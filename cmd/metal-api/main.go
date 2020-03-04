@@ -4,6 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/firewall"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/image"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/ip"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/network"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/partition"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/project"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/size"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
@@ -391,7 +401,7 @@ func initAuth(lg *zap.SugaredLogger) security.UserGetter {
 		logger.Warnw("dex is not configured")
 	}
 
-	defaultUsers := service.NewUserDirectory(providerTenant)
+	defaultUsers := helper.NewUserDirectory(providerTenant)
 	for _, u := range defaultUsers.UserNames() {
 		lfkey := fmt.Sprintf("hmac-%s-lifetime", u)
 		mackey := viper.GetString(fmt.Sprintf("hmac-%s-key", u))
@@ -420,19 +430,19 @@ func initRestServices(withauth bool) *restfulspec.Config {
 	}
 
 	lg := logger.Desugar()
-	restful.DefaultContainer.Add(service.NewPartition(ds, nsqer))
-	restful.DefaultContainer.Add(service.NewImage(ds))
-	restful.DefaultContainer.Add(service.NewSize(ds))
-	restful.DefaultContainer.Add(service.NewNetwork(ds, ipamer, mdc))
-	restful.DefaultContainer.Add(service.NewIP(ds, ipamer, mdc))
+	restful.DefaultContainer.Add(partition.NewPartition(ds, nsqer))
+	restful.DefaultContainer.Add(image.NewImage(ds))
+	restful.DefaultContainer.Add(size.NewSize(ds))
+	restful.DefaultContainer.Add(network.NewNetwork(ds, ipamer, mdc))
+	restful.DefaultContainer.Add(ip.NewIP(ds, ipamer, mdc))
 	var p bus.Publisher
 	if nsqer != nil {
 		p = nsqer.Publisher
 	}
-	restful.DefaultContainer.Add(service.NewMachine(ds, p, ipamer, mdc))
-	restful.DefaultContainer.Add(service.NewProject(ds, mdc))
-	restful.DefaultContainer.Add(service.NewFirewall(ds, ipamer, mdc))
-	restful.DefaultContainer.Add(service.NewSwitch(ds))
+	restful.DefaultContainer.Add(machine.NewMachine(ds, p, ipamer, mdc))
+	restful.DefaultContainer.Add(project.NewProject(ds, mdc))
+	restful.DefaultContainer.Add(firewall.NewFirewall(ds, ipamer, mdc))
+	restful.DefaultContainer.Add(sw.NewSwitch(ds))
 	restful.DefaultContainer.Add(rest.NewHealth(lg, service.BasePath, ds.Health))
 	restful.DefaultContainer.Add(rest.NewVersion(moduleName, service.BasePath))
 	restful.DefaultContainer.Filter(rest.RequestLogger(debug, lg))
@@ -442,7 +452,7 @@ func initRestServices(withauth bool) *restfulspec.Config {
 		restful.DefaultContainer.Filter(rest.UserAuth(initAuth(lg.Sugar())))
 		providerTenant := viper.GetString("provider-tenant")
 		excludedPathSuffixes := []string{"liveliness", "health", "version", "apidocs.json"}
-		ensurer := service.NewTenantEnsurer([]string{providerTenant}, excludedPathSuffixes)
+		ensurer := helper.NewTenantEnsurer([]string{providerTenant}, excludedPathSuffixes)
 		restful.DefaultContainer.Filter(ensurer.EnsureAllowedTenantFilter)
 	}
 
@@ -476,7 +486,7 @@ func resurrectDeadMachines() {
 	if nsqer != nil {
 		p = nsqer.Publisher
 	}
-	err := service.ResurrectMachines(ds, p, logger)
+	err := helper.ResurrectMachines(ds, p, logger)
 	if err != nil {
 		logger.Errorw("unable to resurrect machines", "error", err)
 	}
