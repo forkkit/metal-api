@@ -329,7 +329,7 @@ func TestProcessTags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := processTags(tt.tags)
+			got, err := helper.ProcessTags(tt.tags)
 			if tt.wantErr && err == nil {
 				t.Fatalf("expected error")
 			}
