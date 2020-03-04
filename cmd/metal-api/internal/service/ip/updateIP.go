@@ -27,14 +27,14 @@ func (r ipResource) addUpdateIPRoute(ws *restful.WebService, tags []string) {
 		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
 }
 
-func (ir ipResource) updateIP(request *restful.Request, response *restful.Response) {
+func (r ipResource) updateIP(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.IPUpdateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	oldIP, err := ir.DS.FindIPByID(requestPayload.IPAddress)
+	oldIP, err := r.DS.FindIPByID(requestPayload.IPAddress)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -53,7 +53,7 @@ func (ir ipResource) updateIP(request *restful.Request, response *restful.Respon
 		newIP.Type = requestPayload.Type
 	}
 
-	err = ir.validateAndUpateIP(oldIP, &newIP)
+	err = r.validateAndUpateIP(oldIP, &newIP)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -64,7 +64,7 @@ func (ir ipResource) updateIP(request *restful.Request, response *restful.Respon
 	}
 }
 
-func (ir ipResource) validateAndUpateIP(oldIP, newIP *metal.IP) error {
+func (r ipResource) validateAndUpateIP(oldIP, newIP *metal.IP) error {
 	err := validateIPUpdate(oldIP, newIP)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (ir ipResource) validateAndUpateIP(oldIP, newIP *metal.IP) error {
 	}
 	newIP.Tags = tags
 
-	err = ir.DS.UpdateIP(oldIP, newIP)
+	err = r.DS.UpdateIP(oldIP, newIP)
 	if err != nil {
 		return err
 	}

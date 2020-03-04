@@ -1,4 +1,4 @@
-package ip
+package image
 
 import (
 	"github.com/emicklei/go-restful"
@@ -12,26 +12,26 @@ import (
 	"net/http"
 )
 
-func (r ipResource) addFindIPRoute(ws *restful.WebService, tags []string) {
+func (r imageResource) addFindImageRoute(ws *restful.WebService, tags []string) {
 	ws.Route(ws.GET("/{id}").
-		To(helper.Viewer(r.findIP)).
-		Operation("findIP").
-		Doc("get ip by id").
-		Param(ws.PathParameter("id", "identifier of the ip").DataType("string")).
+		To(r.findImage).
+		Operation("findImage").
+		Doc("get image by id").
+		Param(ws.PathParameter("id", "identifier of the image").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(v1.IPResponse{}).
-		Returns(http.StatusOK, "OK", v1.IPResponse{}).
+		Writes(v1.ImageResponse{}).
+		Returns(http.StatusOK, "OK", v1.ImageResponse{}).
 		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
 }
 
-func (r ipResource) findIP(request *restful.Request, response *restful.Response) {
+func (r imageResource) findImage(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	ip, err := r.DS.FindIPByID(id)
+	img, err := r.DS.FindImage(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, v1.NewIPResponse(ip))
+	err = response.WriteHeaderAndEntity(http.StatusOK, v1.NewImageResponse(img))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

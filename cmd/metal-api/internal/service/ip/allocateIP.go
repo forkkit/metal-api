@@ -39,7 +39,7 @@ func (r ipResource) addAllocateIPRoute(ws *restful.WebService, tags []string) {
 		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
 }
 
-func (ir ipResource) allocateIP(request *restful.Request, response *restful.Response) {
+func (r ipResource) allocateIP(request *restful.Request, response *restful.Response) {
 	specificIP := request.PathParameter("ip")
 	var requestPayload v1.IPAllocateRequest
 	err := request.ReadEntity(&requestPayload)
@@ -67,12 +67,12 @@ func (ir ipResource) allocateIP(request *restful.Request, response *restful.Resp
 		description = *requestPayload.Description
 	}
 
-	nw, err := ir.DS.FindNetworkByID(requestPayload.NetworkID)
+	nw, err := r.DS.FindNetworkByID(requestPayload.NetworkID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	p, err := ir.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: requestPayload.ProjectID})
+	p, err := r.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: requestPayload.ProjectID})
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -89,7 +89,7 @@ func (ir ipResource) allocateIP(request *restful.Request, response *restful.Resp
 
 	// TODO: Following operations should span a database transaction if possible
 
-	ipAddress, ipParentCidr, err := helper.AllocateIP(nw, specificIP, ir.ipamer)
+	ipAddress, ipParentCidr, err := helper.AllocateIP(nw, specificIP, r.ipamer)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -111,7 +111,7 @@ func (ir ipResource) allocateIP(request *restful.Request, response *restful.Resp
 		Tags:             tags,
 	}
 
-	err = ir.DS.CreateIP(ip)
+	err = r.DS.CreateIP(ip)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

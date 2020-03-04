@@ -16,12 +16,12 @@ type ipResource struct {
 
 // NewIP returns a webservice for ip specific endpoints.
 func NewIP(ds *datastore.RethinkStore, ipamer ipam.IPAMer, mdc mdm.Client) *restful.WebService {
-	ir := ipResource{
+	r := ipResource{
 		WebResource: service.WebResource{
 			DS: ds,
 		},
 		ipamer: ipamer,
 		mdc:    mdc,
 	}
-	return ir.webService()
+	return r.webService()
 }

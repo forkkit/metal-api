@@ -26,7 +26,7 @@ func (r ipResource) addFindIPsRoute(ws *restful.WebService, tags []string) {
 		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
 }
 
-func (ir ipResource) findIPs(request *restful.Request, response *restful.Response) {
+func (r ipResource) findIPs(request *restful.Request, response *restful.Response) {
 	var requestPayload datastore.IPSearchQuery
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -34,7 +34,7 @@ func (ir ipResource) findIPs(request *restful.Request, response *restful.Respons
 	}
 
 	var ips metal.IPs
-	err = ir.DS.SearchIPs(&requestPayload, &ips)
+	err = r.DS.SearchIPs(&requestPayload, &ips)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

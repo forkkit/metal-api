@@ -26,10 +26,10 @@ func (r ipResource) addFreeIPRoute(ws *restful.WebService, tags []string) {
 		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
 }
 
-func (ir ipResource) freeIP(request *restful.Request, response *restful.Response) {
+func (r ipResource) freeIP(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	ip, err := ir.DS.FindIPByID(id)
+	ip, err := r.DS.FindIPByID(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -39,12 +39,12 @@ func (ir ipResource) freeIP(request *restful.Request, response *restful.Response
 		return
 	}
 
-	err = ir.ipamer.ReleaseIP(*ip)
+	err = r.ipamer.ReleaseIP(*ip)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	err = ir.DS.DeleteIP(ip)
+	err = r.DS.DeleteIP(ip)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

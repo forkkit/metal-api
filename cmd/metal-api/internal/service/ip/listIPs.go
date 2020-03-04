@@ -23,8 +23,8 @@ func (r ipResource) addListIPsRoute(ws *restful.WebService, tags []string) {
 		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
 }
 
-func (ir ipResource) listIPs(request *restful.Request, response *restful.Response) {
-	ips, err := ir.DS.ListIPs()
+func (r ipResource) listIPs(request *restful.Request, response *restful.Response) {
+	ips, err := r.DS.ListIPs()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
