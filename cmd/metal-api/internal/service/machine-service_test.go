@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/emicklei/go-restful"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/emicklei/go-restful"
 	goipam "github.com/metal-stack/go-ipam"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
