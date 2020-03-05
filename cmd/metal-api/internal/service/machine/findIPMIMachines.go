@@ -2,29 +2,15 @@ package machine
 
 import (
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r machineResource) addFindIPMIMachinesRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/ipmi/find").
-		To(helper.Viewer(r.findIPMIMachines)).
-		Operation("findIPMIMachines").
-		Doc("returns machines including the ipmi connection data").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.MachineFindRequest{}).
-		Writes([]v1.MachineIPMIResponse{}).
-		Returns(http.StatusOK, "OK", []v1.MachineIPMIResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r machineResource) findIPMIMachines(request *restful.Request, response *restful.Response) {
 	var requestPayload datastore.MachineSearchQuery

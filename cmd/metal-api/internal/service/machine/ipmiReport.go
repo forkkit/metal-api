@@ -3,29 +3,16 @@ package machine
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
-
-func (r machineResource) addIPMIReportRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/ipmi").
-		To(helper.Editor(r.ipmiReport)).
-		Operation("ipmiReport").
-		Doc("reports IPMI ip addresses leased by a management server for machines").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.MachineIpmiReport{}).
-		Returns(http.StatusOK, "OK", v1.MachineIpmiReportResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r machineResource) ipmiReport(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineIpmiReport

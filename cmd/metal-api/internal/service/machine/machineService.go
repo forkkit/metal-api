@@ -2,50 +2,263 @@ package machine
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	"github.com/metal-stack/metal-lib/httperrors"
+	"net/http"
 )
 
 // webService creates the webservice endpoint
 func (r machineResource) webService() *restful.WebService {
-	ws := new(restful.WebService)
-	ws.
-		Path(service.BasePath + "v1/machine").
-		Consumes(restful.MIME_JSON).
-		Produces(restful.MIME_JSON)
-
-	tags := []string{"machine"}
-
-	r.addFindMachineRoute(ws, tags)
-	r.addFindMachinesRoute(ws, tags)
-	r.addListMachinesRoute(ws, tags)
-
-	r.addIPMIReportRoute(ws, tags)
-	r.addFindIPMIMachineRoute(ws, tags)
-	r.addFindIPMIMachinesRoute(ws, tags)
-
-	r.addWaitForAllocationRoute(ws, tags)
-	r.addAllocateMachineRoute(ws, tags)
-	r.addFinalizeAllocationRoute(ws, tags)
-
-	r.addRegisterMachineRoute(ws, tags)
-
-	r.addReinstallMachineRoute(ws, tags)
-	r.addFreeMachineRoute(ws, tags)
-
-	r.addGetProvisioningEventContainerRoute(ws, tags)
-	r.addAddProvisioningEventRoute(ws, tags)
-
-	r.addCheckMachineLivelinessRoute(ws, tags)
-	r.addSetMachineStateRoute(ws, tags)
-
-	r.addPowerMachineOnRoute(ws, tags)
-	r.addPowerMachineOffRoute(ws, tags)
-	r.addPowerResetMachineRoute(ws, tags)
-	r.addBootMachineBIOSRoute(ws, tags)
-
-	r.addSetChassisIdentifyLEDStateRoute(ws, tags)
-	r.addPowerChassisIdentifyLEDOnRoute(ws, tags)
-	r.addPowerChassisIdentifyLEDOffRoute(ws, tags)
-
-	return ws
+	return service.Build(service.WebResource{
+		Version: service.V1,
+		Path:    "machine",
+		Routes: []service.Route{
+			{
+				Method:  http.MethodGet,
+				SubPath: "/",
+				Doc:     "get all machines",
+				Access:  metal.ViewAccess,
+				Writes:  []v1.MachineResponse{},
+				Handler: r.listMachines,
+			},
+			{
+				Method:        http.MethodGet,
+				SubPath:       "/{id}",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "get machine by id",
+				Access:        metal.ViewAccess,
+				Writes:        v1.MachineResponse{},
+				Handler:       r.findMachine,
+			},
+			{
+				Method:  http.MethodPost,
+				SubPath: "/find",
+				Doc:     "find machines by multiple criteria",
+				Access:  metal.ViewAccess,
+				Reads:   v1.MachineFindRequest{},
+				Writes:  []v1.MachineResponse{},
+				Handler: r.findMachines,
+			},
+			{
+				Method:  http.MethodPost,
+				SubPath: "/ipmi",
+				Doc:     "reports IPMI ip addresses leased by a management server for machines",
+				Access:  metal.EditAccess,
+				Reads:   v1.MachineIpmiReport{},
+				Writes:  v1.MachineIpmiReportResponse{},
+				Handler: r.ipmiReport,
+			},
+			{
+				Method:  http.MethodPost,
+				SubPath: "/ipmi/find",
+				Doc:     "returns machines including the ipmi connection data",
+				Access:  metal.ViewAccess,
+				Reads:   v1.MachineFindRequest{},
+				Writes:  []v1.MachineIPMIResponse{},
+				Handler: r.findIPMIMachines,
+			},
+			{
+				Method:        http.MethodGet,
+				SubPath:       "/{id}/ipmi",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "returns a machine including the ipmi connection data",
+				Access:        metal.ViewAccess,
+				Writes:        v1.MachineIPMIResponse{},
+				Handler:       r.findIPMIMachine,
+			},
+			{
+				Method:        http.MethodGet,
+				SubPath:       "/{id}/wait",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "wait for an allocation of this machine",
+				Access:        metal.EditAccess,
+				Writes:        v1.MachineResponse{},
+				Returns: []*service.Return{
+					service.NewReturn(http.StatusOK, "OK", v1.MachineResponse{}),
+					service.NewReturn(http.StatusGatewayTimeout, "Timeout", httperrors.HTTPErrorResponse{}),
+				},
+				Handler: r.waitForAllocation,
+			},
+			{
+				Method:  http.MethodPost,
+				SubPath: "/allocate",
+				Doc:     "allocate a machine",
+				Access:  metal.EditAccess,
+				Reads:   v1.MachineAllocateRequest{},
+				Writes:  v1.MachineResponse{},
+				Handler: r.allocateMachine,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/finalize-allocation",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "finalize the allocation of the machine by reconfiguring the switch, sent on successful image installation",
+				Access:        metal.EditAccess,
+				Reads:         v1.MachineFinalizeAllocationRequest{},
+				Writes:        v1.MachineResponse{},
+				Handler:       r.finalizeAllocation,
+			},
+			{
+				Method:  http.MethodPost,
+				SubPath: "/register",
+				Doc:     "register a machine",
+				Access:  metal.EditAccess,
+				Reads:   v1.MachineRegisterRequest{},
+				Writes:  v1.MachineResponse{},
+				Returns: []*service.Return{
+					service.NewReturn(http.StatusOK, "OK", v1.MachineResponse{}),
+					service.NewReturn(http.StatusCreated, "Created", v1.MachineResponse{}),
+				},
+				Handler: r.registerMachine,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/reinstall",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "reinstall this machine with the given image",
+				Access:        metal.EditAccess,
+				Reads:         v1.MachineReinstallRequest{},
+				Writes:        v1.MachineResponse{},
+				Returns: []*service.Return{
+					service.NewReturn(http.StatusOK, "OK", v1.MachineResponse{}),
+					service.NewReturn(http.StatusGatewayTimeout, "Timeout", httperrors.HTTPErrorResponse{}),
+				},
+				Handler: r.reinstallMachine,
+			},
+			{
+				Method:        http.MethodDelete,
+				SubPath:       "/{id}/free",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "free a machine",
+				Access:        metal.EditAccess,
+				Writes:        v1.MachineResponse{},
+				Handler:       r.freeMachine,
+			},
+			{
+				Method:        http.MethodGet,
+				SubPath:       "/{id}/event",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "get the current machine provisioning event container",
+				Access:        metal.EditAccess,
+				Writes:        v1.MachineRecentProvisioningEvents{},
+				Handler:       r.getProvisioningEventContainer,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/event",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "adds a machine provisioning event",
+				Access:        metal.EditAccess,
+				Reads:         v1.MachineProvisioningEvent{},
+				Writes:        v1.MachineRecentProvisioningEvents{},
+				Handler:       r.addProvisioningEvent,
+			},
+			{
+				Method:  http.MethodPost, //TODO Why is this a POST and not a GET?
+				SubPath: "/liveliness",
+				Doc:     "external trigger for evaluating machine liveliness",
+				Reads:   v1.EmptyBody{},
+				Writes:  v1.MachineLivelinessReport{},
+				Handler: r.checkMachineLiveliness,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/state",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "set the state of a machine",
+				Access:        metal.EditAccess,
+				Reads:         v1.MachineState{},
+				Writes:        v1.MachineResponse{},
+				Handler:       r.setMachineState,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/power/on",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "sends a power-on to the machine",
+				Access:        metal.EditAccess,
+				Reads:         v1.EmptyBody{},
+				Writes:        v1.MachineResponse{},
+				Handler:       r.powerMachineOn,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/power/off",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "sends a power-off to the machine",
+				Access:        metal.EditAccess,
+				Reads:         v1.EmptyBody{},
+				Writes:        v1.MachineResponse{},
+				Handler:       r.powerMachineOff,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/power/reset",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "sends a power-reset to the machine",
+				Access:        metal.EditAccess,
+				Reads:         v1.EmptyBody{},
+				Writes:        v1.MachineResponse{},
+				Handler:       r.powerResetMachine,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/power/bios",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "boots machine into BIOS on next reboot",
+				Access:        metal.EditAccess,
+				Reads:         v1.EmptyBody{},
+				Writes:        v1.MachineResponse{},
+				Handler:       r.bootMachineBIOS,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/chassis-identify-led-state",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "set the state of a chassis identify LED",
+				Access:        metal.EditAccess,
+				Reads:         v1.ChassisIdentifyLEDState{},
+				Writes:        v1.MachineResponse{},
+				Handler:       r.setChassisIdentifyLEDState,
+			},
+			{
+				Method:        http.MethodPost,
+				SubPath:       "/{id}/power/chassis-identify-led-on",
+				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
+				Doc:           "sends a power-on to the chassis identify LED",
+				Access:        metal.EditAccess,
+				Reads:         v1.EmptyBody{},
+				Writes:        v1.MachineResponse{},
+				Handler:       r.powerChassisIdentifyLEDOn,
+			},
+			{
+				Method:  http.MethodPost,
+				SubPath: "/{id}/power/chassis-identify-led-on/{description}",
+				PathParameters: []*service.PathParameter{
+					service.NewPathParameter("id", "identifier of the machine"),
+					service.NewPathParameter("description", "reason why the chassis identify LED has been turned on"),
+				},
+				Doc:     "sends a power-on to the chassis identify LED",
+				Access:  metal.EditAccess,
+				Reads:   v1.EmptyBody{},
+				Writes:  v1.MachineResponse{},
+				Handler: r.powerChassisIdentifyLEDOnWithDescription,
+			},
+			{
+				Method:  http.MethodPost,
+				SubPath: "/{id}/power/chassis-identify-led-off/{description}",
+				PathParameters: []*service.PathParameter{
+					service.NewPathParameter("id", "identifier of the machine"),
+					service.NewPathParameter("description", "reason why the chassis identify LED has been turned off"),
+				},
+				Doc:     "sends a power-off to the chassis identify LED",
+				Access:  metal.EditAccess,
+				Reads:   v1.EmptyBody{},
+				Writes:  v1.MachineResponse{},
+				Handler: r.powerChassisIdentifyLEDOff,
+			},
+		},
+	})
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
@@ -15,18 +14,6 @@ import (
 	"net/http"
 	"time"
 )
-
-func (r machineResource) addWaitForAllocationRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.GET("/{id}/wait").
-		To(helper.Editor(r.waitForAllocation)).
-		Operation("waitForAllocation").
-		Doc("wait for an allocation of this machine").
-		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Returns(http.StatusOK, "OK", v1.MachineResponse{}).
-		Returns(http.StatusGatewayTimeout, "Timeout", httperrors.HTTPErrorResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 // The MachineAllocation contains the allocated machine or an error.
 type MachineAllocation struct {

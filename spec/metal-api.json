@@ -3652,7 +3652,7 @@
             }
           }
         },
-        "summary": "get all known machines",
+        "summary": "get all machines",
         "tags": [
           "machine"
         ]
@@ -3950,19 +3950,19 @@
         "operationId": "setChassisIdentifyLEDState",
         "parameters": [
           {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "body",
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1.ChassisIdentifyLEDState"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4032,19 +4032,19 @@
         "operationId": "addProvisioningEvent",
         "parameters": [
           {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "body",
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1.MachineProvisioningEvent"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4078,19 +4078,19 @@
         "operationId": "finalizeAllocation",
         "parameters": [
           {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "body",
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1.MachineFinalizeAllocationRequest"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4197,15 +4197,8 @@
         "consumes": [
           "application/json"
         ],
-        "operationId": "machineBios",
+        "operationId": "bootMachineBIOS",
         "parameters": [
-          {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
           {
             "in": "body",
             "name": "body",
@@ -4213,6 +4206,13 @@
             "schema": {
               "$ref": "#/definitions/v1.EmptyBody"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4243,8 +4243,16 @@
         "consumes": [
           "application/json"
         ],
-        "operationId": "chassisIdentifyLEDOff",
+        "operationId": "powerChassisIdentifyLEDOff",
         "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.EmptyBody"
+            }
+          },
           {
             "description": "identifier of the machine",
             "in": "path",
@@ -4258,14 +4266,6 @@
             "name": "description",
             "required": true,
             "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1.EmptyBody"
-            }
           }
         ],
         "produces": [
@@ -4296,15 +4296,8 @@
         "consumes": [
           "application/json"
         ],
-        "operationId": "chassisIdentifyLEDOn",
+        "operationId": "powerChassisIdentifyLEDOn",
         "parameters": [
-          {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
           {
             "in": "body",
             "name": "body",
@@ -4312,6 +4305,13 @@
             "schema": {
               "$ref": "#/definitions/v1.EmptyBody"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4342,8 +4342,16 @@
         "consumes": [
           "application/json"
         ],
-        "operationId": "chassisIdentifyLEDOn",
+        "operationId": "powerChassisIdentifyLEDOnWithDescription",
         "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.EmptyBody"
+            }
+          },
           {
             "description": "identifier of the machine",
             "in": "path",
@@ -4357,14 +4365,6 @@
             "name": "description",
             "required": true,
             "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1.EmptyBody"
-            }
           }
         ],
         "produces": [
@@ -4395,15 +4395,8 @@
         "consumes": [
           "application/json"
         ],
-        "operationId": "machineOff",
+        "operationId": "powerMachineOff",
         "parameters": [
-          {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
           {
             "in": "body",
             "name": "body",
@@ -4411,6 +4404,13 @@
             "schema": {
               "$ref": "#/definitions/v1.EmptyBody"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4441,15 +4441,8 @@
         "consumes": [
           "application/json"
         ],
-        "operationId": "machineOn",
+        "operationId": "powerMachineOn",
         "parameters": [
-          {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
           {
             "in": "body",
             "name": "body",
@@ -4457,6 +4450,13 @@
             "schema": {
               "$ref": "#/definitions/v1.EmptyBody"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4487,15 +4487,8 @@
         "consumes": [
           "application/json"
         ],
-        "operationId": "machineReset",
+        "operationId": "powerResetMachine",
         "parameters": [
-          {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
           {
             "in": "body",
             "name": "body",
@@ -4503,6 +4496,13 @@
             "schema": {
               "$ref": "#/definitions/v1.EmptyBody"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4522,7 +4522,7 @@
             }
           }
         },
-        "summary": "sends a reset to the machine",
+        "summary": "sends a power-reset to the machine",
         "tags": [
           "machine"
         ]
@@ -4536,19 +4536,19 @@
         "operationId": "reinstallMachine",
         "parameters": [
           {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "body",
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1.MachineReinstallRequest"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [
@@ -4574,7 +4574,7 @@
             }
           }
         },
-        "summary": "reinstall this machine",
+        "summary": "reinstall this machine with the given image",
         "tags": [
           "machine"
         ]
@@ -4588,19 +4588,19 @@
         "operationId": "setMachineState",
         "parameters": [
           {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "body",
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1.MachineState"
             }
+          },
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
           }
         ],
         "produces": [

@@ -4,29 +4,14 @@ import (
 	"fmt"
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r machineResource) addRegisterMachineRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/register").
-		To(helper.Editor(r.registerMachine)).
-		Operation("registerMachine").
-		Doc("register a machine").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.MachineRegisterRequest{}).
-		Writes(v1.MachineResponse{}).
-		Returns(http.StatusOK, "OK", v1.MachineResponse{}).
-		Returns(http.StatusCreated, "Created", v1.MachineResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r machineResource) registerMachine(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineRegisterRequest

@@ -3,27 +3,14 @@ package machine
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r machineResource) addAllocateMachineRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/allocate").
-		To(helper.Editor(r.allocateMachine)).
-		Operation("allocateMachine").
-		Doc("allocate a machine").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.MachineAllocateRequest{}).
-		Returns(http.StatusOK, "OK", v1.MachineResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r machineResource) allocateMachine(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineAllocateRequest

@@ -2,28 +2,13 @@ package machine
 
 import (
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
-	"net/http"
 )
-
-func (r machineResource) addReinstallMachineRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/{id}/reinstall").
-		To(helper.Editor(r.reinstallMachine)).
-		Operation("reinstallMachine").
-		Doc("reinstall this machine").
-		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.MachineReinstallRequest{}).
-		Returns(http.StatusOK, "OK", v1.MachineResponse{}).
-		Returns(http.StatusGatewayTimeout, "Timeout", httperrors.HTTPErrorResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r machineResource) reinstallMachine(request *restful.Request, response *restful.Response) {
 	log := utils.Logger(request).Sugar()

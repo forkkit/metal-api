@@ -3,29 +3,16 @@ package machine
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metrics"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
-
-func (r machineResource) addCheckMachineLivelinessRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/liveliness").
-		To(r.checkMachineLiveliness).
-		Operation("checkMachineLiveliness").
-		Doc("external trigger for evaluating machine liveliness").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.EmptyBody{}).
-		Returns(http.StatusOK, "OK", v1.MachineLivelinessReport{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r machineResource) checkMachineLiveliness(request *restful.Request, response *restful.Response) {
 	logger := utils.Logger(request).Sugar()
