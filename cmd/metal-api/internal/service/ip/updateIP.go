@@ -3,29 +3,14 @@ package ip
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r ipResource) addUpdateIPRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/").
-		To(helper.Editor(r.updateIP)).
-		Operation("updateIP").
-		Doc("updates an ip. if the ip was changed since this one was read, a conflict is returned").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.IPUpdateRequest{}).
-		Writes(v1.IPResponse{}).
-		Returns(http.StatusOK, "OK", v1.IPResponse{}).
-		Returns(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r ipResource) updateIP(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.IPUpdateRequest

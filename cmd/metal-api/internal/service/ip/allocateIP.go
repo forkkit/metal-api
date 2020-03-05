@@ -4,42 +4,21 @@ import (
 	"context"
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-func (r ipResource) addAllocateIPRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/allocate").
-		To(helper.Editor(r.allocateIP)).
-		Operation("allocateIP").
-		Doc("allocate an ip in the given network.").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.IPAllocateRequest{}).
-		Writes(v1.IPResponse{}).
-		Returns(http.StatusCreated, "Created", v1.IPResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-
-	ws.Route(ws.POST("/allocate/{ip}").
-		To(helper.Editor(r.allocateIP)).
-		Operation("allocateSpecificIP").
-		Param(ws.PathParameter("ip", "ip to try to allocate").DataType("string")).
-		Doc("allocate a specific ip in the given network.").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.IPAllocateRequest{}).
-		Writes(v1.IPResponse{}).
-		Returns(http.StatusCreated, "Created", v1.IPResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
+func (r ipResource) allocateIP(request *restful.Request, response *restful.Response) {
+	r.allocateSpecificIP(request, response)
 }
 
-func (r ipResource) allocateIP(request *restful.Request, response *restful.Response) {
+func (r ipResource) allocateSpecificIP(request *restful.Request, response *restful.Response) {
 	specificIP := request.PathParameter("ip")
 	var requestPayload v1.IPAllocateRequest
 	err := request.ReadEntity(&requestPayload)

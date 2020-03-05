@@ -37,6 +37,27 @@ var (
 	AdminAccess = AdminGroups
 )
 
+func contains(access []security.ResourceAccess, acc security.ResourceAccess) bool {
+	for _, a := range access {
+		if a == acc {
+			return true
+		}
+	}
+	return false
+}
+
+func IsView(access []security.ResourceAccess) bool {
+	return contains(access, "maas-all-all-view")
+}
+
+func IsEdit(access []security.ResourceAccess) bool {
+	return !IsView(access) && contains(access, "maas-all-all-edit")
+}
+
+func IsAdmin(access []security.ResourceAccess) bool {
+	return !IsView(access) && !IsEdit(access) && contains(access, "maas-all-all-admin")
+}
+
 // EventType is the type for event types.
 type EventType string
 

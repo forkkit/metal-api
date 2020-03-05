@@ -3,28 +3,14 @@ package ip
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r ipResource) addFreeIPRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/free/{id}").
-		To(helper.Editor(r.freeIP)).
-		Operation("freeIP").
-		Doc("frees an ip").
-		Param(ws.PathParameter("id", "identifier of the ip").DataType("string")).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(v1.IPResponse{}).
-		Returns(http.StatusOK, "OK", v1.IPResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r ipResource) freeIP(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")

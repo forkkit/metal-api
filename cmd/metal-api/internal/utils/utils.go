@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -13,6 +14,20 @@ import (
 // Logger returns the request logger from the request.
 func Logger(rq *restful.Request) *zap.Logger {
 	return zapup.RequestLogger(rq.Request)
+}
+
+// GetFunctionName returns the name of the given function
+func GetFunctionName(i interface{}) string {
+	n := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	idx := strings.LastIndex(n, ".")
+	if idx > 0 {
+		n = n[idx+1:]
+	}
+	idx = strings.Index(n, "-")
+	if idx > 0 {
+		n = n[:idx]
+	}
+	return n
 }
 
 // CurrentFuncName returns the name of the caller of this function.

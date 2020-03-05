@@ -2,28 +2,14 @@ package image
 
 import (
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r imageResource) addUpdateImageRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/").
-		To(helper.Admin(r.updateImage)).
-		Operation("updateImage").
-		Doc("updates an image. if the image was changed since this one was read, a conflict is returned").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.ImageUpdateRequest{}).
-		Returns(http.StatusOK, "OK", v1.ImageResponse{}).
-		Returns(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r imageResource) updateImage(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.ImageUpdateRequest

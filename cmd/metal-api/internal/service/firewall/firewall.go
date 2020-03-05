@@ -17,10 +17,7 @@ type firewallResource struct {
 }
 
 // NewFirewall returns a webservice for firewall specific endpoints.
-func NewFirewall(
-	ds *datastore.RethinkStore,
-	ipamer ipam.IPAMer,
-	mdc mdm.Client) *restful.WebService {
+func NewFirewall(ds *datastore.RethinkStore, ipamer ipam.IPAMer, mdc mdm.Client) *restful.WebService {
 	r := firewallResource{
 		WebResource: service.WebResource{
 			DS: ds,

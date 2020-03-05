@@ -3,7 +3,6 @@ package firewall
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
@@ -14,18 +13,6 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r firewallResource) addFindFirewallRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.GET("/{id}").
-		To(helper.Viewer(r.findFirewall)).
-		Operation("findFirewall").
-		Doc("get firewall by id").
-		Param(ws.PathParameter("id", "identifier of the firewall").DataType("string")).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(v1.FirewallResponse{}).
-		Returns(http.StatusOK, "OK", v1.FirewallResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r firewallResource) findFirewall(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")

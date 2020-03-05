@@ -2,29 +2,14 @@ package firewall
 
 import (
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r firewallResource) addFindFirewallsRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.GET("/find").
-		To(helper.Viewer(r.findFirewalls)).
-		Operation("findFirewalls").
-		Doc("find firewalls by multiple criteria").
-		Reads(v1.FirewallFindRequest{}).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes([]v1.FirewallResponse{}).
-		Returns(http.StatusOK, "OK", []v1.FirewallResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r firewallResource) findFirewalls(request *restful.Request, response *restful.Response) {
 	var requestPayload datastore.MachineSearchQuery

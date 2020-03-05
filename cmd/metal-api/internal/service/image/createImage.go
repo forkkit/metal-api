@@ -3,28 +3,14 @@ package image
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r imageResource) addCreateImageRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.PUT("/").
-		To(helper.Admin(r.createImage)).
-		Operation("createImage").
-		Doc("create an image. if the given ID already exists a conflict is returned").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.ImageCreateRequest{}).
-		Returns(http.StatusCreated, "Created", v1.ImageResponse{}).
-		Returns(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r imageResource) createImage(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.ImageCreateRequest
