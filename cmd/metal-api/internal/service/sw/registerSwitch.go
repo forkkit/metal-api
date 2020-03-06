@@ -3,28 +3,14 @@ package sw
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r switchResource) addRegisterSwitchRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/register").
-		To(helper.Editor(r.registerSwitch)).
-		Doc("register a switch").
-		Operation("registerSwitch").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.SwitchRegisterRequest{}).
-		Returns(http.StatusOK, "OK", v1.SwitchResponse{}).
-		Returns(http.StatusCreated, "Created", v1.SwitchResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r switchResource) registerSwitch(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.SwitchRegisterRequest
