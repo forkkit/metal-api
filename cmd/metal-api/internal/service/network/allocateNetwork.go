@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
@@ -12,23 +11,10 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r networkResource) addAllocateNetworkRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/allocate").
-		To(helper.Editor(r.allocateNetwork)).
-		Operation("allocateNetwork").
-		Doc("allocates a child network from a partition's private super network").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.NetworkAllocateRequest{}).
-		Returns(http.StatusCreated, "Created", v1.NetworkResponse{}).
-		Returns(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r networkResource) allocateNetwork(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.NetworkAllocateRequest
