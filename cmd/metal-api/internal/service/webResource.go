@@ -37,12 +37,12 @@ func (r WebResource) build() *restful.WebService {
 	}
 
 	path := r.Path
-	if strings.HasPrefix(path, "/") {
+	if strings.HasSuffix(path, "/") {
 		path = path[:len(path)-1]
 	}
 
 	basePath := BasePath
-	if strings.HasPrefix(basePath, "/") {
+	if strings.HasSuffix(basePath, "/") {
 		basePath = basePath[:len(basePath)-1]
 	}
 
