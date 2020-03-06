@@ -5019,9 +5019,9 @@
             }
           }
         },
-        "summary": "get all Partitions",
+        "summary": "get all partitions",
         "tags": [
-          "Partition"
+          "partition"
         ]
       },
       "post": {
@@ -5062,9 +5062,9 @@
             }
           }
         },
-        "summary": "updates a Partition. if the Partition was changed since this one was read, a conflict is returned",
+        "summary": "updates a partition. If the partition was changed since this one was read, a conflict is returned",
         "tags": [
-          "Partition"
+          "partition"
         ]
       },
       "put": {
@@ -5105,9 +5105,9 @@
             }
           }
         },
-        "summary": "create a Partition. if the given ID already exists a conflict is returned",
+        "summary": "creates a partition. If the given ID already exists a conflict is returned",
         "tags": [
-          "Partition"
+          "partition"
         ]
       }
     },
@@ -5116,7 +5116,7 @@
         "consumes": [
           "application/json"
         ],
-        "operationId": "partitionCapacity",
+        "operationId": "listPartitionCapacities",
         "produces": [
           "application/json"
         ],
@@ -5137,9 +5137,9 @@
             }
           }
         },
-        "summary": "get Partition capacity",
+        "summary": "get partition capacities",
         "tags": [
-          "Partition"
+          "partition"
         ]
       }
     },
@@ -5151,7 +5151,7 @@
         "operationId": "deletePartition",
         "parameters": [
           {
-            "description": "identifier of the Partition",
+            "description": "identifier of the partition",
             "in": "path",
             "name": "id",
             "required": true,
@@ -5175,9 +5175,9 @@
             }
           }
         },
-        "summary": "deletes a Partition and returns the deleted entity",
+        "summary": "deletes a partition and returns the deleted entity",
         "tags": [
-          "Partition"
+          "partition"
         ]
       },
       "get": {
@@ -5187,7 +5187,7 @@
         "operationId": "findPartition",
         "parameters": [
           {
-            "description": "identifier of the Partition",
+            "description": "identifier of the partition",
             "in": "path",
             "name": "id",
             "required": true,
@@ -5211,9 +5211,9 @@
             }
           }
         },
-        "summary": "get Partition by id",
+        "summary": "get partition by id",
         "tags": [
-          "Partition"
+          "partition"
         ]
       }
     },

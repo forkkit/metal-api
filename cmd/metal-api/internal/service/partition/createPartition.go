@@ -3,28 +3,14 @@ package partition
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r partitionResource) addCreatePartitionRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.PUT("/").
-		To(helper.Admin(r.createPartition)).
-		Operation("createPartition").
-		Doc("create a Partition. if the given ID already exists a conflict is returned").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.PartitionCreateRequest{}).
-		Returns(http.StatusCreated, "Created", v1.PartitionResponse{}).
-		Returns(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r partitionResource) createPartition(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.PartitionCreateRequest

@@ -2,27 +2,13 @@ package partition
 
 import (
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r partitionResource) addUpdatePartitionRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.POST("/").
-		To(helper.Admin(r.updatePartition)).
-		Operation("updatePartition").
-		Doc("updates a Partition. if the Partition was changed since this one was read, a conflict is returned").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(v1.PartitionUpdateRequest{}).
-		Returns(http.StatusOK, "OK", v1.PartitionResponse{}).
-		Returns(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r partitionResource) updatePartition(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.PartitionUpdateRequest
