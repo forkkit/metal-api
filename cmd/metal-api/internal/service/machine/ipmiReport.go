@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func (r machineResource) ipmiReport(request *restful.Request, response *restful.Response) {
+func (r *machineResource) ipmiReport(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineIpmiReport
 	log := utils.Logger(request)
 	logger := log.Sugar()
@@ -29,7 +29,7 @@ func (r machineResource) ipmiReport(request *restful.Request, response *restful.
 	}
 
 	var ms metal.Machines
-	err = r.DS.SearchMachines(&datastore.MachineSearchQuery{}, &ms)
+	err = r.ds.SearchMachines(&datastore.MachineSearchQuery{}, &ms)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -63,7 +63,7 @@ func (r machineResource) ipmiReport(request *restful.Request, response *restful.
 				Address: ip + ":" + defaultIPMIPort,
 			},
 		}
-		err = r.DS.CreateMachine(m)
+		err = r.ds.CreateMachine(m)
 		if err != nil {
 			logger.Errorf("could not create machine", "id", uuid, "ipmi-ip", ip, "m", m, "err", err)
 			continue
@@ -107,7 +107,7 @@ func (r machineResource) ipmiReport(request *restful.Request, response *restful.
 			continue
 		}
 
-		err = r.DS.UpdateMachine(&oldMachine, &newMachine)
+		err = r.ds.UpdateMachine(&oldMachine, &newMachine)
 		if err != nil {
 			logger.Errorf("could not update machine", "id", uuid, "ip", ip, "machine", newMachine, "err", err)
 			continue

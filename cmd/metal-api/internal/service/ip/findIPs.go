@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r ipResource) findIPs(request *restful.Request, response *restful.Response) {
+func (r *ipResource) findIPs(request *restful.Request, response *restful.Response) {
 	var requestPayload datastore.IPSearchQuery
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -20,7 +20,7 @@ func (r ipResource) findIPs(request *restful.Request, response *restful.Response
 	}
 
 	var ips metal.IPs
-	err = r.DS.SearchIPs(&requestPayload, &ips)
+	err = r.ds.SearchIPs(&requestPayload, &ips)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

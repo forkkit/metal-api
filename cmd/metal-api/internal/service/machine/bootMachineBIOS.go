@@ -5,6 +5,6 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 )
 
-func (r machineResource) bootMachineBIOS(request *restful.Request, response *restful.Response) {
+func (r *machineResource) bootMachineBIOS(request *restful.Request, response *restful.Response) {
 	r.publishMachineCmd("bootMachineBIOS", metal.MachineBiosCmd, request, response)
 }

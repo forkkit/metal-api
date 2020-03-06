@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
-func (r networkResource) listNetworks(request *restful.Request, response *restful.Response) {
-	nws, err := r.DS.ListNetworks()
+func (r *networkResource) listNetworks(request *restful.Request, response *restful.Response) {
+	nws, err := r.ds.ListNetworks()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

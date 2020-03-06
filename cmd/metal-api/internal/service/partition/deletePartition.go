@@ -10,15 +10,15 @@ import (
 	"net/http"
 )
 
-func (r partitionResource) deletePartition(request *restful.Request, response *restful.Response) {
+func (r *partitionResource) deletePartition(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	p, err := r.DS.FindPartition(id)
+	p, err := r.ds.FindPartition(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	err = r.DS.DeletePartition(p)
+	err = r.ds.DeletePartition(p)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

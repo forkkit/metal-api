@@ -15,7 +15,7 @@ import (
 	"net/http"
 )
 
-func (r networkResource) createNetwork(request *restful.Request, response *restful.Response) {
+func (r *networkResource) createNetwork(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.NetworkCreateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -88,7 +88,7 @@ func (r networkResource) createNetwork(request *restful.Request, response *restf
 		destPrefixes = append(destPrefixes, *prefix)
 	}
 
-	allNws, err := r.DS.ListNetworks()
+	allNws, err := r.ds.ListNetworks()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -111,14 +111,14 @@ func (r networkResource) createNetwork(request *restful.Request, response *restf
 
 	var partitionID string
 	if requestPayload.PartitionID != nil {
-		partition, err := r.DS.FindPartition(*requestPayload.PartitionID)
+		partition, err := r.ds.FindPartition(*requestPayload.PartitionID)
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
 		}
 
 		if privateSuper {
 			boolTrue := true
-			err := r.DS.FindNetwork(&datastore.NetworkSearchQuery{PartitionID: &partition.ID, PrivateSuper: &boolTrue}, &metal.Network{})
+			err := r.ds.FindNetwork(&datastore.NetworkSearchQuery{PartitionID: &partition.ID, PrivateSuper: &boolTrue}, &metal.Network{})
 			if err != nil {
 				if !metal.IsNotFound(err) {
 					if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -133,7 +133,7 @@ func (r networkResource) createNetwork(request *restful.Request, response *restf
 		}
 		if underlay {
 			boolTrue := true
-			err := r.DS.FindNetwork(&datastore.NetworkSearchQuery{PartitionID: &partition.ID, Underlay: &boolTrue}, &metal.Network{})
+			err := r.ds.FindNetwork(&datastore.NetworkSearchQuery{PartitionID: &partition.ID, Underlay: &boolTrue}, &metal.Network{})
 			if err != nil {
 				if !metal.IsNotFound(err) {
 					if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -155,7 +155,7 @@ func (r networkResource) createNetwork(request *restful.Request, response *restf
 	}
 
 	if vrf != 0 {
-		_, err := r.DS.AcquireUniqueInteger(vrf)
+		_, err := r.ds.AcquireUniqueInteger(vrf)
 		if err != nil {
 			if !metal.IsConflict(err) {
 				if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("could not acquire vrf: %v", err)) {
@@ -193,7 +193,7 @@ func (r networkResource) createNetwork(request *restful.Request, response *restf
 		}
 	}
 
-	err = r.DS.CreateNetwork(nw)
+	err = r.ds.CreateNetwork(nw)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

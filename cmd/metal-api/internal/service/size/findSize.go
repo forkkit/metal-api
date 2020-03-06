@@ -10,10 +10,10 @@ import (
 	"net/http"
 )
 
-func (r sizeResource) findSize(request *restful.Request, response *restful.Response) {
+func (r *sizeResource) findSize(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	s, err := r.DS.FindSize(id)
+	s, err := r.ds.FindSize(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

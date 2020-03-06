@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r imageResource) createImage(request *restful.Request, response *restful.Response) {
+func (r *imageResource) createImage(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.ImageCreateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -59,7 +59,7 @@ func (r imageResource) createImage(request *restful.Request, response *restful.R
 		Features: features,
 	}
 
-	err = r.DS.CreateImage(img)
+	err = r.ds.CreateImage(img)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

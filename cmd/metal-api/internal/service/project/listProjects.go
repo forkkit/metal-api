@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func (r projectResource) listProjects(request *restful.Request, response *restful.Response) {
+func (r *projectResource) listProjects(request *restful.Request, response *restful.Response) {
 	ps, err := r.mdc.Project().Find(context.Background(), &mdmv1.ProjectFindRequest{})
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return

@@ -10,10 +10,10 @@ import (
 	"net/http"
 )
 
-func (r ipResource) findIP(request *restful.Request, response *restful.Response) {
+func (r *ipResource) findIP(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	ip, err := r.DS.FindIPByID(id)
+	ip, err := r.ds.FindIPByID(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

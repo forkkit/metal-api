@@ -10,14 +10,14 @@ import (
 	"net/http"
 )
 
-func (r partitionResource) updatePartition(request *restful.Request, response *restful.Response) {
+func (r *partitionResource) updatePartition(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.PartitionUpdateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	oldPartition, err := r.DS.FindPartition(requestPayload.ID)
+	oldPartition, err := r.ds.FindPartition(requestPayload.ID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -43,7 +43,7 @@ func (r partitionResource) updatePartition(request *restful.Request, response *r
 		newPartition.BootConfiguration.CommandLine = *requestPayload.PartitionBootConfiguration.CommandLine
 	}
 
-	err = r.DS.UpdatePartition(oldPartition, &newPartition)
+	err = r.ds.UpdatePartition(oldPartition, &newPartition)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

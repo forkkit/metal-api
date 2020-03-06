@@ -12,14 +12,14 @@ import (
 	"net/http"
 )
 
-func (r networkResource) updateNetwork(request *restful.Request, response *restful.Response) {
+func (r *networkResource) updateNetwork(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.NetworkUpdateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	oldNetwork, err := r.DS.FindNetworkByID(requestPayload.ID)
+	oldNetwork, err := r.ds.FindNetworkByID(requestPayload.ID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -52,7 +52,7 @@ func (r networkResource) updateNetwork(request *restful.Request, response *restf
 		prefixesToBeRemoved = oldNetwork.SubstractPrefixes(prefixesFromRequest...)
 
 		// now validate if there are ips which have a prefix to be removed as a parent
-		allIPs, err := r.DS.ListIPs()
+		allIPs, err := r.ds.ListIPs()
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
 		}
@@ -80,7 +80,7 @@ func (r networkResource) updateNetwork(request *restful.Request, response *restf
 		}
 	}
 
-	err = r.DS.UpdateNetwork(oldNetwork, &newNetwork)
+	err = r.ds.UpdateNetwork(oldNetwork, &newNetwork)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

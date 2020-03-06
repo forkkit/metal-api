@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func (r projectResource) findProjects(request *restful.Request, response *restful.Response) {
+func (r *projectResource) findProjects(request *restful.Request, response *restful.Response) {
 	var requestPayload mdmv1.ProjectFindRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {

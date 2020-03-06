@@ -12,10 +12,10 @@ import (
 	"net/http"
 )
 
-func (r networkResource) freeNetwork(request *restful.Request, response *restful.Response) {
+func (r *networkResource) freeNetwork(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	nw, err := r.DS.FindNetworkByID(id)
+	nw, err := r.ds.FindNetworkByID(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -40,7 +40,7 @@ func (r networkResource) freeNetwork(request *restful.Request, response *restful
 	}
 
 	if nw.Vrf != 0 {
-		err = r.DS.ReleaseUniqueInteger(nw.Vrf)
+		err = r.ds.ReleaseUniqueInteger(nw.Vrf)
 		if err != nil {
 			if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("could not release vrf: %v", err)) {
 				return
@@ -48,7 +48,7 @@ func (r networkResource) freeNetwork(request *restful.Request, response *restful
 		}
 	}
 
-	err = r.DS.DeleteNetwork(nw)
+	err = r.ds.DeleteNetwork(nw)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

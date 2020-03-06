@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func (r firewallResource) findFirewalls(request *restful.Request, response *restful.Response) {
+func (r *firewallResource) findFirewalls(request *restful.Request, response *restful.Response) {
 	var requestPayload datastore.MachineSearchQuery
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -19,12 +19,12 @@ func (r firewallResource) findFirewalls(request *restful.Request, response *rest
 	}
 
 	var possibleFws metal.Machines
-	err = r.DS.SearchMachines(&requestPayload, &possibleFws)
+	err = r.ds.SearchMachines(&requestPayload, &possibleFws)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	imgs, err := r.DS.ListImages()
+	imgs, err := r.ds.ListImages()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -37,7 +37,7 @@ func (r firewallResource) findFirewalls(request *restful.Request, response *rest
 		}
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, makeFirewallResponseList(fws, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, makeFirewallResponseList(fws, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

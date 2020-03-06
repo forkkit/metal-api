@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r machineResource) finalizeAllocation(request *restful.Request, response *restful.Response) {
+func (r *machineResource) finalizeAllocation(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineFinalizeAllocationRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -20,7 +20,7 @@ func (r machineResource) finalizeAllocation(request *restful.Request, response *
 	}
 
 	id := request.PathParameter("id")
-	m, err := r.DS.FindMachineByID(id)
+	m, err := r.ds.FindMachineByID(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -42,14 +42,14 @@ func (r machineResource) finalizeAllocation(request *restful.Request, response *
 	m.Allocation.BootloaderID = requestPayload.BootloaderID
 	m.Allocation.Reinstall = false // just for safety
 
-	err = r.DS.UpdateMachine(&old, m)
+	err = r.ds.UpdateMachine(&old, m)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
 	var sws []metal.Switch
 	var vrf = ""
-	imgs, err := r.DS.ListImages()
+	imgs, err := r.ds.ListImages()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -66,7 +66,7 @@ func (r machineResource) finalizeAllocation(request *restful.Request, response *
 		}
 	}
 
-	sws, err = helper.SetVrfAtSwitches(r.DS, m, vrf)
+	sws, err = helper.SetVrfAtSwitches(r.ds, m, vrf)
 	if err != nil {
 		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("the machine %q could not be enslaved into the vrf %s", id, vrf)) {
 			return
@@ -81,7 +81,7 @@ func (r machineResource) finalizeAllocation(request *restful.Request, response *
 			utils.Logger(request).Sugar().Infow("switch update event could not be published", "event", evt, "error", err)
 		}
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

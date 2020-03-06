@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func (r partitionResource) listPartitionCapacities(request *restful.Request, response *restful.Response) {
+func (r *partitionResource) listPartitionCapacities(request *restful.Request, response *restful.Response) {
 	partitionCapacities, err := r.calcPartitionCapacities()
 
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -24,20 +24,20 @@ func (r partitionResource) listPartitionCapacities(request *restful.Request, res
 	}
 }
 
-func (r partitionResource) calcPartitionCapacities() ([]v1.PartitionCapacity, error) {
+func (r *partitionResource) calcPartitionCapacities() ([]v1.PartitionCapacity, error) {
 	// FIXME bad workaround to be able to run make spec
-	if r.DS == nil {
+	if r.ds == nil {
 		return nil, nil
 	}
-	ps, err := r.DS.ListPartitions()
+	ps, err := r.ds.ListPartitions()
 	if err != nil {
 		return nil, err
 	}
-	ms, err := r.DS.ListMachines()
+	ms, err := r.ds.ListMachines()
 	if err != nil {
 		return nil, err
 	}
-	machines := helper.MakeMachineResponseList(ms, r.DS, zapup.MustRootLogger().Sugar())
+	machines := helper.MakeMachineResponseList(ms, r.ds, zapup.MustRootLogger().Sugar())
 
 	var partitionCapacities []v1.PartitionCapacity
 	for _, p := range ps {

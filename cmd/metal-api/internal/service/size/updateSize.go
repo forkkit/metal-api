@@ -11,14 +11,14 @@ import (
 	"net/http"
 )
 
-func (r sizeResource) updateSize(request *restful.Request, response *restful.Response) {
+func (r *sizeResource) updateSize(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.SizeUpdateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	oldSize, err := r.DS.FindSize(requestPayload.ID)
+	oldSize, err := r.ds.FindSize(requestPayload.ID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -45,7 +45,7 @@ func (r sizeResource) updateSize(request *restful.Request, response *restful.Res
 		newSize.Constraints = constraints
 	}
 
-	err = r.DS.UpdateSize(oldSize, &newSize)
+	err = r.ds.UpdateSize(oldSize, &newSize)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

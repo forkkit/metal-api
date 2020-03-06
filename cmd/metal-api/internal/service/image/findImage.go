@@ -10,10 +10,10 @@ import (
 	"net/http"
 )
 
-func (r imageResource) findImage(request *restful.Request, response *restful.Response) {
+func (r *imageResource) findImage(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	img, err := r.DS.FindImage(id)
+	img, err := r.ds.FindImage(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

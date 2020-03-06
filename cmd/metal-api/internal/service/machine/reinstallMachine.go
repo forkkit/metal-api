@@ -10,7 +10,7 @@ import (
 	"github.com/metal-stack/metal-lib/zapup"
 )
 
-func (r machineResource) reinstallMachine(request *restful.Request, response *restful.Response) {
+func (r *machineResource) reinstallMachine(request *restful.Request, response *restful.Response) {
 	log := utils.Logger(request).Sugar()
 	var requestPayload v1.MachineReinstallRequest
 	err := request.ReadEntity(&requestPayload)
@@ -24,10 +24,10 @@ func (r machineResource) reinstallMachine(request *restful.Request, response *re
 	}
 }
 
-func (r machineResource) abortReinstall(machineID string) {
+func (r *machineResource) abortReinstall(machineID string) {
 	log := zapup.MustRootLogger().Sugar()
 
-	m, err := r.DS.FindMachineByID(machineID)
+	m, err := r.ds.FindMachineByID(machineID)
 	if err != nil {
 		log.Errorw("unable to find machine", "machineID", machineID, "error", err)
 		return
@@ -36,7 +36,7 @@ func (r machineResource) abortReinstall(machineID string) {
 	if m.Allocation != nil && m.Allocation.Reinstall {
 		old := *m
 		m.Allocation.Reinstall = false
-		err = r.DS.UpdateMachine(&old, m)
+		err = r.ds.UpdateMachine(&old, m)
 		if err != nil {
 			log.Errorw("unable to find machine", "machineID", machineID, "error", err)
 		}

@@ -44,10 +44,10 @@ func (nuc networkUsageCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (nuc networkUsageCollector) Collect(ch chan<- prometheus.Metric) {
 	// FIXME bad workaround to be able to run make spec
-	if nuc.r == nil || nuc.r.DS == nil {
+	if nuc.r == nil || nuc.r.ds == nil {
 		return
 	}
-	nws, err := nuc.r.DS.ListNetworks()
+	nws, err := nuc.r.ds.ListNetworks()
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to get network usage", zap.Error(err))
 		return

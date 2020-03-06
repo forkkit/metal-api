@@ -9,11 +9,11 @@ import (
 	"net/http"
 )
 
-func (r partitionResource) webService() *restful.WebService {
-	return service.Build(service.WebResource{
+func (r *partitionResource) webService() *restful.WebService {
+	return service.Build(&service.WebService{
 		Version: service.V1,
 		Path:    "partition",
-		Routes: []service.Route{
+		Routes: []*service.Route{
 			{
 				Method:  http.MethodGet,
 				SubPath: "/",

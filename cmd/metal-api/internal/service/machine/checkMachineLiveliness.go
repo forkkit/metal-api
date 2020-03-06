@@ -14,11 +14,11 @@ import (
 	"time"
 )
 
-func (r machineResource) checkMachineLiveliness(request *restful.Request, response *restful.Response) {
+func (r *machineResource) checkMachineLiveliness(request *restful.Request, response *restful.Response) {
 	logger := utils.Logger(request).Sugar()
 	logger.Info("liveliness report was requested")
 
-	machines, err := r.DS.ListMachines()
+	machines, err := r.ds.ListMachines()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -64,8 +64,8 @@ func (r machineResource) checkMachineLiveliness(request *restful.Request, respon
 }
 
 // EvaluateMachineLiveliness evaluates the liveliness of a given machine
-func (r machineResource) evaluateMachineLiveliness(m metal.Machine) (metal.MachineLiveliness, error) {
-	provisioningEvents, err := r.DS.FindProvisioningEventContainer(m.ID)
+func (r *machineResource) evaluateMachineLiveliness(m metal.Machine) (metal.MachineLiveliness, error) {
+	provisioningEvents, err := r.ds.FindProvisioningEventContainer(m.ID)
 	if err != nil {
 		// we have no provisioning events... we cannot tell
 		return metal.MachineLivelinessUnknown, fmt.Errorf("no provisioningEvents found for ID: %s", m.ID)
@@ -85,7 +85,7 @@ func (r machineResource) evaluateMachineLiveliness(m metal.Machine) (metal.Machi
 		} else {
 			provisioningEvents.Liveliness = metal.MachineLivelinessAlive
 		}
-		err = r.DS.UpdateProvisioningEventContainer(&old, provisioningEvents)
+		err = r.ds.UpdateProvisioningEventContainer(&old, provisioningEvents)
 		if err != nil {
 			return provisioningEvents.Liveliness, err
 		}

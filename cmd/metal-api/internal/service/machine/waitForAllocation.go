@@ -29,7 +29,7 @@ type Allocation <-chan MachineAllocation
 // allocated machines.
 type Allocator func(Allocation) error
 
-func (r machineResource) waitForAllocation(request *restful.Request, response *restful.Response) {
+func (r *machineResource) waitForAllocation(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 	ctx, cancel := context.WithCancel(request.Request.Context())
 	log := utils.Logger(request)
@@ -51,7 +51,7 @@ func (r machineResource) waitForAllocation(request *restful.Request, response *r
 				return a.Err
 			}
 
-			s, p, i, ec := helper.FindMachineReferencedEntities(a.Machine, r.DS, log.Sugar())
+			s, p, i, ec := helper.FindMachineReferencedEntities(a.Machine, r.ds, log.Sugar())
 			err := response.WriteHeaderAndEntity(http.StatusOK, v1.NewMachineResponse(a.Machine, s, p, i, ec))
 			if err != nil {
 				zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
@@ -76,8 +76,8 @@ func (r machineResource) waitForAllocation(request *restful.Request, response *r
 // channel to get a result. Using a channel allows the caller of this
 // function to implement timeouts to not wait forever.
 // The user of this function will block until this machine is allocated.
-func (r machineResource) wait(ctx context.Context, id string, logger *zap.SugaredLogger, allocator Allocator) error {
-	m, err := r.DS.FindMachineByID(id)
+func (r *machineResource) wait(ctx context.Context, id string, logger *zap.SugaredLogger, allocator Allocator) error {
+	m, err := r.ds.FindMachineByID(id)
 	if err != nil {
 		return err
 	}
@@ -91,19 +91,19 @@ func (r machineResource) wait(ctx context.Context, id string, logger *zap.Sugare
 		return allocator(a)
 	}
 
-	err = r.DS.InsertWaitingMachine(m)
+	err = r.ds.InsertWaitingMachine(m)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		err := r.DS.RemoveWaitingMachine(m)
+		err := r.ds.RemoveWaitingMachine(m)
 		if err != nil {
 			logger.Errorw("could not remove machine from wait table", "error", err)
 		}
 	}()
 
 	go func() {
-		changedMachine, err := r.DS.WaitForMachineAllocation(ctx, m)
+		changedMachine, err := r.ds.WaitForMachineAllocation(ctx, m)
 		if err != nil {
 			logger.Errorw("WaitForMachineAllocation returned an error", "error", err)
 			a <- MachineAllocation{Err: err}

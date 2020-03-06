@@ -9,12 +9,12 @@ import (
 	"net/http"
 )
 
-func (r machineResource) listMachines(request *restful.Request, response *restful.Response) {
-	ms, err := r.DS.ListMachines()
+func (r *machineResource) listMachines(request *restful.Request, response *restful.Response) {
+	ms, err := r.ds.ListMachines()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponseList(ms, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponseList(ms, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

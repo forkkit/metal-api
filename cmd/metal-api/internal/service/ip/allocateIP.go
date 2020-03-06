@@ -14,11 +14,11 @@ import (
 	"net/http"
 )
 
-func (r ipResource) allocateIP(request *restful.Request, response *restful.Response) {
+func (r *ipResource) allocateIP(request *restful.Request, response *restful.Response) {
 	r.allocateSpecificIP(request, response)
 }
 
-func (r ipResource) allocateSpecificIP(request *restful.Request, response *restful.Response) {
+func (r *ipResource) allocateSpecificIP(request *restful.Request, response *restful.Response) {
 	specificIP := request.PathParameter("ip")
 	var requestPayload v1.IPAllocateRequest
 	err := request.ReadEntity(&requestPayload)
@@ -46,7 +46,7 @@ func (r ipResource) allocateSpecificIP(request *restful.Request, response *restf
 		description = *requestPayload.Description
 	}
 
-	nw, err := r.DS.FindNetworkByID(requestPayload.NetworkID)
+	nw, err := r.ds.FindNetworkByID(requestPayload.NetworkID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -90,7 +90,7 @@ func (r ipResource) allocateSpecificIP(request *restful.Request, response *restf
 		Tags:             tags,
 	}
 
-	err = r.DS.CreateIP(ip)
+	err = r.ds.CreateIP(ip)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

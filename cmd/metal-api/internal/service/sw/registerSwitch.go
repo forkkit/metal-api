@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r switchResource) registerSwitch(request *restful.Request, response *restful.Response) {
+func (r *switchResource) registerSwitch(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.SwitchRegisterRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -25,12 +25,12 @@ func (r switchResource) registerSwitch(request *restful.Request, response *restf
 		}
 	}
 
-	_, err = r.DS.FindPartition(requestPayload.PartitionID)
+	_, err = r.ds.FindPartition(requestPayload.PartitionID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	s, err := r.DS.FindSwitch(requestPayload.ID)
+	s, err := r.ds.FindSwitch(requestPayload.ID)
 	if err != nil && !metal.IsNotFound(err) {
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
@@ -48,7 +48,7 @@ func (r switchResource) registerSwitch(request *restful.Request, response *restf
 			}
 		}
 
-		err = r.DS.CreateSwitch(s)
+		err = r.ds.CreateSwitch(s)
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
 		}
@@ -86,13 +86,13 @@ func (r switchResource) registerSwitch(request *restful.Request, response *restf
 		s.Nics = nics
 		// Do not replace connections here: We do not want to loose them!
 
-		err = r.DS.UpdateSwitch(&old, s)
+		err = r.ds.UpdateSwitch(&old, s)
 
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
 		}
 	}
-	err = response.WriteHeaderAndEntity(returnCode, helper.MakeSwitchResponse(s, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(returnCode, helper.MakeSwitchResponse(s, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

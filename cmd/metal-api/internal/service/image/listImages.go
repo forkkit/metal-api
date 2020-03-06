@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
-func (r imageResource) listImages(request *restful.Request, response *restful.Response) {
-	imgs, err := r.DS.ListImages()
+func (r *imageResource) listImages(request *restful.Request, response *restful.Response) {
+	imgs, err := r.ds.ListImages()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

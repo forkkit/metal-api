@@ -11,14 +11,14 @@ import (
 	"net/http"
 )
 
-func (r imageResource) updateImage(request *restful.Request, response *restful.Response) {
+func (r *imageResource) updateImage(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.ImageUpdateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	oldImage, err := r.DS.FindImage(requestPayload.ID)
+	oldImage, err := r.ds.FindImage(requestPayload.ID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -46,7 +46,7 @@ func (r imageResource) updateImage(request *restful.Request, response *restful.R
 		newImage.Features = features
 	}
 
-	err = r.DS.UpdateImage(oldImage, &newImage)
+	err = r.ds.UpdateImage(oldImage, &newImage)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

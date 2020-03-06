@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func (r sizeResource) fromHardware(request *restful.Request, response *restful.Response) {
+func (r *sizeResource) fromHardware(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineHardwareExtended
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -19,7 +19,7 @@ func (r sizeResource) fromHardware(request *restful.Request, response *restful.R
 	}
 
 	hw := v1.NewMetalMachineHardware(&requestPayload)
-	_, lg, err := r.DS.FromHardware(hw)
+	_, lg, err := r.ds.FromHardware(hw)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

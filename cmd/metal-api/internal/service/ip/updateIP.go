@@ -12,14 +12,14 @@ import (
 	"net/http"
 )
 
-func (r ipResource) updateIP(request *restful.Request, response *restful.Response) {
+func (r *ipResource) updateIP(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.IPUpdateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	oldIP, err := r.DS.FindIPByID(requestPayload.IPAddress)
+	oldIP, err := r.ds.FindIPByID(requestPayload.IPAddress)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -49,7 +49,7 @@ func (r ipResource) updateIP(request *restful.Request, response *restful.Respons
 	}
 }
 
-func (r ipResource) validateAndUpateIP(oldIP, newIP *metal.IP) error {
+func (r *ipResource) validateAndUpateIP(oldIP, newIP *metal.IP) error {
 	err := validateIPUpdate(oldIP, newIP)
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func (r ipResource) validateAndUpateIP(oldIP, newIP *metal.IP) error {
 	}
 	newIP.Tags = tags
 
-	err = r.DS.UpdateIP(oldIP, newIP)
+	err = r.ds.UpdateIP(oldIP, newIP)
 	if err != nil {
 		return err
 	}

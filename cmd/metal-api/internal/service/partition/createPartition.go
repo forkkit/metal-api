@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r partitionResource) createPartition(request *restful.Request, response *restful.Response) {
+func (r *partitionResource) createPartition(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.PartitionCreateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -83,7 +83,7 @@ func (r partitionResource) createPartition(request *restful.Request, response *r
 		}
 	}
 
-	err = r.DS.CreatePartition(p)
+	err = r.ds.CreatePartition(p)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

@@ -16,7 +16,7 @@ import (
 	"net/http"
 )
 
-func (r networkResource) allocateNetwork(request *restful.Request, response *restful.Response) {
+func (r *networkResource) allocateNetwork(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.NetworkAllocateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -56,14 +56,14 @@ func (r networkResource) allocateNetwork(request *restful.Request, response *res
 		return
 	}
 
-	partition, err := r.DS.FindPartition(partitionID)
+	partition, err := r.ds.FindPartition(partitionID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
 	var superNetwork metal.Network
 	boolTrue := true
-	err = r.DS.FindNetwork(&datastore.NetworkSearchQuery{PartitionID: &partition.ID, PrivateSuper: &boolTrue}, &superNetwork)
+	err = r.ds.FindNetwork(&datastore.NetworkSearchQuery{PartitionID: &partition.ID, PrivateSuper: &boolTrue}, &superNetwork)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -78,7 +78,7 @@ func (r networkResource) allocateNetwork(request *restful.Request, response *res
 		Labels:      requestPayload.Labels,
 	}
 
-	nw, err := createChildNetwork(r.DS, r.ipamer, nwSpec, &superNetwork, partition.PrivateNetworkPrefixLength)
+	nw, err := createChildNetwork(r.ds, r.ipamer, nwSpec, &superNetwork, partition.PrivateNetworkPrefixLength)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

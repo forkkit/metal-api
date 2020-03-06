@@ -3,7 +3,6 @@ package partition
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
@@ -14,16 +13,14 @@ type TopicCreater interface {
 }
 
 type partitionResource struct {
-	service.WebResource
+	ds           *datastore.RethinkStore
 	topicCreater TopicCreater
 }
 
 // NewPartition returns a webservice for partition specific endpoints.
 func NewPartition(ds *datastore.RethinkStore, tc TopicCreater) *restful.WebService {
 	r := partitionResource{
-		WebResource: service.WebResource{
-			DS: ds,
-		},
+		ds:           ds,
 		topicCreater: tc,
 	}
 	pcc := partitionCapacityCollector{r: &r}

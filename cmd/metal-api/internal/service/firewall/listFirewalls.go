@@ -10,14 +10,14 @@ import (
 	"net/http"
 )
 
-func (r firewallResource) listFirewalls(request *restful.Request, response *restful.Response) {
-	possibleFws, err := r.DS.ListMachines()
+func (r *firewallResource) listFirewalls(request *restful.Request, response *restful.Response) {
+	possibleFws, err := r.ds.ListMachines()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
 	// potentially a little unefficient because images are also retrieved for creating the machine list response later
-	imgs, err := r.DS.ListImages()
+	imgs, err := r.ds.ListImages()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -30,7 +30,7 @@ func (r firewallResource) listFirewalls(request *restful.Request, response *rest
 		}
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, makeFirewallResponseList(fws, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, makeFirewallResponseList(fws, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func (r projectResource) findProject(request *restful.Request, response *restful.Response) {
+func (r *projectResource) findProject(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
 	p, err := r.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: id})

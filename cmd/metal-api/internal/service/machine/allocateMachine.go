@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r machineResource) allocateMachine(request *restful.Request, response *restful.Response) {
+func (r *machineResource) allocateMachine(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineAllocateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -40,7 +40,7 @@ func (r machineResource) allocateMachine(request *restful.Request, response *res
 		userdata = *requestPayload.UserData
 	}
 
-	image, err := r.DS.FindImage(requestPayload.ImageID)
+	image, err := r.ds.FindImage(requestPayload.ImageID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -69,13 +69,13 @@ func (r machineResource) allocateMachine(request *restful.Request, response *res
 		IsFirewall:  false,
 	}
 
-	m, err := helper.AllocateMachine(r.DS, r.ipamer, &spec, r.mdc)
+	m, err := helper.AllocateMachine(r.ds, r.ipamer, &spec, r.mdc)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		// TODO: Trigger network garbage collection
 		utils.Logger(request).Sugar().Errorf("machine allocation went wrong, triggered network garbage collection", "error", err)
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

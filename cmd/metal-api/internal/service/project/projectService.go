@@ -8,11 +8,11 @@ import (
 	"net/http"
 )
 
-func (r projectResource) webService() *restful.WebService {
-	return service.Build(service.WebResource{
+func (r *projectResource) webService() *restful.WebService {
+	return service.Build(&service.WebService{
 		Version: service.V1,
 		Path:    "project",
-		Routes: []service.Route{
+		Routes: []*service.Route{
 			{
 				Method:  http.MethodGet,
 				SubPath: "/",

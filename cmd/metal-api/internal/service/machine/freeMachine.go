@@ -10,15 +10,15 @@ import (
 	"net/http"
 )
 
-func (r machineResource) freeMachine(request *restful.Request, response *restful.Response) {
+func (r *machineResource) freeMachine(request *restful.Request, response *restful.Response) {
 	err := r.reinstallOrDeleteMachine(request, response, nil)
 	helper.CheckError(request, response, utils.CurrentFuncName(), err)
 }
 
-func (r machineResource) releaseMachineNetworks(machine *metal.Machine, machineNetworks []*metal.MachineNetwork) error {
+func (r *machineResource) releaseMachineNetworks(machine *metal.Machine, machineNetworks []*metal.MachineNetwork) error {
 	for _, machineNetwork := range machineNetworks {
 		for _, ipString := range machineNetwork.IPs {
-			ip, err := r.DS.FindIPByID(ipString)
+			ip, err := r.ds.FindIPByID(ipString)
 			if err != nil {
 				return err
 			}
@@ -29,7 +29,7 @@ func (r machineResource) releaseMachineNetworks(machine *metal.Machine, machineN
 			// disassociate machine from ip
 			newIP := *ip
 			newIP.RemoveMachineId(machine.GetID())
-			err = r.DS.UpdateIP(ip, &newIP)
+			err = r.ds.UpdateIP(ip, &newIP)
 			if err != nil {
 				return err
 			}
@@ -46,7 +46,7 @@ func (r machineResource) releaseMachineNetworks(machine *metal.Machine, machineN
 			if err != nil {
 				return err
 			}
-			err = r.DS.DeleteIP(ip)
+			err = r.ds.DeleteIP(ip)
 			if err != nil {
 				return err
 			}
@@ -59,9 +59,9 @@ func (r machineResource) releaseMachineNetworks(machine *metal.Machine, machineN
 // the machine if not yet allocated or not modifying any other allocation parameter than 'ImageID'
 // and 'Reinstall' set to true.
 // If the given image ID is nil, it deletes the machine instead.
-func (r machineResource) reinstallOrDeleteMachine(request *restful.Request, response *restful.Response, imageID *string) error {
+func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, response *restful.Response, imageID *string) error {
 	id := request.PathParameter("id")
-	m, err := r.DS.FindMachineByID(id)
+	m, err := r.ds.FindMachineByID(id)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (r machineResource) reinstallOrDeleteMachine(request *restful.Request, resp
 			log.Infow("reinstall machine", "machineID", id, "imageID", *imageID)
 		}
 
-		err = r.DS.UpdateMachine(&old, m)
+		err = r.ds.UpdateMachine(&old, m)
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return err
 		}
@@ -106,7 +106,7 @@ func (r machineResource) reinstallOrDeleteMachine(request *restful.Request, resp
 	// do the next steps in any case, so a client can call this function multiple times to
 	// fire of the needed events
 
-	sw, err := helper.SetVrfAtSwitches(r.DS, m, "")
+	sw, err := helper.SetVrfAtSwitches(r.ds, m, "")
 	log.Infow("set VRF at switch", "machineID", id, "error", err)
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func (r machineResource) reinstallOrDeleteMachine(request *restful.Request, resp
 		return err
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		log.Error("Failed to send response", zap.Error(err))
 	}

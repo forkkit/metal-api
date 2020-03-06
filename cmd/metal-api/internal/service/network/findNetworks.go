@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r networkResource) findNetworks(request *restful.Request, response *restful.Response) {
+func (r *networkResource) findNetworks(request *restful.Request, response *restful.Response) {
 	var requestPayload datastore.NetworkSearchQuery
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -20,7 +20,7 @@ func (r networkResource) findNetworks(request *restful.Request, response *restfu
 	}
 
 	var nws metal.Networks
-	err = r.DS.SearchNetworks(&requestPayload, &nws)
+	err = r.ds.SearchNetworks(&requestPayload, &nws)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

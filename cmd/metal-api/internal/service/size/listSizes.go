@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
-func (r sizeResource) listSizes(request *restful.Request, response *restful.Response) {
-	ss, err := r.DS.ListSizes()
+func (r *sizeResource) listSizes(request *restful.Request, response *restful.Response) {
+	ss, err := r.ds.ListSizes()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

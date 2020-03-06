@@ -9,12 +9,12 @@ import (
 	"net/http"
 )
 
-func (r switchResource) listSwitches(request *restful.Request, response *restful.Response) {
-	ss, err := r.DS.ListSwitches()
+func (r *switchResource) listSwitches(request *restful.Request, response *restful.Response) {
+	ss, err := r.ds.ListSwitches()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeSwitchResponseList(ss, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeSwitchResponseList(ss, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

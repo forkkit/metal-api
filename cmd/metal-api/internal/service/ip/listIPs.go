@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
-func (r ipResource) listIPs(request *restful.Request, response *restful.Response) {
-	ips, err := r.DS.ListIPs()
+func (r *ipResource) listIPs(request *restful.Request, response *restful.Response) {
+	ips, err := r.ds.ListIPs()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

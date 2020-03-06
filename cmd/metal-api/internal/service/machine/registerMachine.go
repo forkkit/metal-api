@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-func (r machineResource) registerMachine(request *restful.Request, response *restful.Response) {
+func (r *machineResource) registerMachine(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineRegisterRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -26,19 +26,19 @@ func (r machineResource) registerMachine(request *restful.Request, response *res
 		}
 	}
 
-	partition, err := r.DS.FindPartition(requestPayload.PartitionID)
+	partition, err := r.ds.FindPartition(requestPayload.PartitionID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
 	machineHardware := v1.NewMetalMachineHardware(&requestPayload.Hardware)
-	size, _, err := r.DS.FromHardware(machineHardware)
+	size, _, err := r.ds.FromHardware(machineHardware)
 	if err != nil {
 		size = metal.UnknownSize
 		utils.Logger(request).Sugar().Errorw("no size found for hardware, defaulting to unknown size", "hardware", machineHardware, "error", err)
 	}
 
-	m, err := r.DS.FindMachineByID(requestPayload.UUID)
+	m, err := r.ds.FindMachineByID(requestPayload.UUID)
 	if err != nil && !metal.IsNotFound(err) {
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
@@ -78,7 +78,7 @@ func (r machineResource) registerMachine(request *restful.Request, response *res
 			IPMI: v1.NewMetalIPMI(&requestPayload.IPMI),
 		}
 
-		err = r.DS.CreateMachine(m)
+		err = r.ds.CreateMachine(m)
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
 		}
@@ -97,13 +97,13 @@ func (r machineResource) registerMachine(request *restful.Request, response *res
 		m.BIOS.Date = requestPayload.BIOS.Date
 		m.IPMI = v1.NewMetalIPMI(&requestPayload.IPMI)
 
-		err = r.DS.UpdateMachine(&old, m)
+		err = r.ds.UpdateMachine(&old, m)
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
 		}
 	}
 
-	ec, err := r.DS.FindProvisioningEventContainer(m.ID)
+	ec, err := r.ds.FindProvisioningEventContainer(m.ID)
 	if err != nil && !metal.IsNotFound(err) {
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
@@ -111,7 +111,7 @@ func (r machineResource) registerMachine(request *restful.Request, response *res
 	}
 
 	if ec == nil {
-		err = r.DS.CreateProvisioningEventContainer(&metal.ProvisioningEventContainer{
+		err = r.ds.CreateProvisioningEventContainer(&metal.ProvisioningEventContainer{
 			Base:                         metal.Base{ID: m.ID},
 			Liveliness:                   metal.MachineLivelinessAlive,
 			IncompleteProvisioningCycles: "0"},
@@ -121,11 +121,11 @@ func (r machineResource) registerMachine(request *restful.Request, response *res
 		}
 	}
 
-	err = helper.ConnectMachineWithSwitches(r.DS, m)
+	err = helper.ConnectMachineWithSwitches(r.ds, m)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(returnCode, helper.MakeMachineResponse(m, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(returnCode, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

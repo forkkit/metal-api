@@ -10,10 +10,10 @@ import (
 	"net/http"
 )
 
-func (r partitionResource) findPartition(request *restful.Request, response *restful.Response) {
+func (r *partitionResource) findPartition(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	p, err := r.DS.FindPartition(id)
+	p, err := r.ds.FindPartition(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

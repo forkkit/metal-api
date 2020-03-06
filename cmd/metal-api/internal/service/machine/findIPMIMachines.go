@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r machineResource) findIPMIMachines(request *restful.Request, response *restful.Response) {
+func (r *machineResource) findIPMIMachines(request *restful.Request, response *restful.Response) {
 	var requestPayload datastore.MachineSearchQuery
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -20,11 +20,11 @@ func (r machineResource) findIPMIMachines(request *restful.Request, response *re
 	}
 
 	ms := metal.Machines{}
-	err = r.DS.SearchMachines(&requestPayload, &ms)
+	err = r.ds.SearchMachines(&requestPayload, &ms)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, makeMachineIPMIResponseList(ms, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, makeMachineIPMIResponseList(ms, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

@@ -10,16 +10,16 @@ import (
 	"net/http"
 )
 
-func (r machineResource) getProvisioningEventContainer(request *restful.Request, response *restful.Response) {
+func (r *machineResource) getProvisioningEventContainer(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
 	// check for existence of the machine
-	_, err := r.DS.FindMachineByID(id)
+	_, err := r.ds.FindMachineByID(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	ec, err := r.DS.FindProvisioningEventContainer(id)
+	ec, err := r.ds.FindProvisioningEventContainer(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

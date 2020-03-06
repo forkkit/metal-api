@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r sizeResource) createSize(request *restful.Request, response *restful.Response) {
+func (r *sizeResource) createSize(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.SizeCreateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -58,7 +58,7 @@ func (r sizeResource) createSize(request *restful.Request, response *restful.Res
 		Constraints: constraints,
 	}
 
-	err = r.DS.CreateSize(s)
+	err = r.ds.CreateSize(s)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

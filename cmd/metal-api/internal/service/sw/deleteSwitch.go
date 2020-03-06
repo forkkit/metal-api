@@ -9,19 +9,19 @@ import (
 	"net/http"
 )
 
-func (r switchResource) deleteSwitch(request *restful.Request, response *restful.Response) {
+func (r *switchResource) deleteSwitch(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	s, err := r.DS.FindSwitch(id)
+	s, err := r.ds.FindSwitch(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	err = r.DS.DeleteSwitch(s)
+	err = r.ds.DeleteSwitch(s)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeSwitchResponse(s, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeSwitchResponse(s, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

@@ -10,11 +10,11 @@ import (
 )
 
 // webService creates the webservice endpoint
-func (r machineResource) webService() *restful.WebService {
-	return service.Build(service.WebResource{
+func (r *machineResource) webService() *restful.WebService {
+	return service.Build(&service.WebService{
 		Version: service.V1,
 		Path:    "machine",
-		Routes: []service.Route{
+		Routes: []*service.Route{
 			{
 				Method:  http.MethodGet,
 				SubPath: "/",

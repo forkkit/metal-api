@@ -9,11 +9,11 @@ import (
 )
 
 // webService creates the webservice endpoint
-func (r firewallResource) webService() *restful.WebService {
-	return service.Build(service.WebResource{
+func (r *firewallResource) webService() *restful.WebService {
+	return service.Build(&service.WebService{
 		Version: service.V1,
 		Path:    "firewall",
-		Routes: []service.Route{
+		Routes: []*service.Route{
 			{
 				Method:  http.MethodGet,
 				SubPath: "/",

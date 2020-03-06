@@ -9,14 +9,14 @@ import (
 	"net/http"
 )
 
-func (r machineResource) findMachine(request *restful.Request, response *restful.Response) {
+func (r *machineResource) findMachine(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	m, err := r.DS.FindMachineByID(id)
+	m, err := r.ds.FindMachineByID(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	resp := helper.MakeMachineResponse(m, r.DS, utils.Logger(request).Sugar())
+	resp := helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar())
 	err = response.WriteHeaderAndEntity(http.StatusOK, resp)
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))

@@ -13,9 +13,9 @@ import (
 	"time"
 )
 
-func (r machineResource) addProvisioningEvent(request *restful.Request, response *restful.Response) {
+func (r *machineResource) addProvisioningEvent(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
-	m, err := r.DS.FindMachineByID(id)
+	m, err := r.ds.FindMachineByID(id)
 	if err != nil && !metal.IsNotFound(err) {
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
@@ -30,7 +30,7 @@ func (r machineResource) addProvisioningEvent(request *restful.Request, response
 				ID: id,
 			},
 		}
-		err = r.DS.CreateMachine(m)
+		err = r.ds.CreateMachine(m)
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
 		}
@@ -60,8 +60,8 @@ func (r machineResource) addProvisioningEvent(request *restful.Request, response
 	}
 }
 
-func (r machineResource) provisioningEventForMachine(machineID string, e v1.MachineProvisioningEvent) (*metal.ProvisioningEventContainer, error) {
-	ec, err := r.DS.FindProvisioningEventContainer(machineID)
+func (r *machineResource) provisioningEventForMachine(machineID string, e v1.MachineProvisioningEvent) (*metal.ProvisioningEventContainer, error) {
+	ec, err := r.ds.FindProvisioningEventContainer(machineID)
 	if err != nil && !metal.IsNotFound(err) {
 		return nil, err
 	}
@@ -97,6 +97,6 @@ func (r machineResource) provisioningEventForMachine(machineID string, e v1.Mach
 	}
 	ec.TrimEvents(metal.ProvisioningEventsInspectionLimit)
 
-	err = r.DS.UpsertProvisioningEventContainer(ec)
+	err = r.ds.UpsertProvisioningEventContainer(ec)
 	return ec, err
 }

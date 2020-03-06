@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r machineResource) setChassisIdentifyLEDState(request *restful.Request, response *restful.Response) {
+func (r *machineResource) setChassisIdentifyLEDState(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.ChassisIdentifyLEDState
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -32,7 +32,7 @@ func (r machineResource) setChassisIdentifyLEDState(request *restful.Request, re
 	}
 
 	id := request.PathParameter("id")
-	oldMachine, err := r.DS.FindMachineByID(id)
+	oldMachine, err := r.ds.FindMachineByID(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -44,12 +44,12 @@ func (r machineResource) setChassisIdentifyLEDState(request *restful.Request, re
 		Description: requestPayload.Description,
 	}
 
-	err = r.DS.UpdateMachine(oldMachine, &newMachine)
+	err = r.ds.UpdateMachine(oldMachine, &newMachine)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(&newMachine, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(&newMachine, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

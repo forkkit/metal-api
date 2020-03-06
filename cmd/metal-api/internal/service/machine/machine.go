@@ -1,7 +1,6 @@
 package machine
 
 import (
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"time"
 
 	mdm "github.com/metal-stack/masterdata-api/pkg/client"
@@ -17,8 +16,8 @@ const (
 )
 
 type machineResource struct {
-	service.WebResource
 	bus.Publisher
+	ds     *datastore.RethinkStore
 	ipamer ipam.IPAMer
 	mdc    mdm.Client
 }
@@ -30,9 +29,7 @@ func NewMachine(
 	ipamer ipam.IPAMer,
 	mdc mdm.Client) *restful.WebService {
 	r := machineResource{
-		WebResource: service.WebResource{
-			DS: ds,
-		},
+		ds:        ds,
 		Publisher: pub,
 		ipamer:    ipamer,
 		mdc:       mdc,

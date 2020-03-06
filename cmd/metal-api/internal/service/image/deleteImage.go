@@ -11,15 +11,15 @@ import (
 	"net/http"
 )
 
-func (r imageResource) deleteImage(request *restful.Request, response *restful.Response) {
+func (r *imageResource) deleteImage(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	img, err := r.DS.FindImage(id)
+	img, err := r.ds.FindImage(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
 
-	machines, err := r.DS.ListMachines()
+	machines, err := r.ds.ListMachines()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -34,7 +34,7 @@ func (r imageResource) deleteImage(request *restful.Request, response *restful.R
 		}
 	}
 
-	err = r.DS.DeleteImage(img)
+	err = r.ds.DeleteImage(img)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

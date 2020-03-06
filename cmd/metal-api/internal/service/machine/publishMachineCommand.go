@@ -12,11 +12,11 @@ import (
 	"time"
 )
 
-func (r machineResource) publishMachineCmd(op string, cmd metal.MachineCommand, request *restful.Request, response *restful.Response, params ...string) {
+func (r *machineResource) publishMachineCmd(op string, cmd metal.MachineCommand, request *restful.Request, response *restful.Response, params ...string) {
 	logger := utils.Logger(request).Sugar()
 	id := request.PathParameter("id")
 
-	m, err := r.DS.FindMachineByID(id)
+	m, err := r.ds.FindMachineByID(id)
 	if helper.CheckError(request, response, op, err) {
 		return
 	}
@@ -35,7 +35,7 @@ func (r machineResource) publishMachineCmd(op string, cmd metal.MachineCommand, 
 		return
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

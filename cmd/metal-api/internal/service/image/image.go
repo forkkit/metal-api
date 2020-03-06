@@ -3,19 +3,16 @@ package image
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 )
 
 type imageResource struct {
-	service.WebResource
+	ds *datastore.RethinkStore
 }
 
 // NewImage returns a webservice for image specific endpoints.
 func NewImage(ds *datastore.RethinkStore) *restful.WebService {
 	r := imageResource{
-		WebResource: service.WebResource{
-			DS: ds,
-		},
+		ds: ds,
 	}
 	return r.webService()
 }

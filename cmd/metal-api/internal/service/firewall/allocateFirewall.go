@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (r firewallResource) allocateFirewall(request *restful.Request, response *restful.Response) {
+func (r *firewallResource) allocateFirewall(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.FirewallCreateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
@@ -54,7 +54,7 @@ func (r firewallResource) allocateFirewall(request *restful.Request, response *r
 		}
 	}
 
-	image, err := r.DS.FindImage(requestPayload.ImageID)
+	image, err := r.ds.FindImage(requestPayload.ImageID)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
@@ -83,11 +83,11 @@ func (r firewallResource) allocateFirewall(request *restful.Request, response *r
 		IsFirewall:  true,
 	}
 
-	m, err := helper.AllocateMachine(r.DS, r.ipamer, &spec, r.mdc)
+	m, err := helper.AllocateMachine(r.ds, r.ipamer, &spec, r.mdc)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.DS, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

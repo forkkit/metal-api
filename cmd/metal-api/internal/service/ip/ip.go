@@ -5,11 +5,10 @@ import (
 	mdm "github.com/metal-stack/masterdata-api/pkg/client"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 )
 
 type ipResource struct {
-	service.WebResource
+	ds     *datastore.RethinkStore
 	ipamer ipam.IPAMer
 	mdc    mdm.Client
 }
@@ -17,9 +16,7 @@ type ipResource struct {
 // NewIP returns a webservice for ip specific endpoints.
 func NewIP(ds *datastore.RethinkStore, ipamer ipam.IPAMer, mdc mdm.Client) *restful.WebService {
 	r := ipResource{
-		WebResource: service.WebResource{
-			DS: ds,
-		},
+		ds:     ds,
 		ipamer: ipamer,
 		mdc:    mdc,
 	}

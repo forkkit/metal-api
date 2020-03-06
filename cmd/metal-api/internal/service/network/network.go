@@ -5,14 +5,13 @@ import (
 	mdm "github.com/metal-stack/masterdata-api/pkg/client"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 
 type networkResource struct {
-	service.WebResource
+	ds     *datastore.RethinkStore
 	ipamer ipam.IPAMer
 	mdc    mdm.Client
 }
@@ -20,9 +19,7 @@ type networkResource struct {
 // NewNetwork returns a webservice for network specific endpoints.
 func NewNetwork(ds *datastore.RethinkStore, ipamer ipam.IPAMer, mdc mdm.Client) *restful.WebService {
 	r := networkResource{
-		WebResource: service.WebResource{
-			DS: ds,
-		},
+		ds:     ds,
 		ipamer: ipamer,
 		mdc:    mdc,
 	}

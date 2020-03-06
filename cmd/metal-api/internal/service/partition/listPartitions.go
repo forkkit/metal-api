@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
-func (r partitionResource) listPartitions(request *restful.Request, response *restful.Response) {
-	ps, err := r.DS.ListPartitions()
+func (r *partitionResource) listPartitions(request *restful.Request, response *restful.Response) {
+	ps, err := r.ds.ListPartitions()
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}

@@ -10,10 +10,10 @@ import (
 	"net/http"
 )
 
-func (r networkResource) findNetwork(request *restful.Request, response *restful.Response) {
+func (r *networkResource) findNetwork(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 
-	nw, err := r.DS.FindNetworkByID(id)
+	nw, err := r.ds.FindNetworkByID(id)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
