@@ -5470,7 +5470,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/v1.SizeMatchingLog"
+              "items": {
+                "$ref": "#/definitions/v1.SizeMatchingLog"
+              },
+              "type": "array"
             }
           },
           "default": {
@@ -5480,7 +5483,7 @@
             }
           }
         },
-        "summary": "Searches all sizes for one to match the given hardwarespecs. If nothing is found, a list of entries is returned which describe the constraint which did not match",
+        "summary": "Searches all sizes for one to match the given hardware specs. If nothing is found, a list of entries is returned, which describe the constraint that did not match",
         "tags": [
           "size"
         ]

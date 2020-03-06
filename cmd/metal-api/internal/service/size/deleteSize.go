@@ -2,27 +2,13 @@ package size
 
 import (
 	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
-
-func (r sizeResource) addDeleteSizeRoute(ws *restful.WebService, tags []string) {
-	ws.Route(ws.DELETE("/{id}").
-		To(helper.Admin(r.deleteSize)).
-		Operation("deleteSize").
-		Doc("deletes an size and returns the deleted entity").
-		Param(ws.PathParameter("id", "identifier of the size").DataType("string")).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(v1.SizeResponse{}).
-		Returns(http.StatusOK, "OK", v1.SizeResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
-}
 
 func (r sizeResource) deleteSize(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
