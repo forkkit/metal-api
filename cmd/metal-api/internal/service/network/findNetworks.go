@@ -5,7 +5,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -25,10 +25,10 @@ func (r *networkResource) findNetworks(request *restful.Request, response *restf
 		return
 	}
 
-	var result []*v1.NetworkResponse
+	var result []*v12.NetworkResponse
 	for i := range nws {
 		usage := helper.GetNetworkUsage(&nws[i], r.ipamer)
-		result = append(result, v1.NewNetworkResponse(&nws[i], usage))
+		result = append(result, v12.NewNetworkResponse(&nws[i], usage))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

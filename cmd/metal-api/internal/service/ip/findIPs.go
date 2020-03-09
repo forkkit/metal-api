@@ -2,10 +2,9 @@ package ip
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -13,7 +12,7 @@ import (
 )
 
 func (r *ipResource) findIPs(request *restful.Request, response *restful.Response) {
-	var requestPayload datastore.IPSearchQuery
+	var requestPayload v1.IPFindRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return

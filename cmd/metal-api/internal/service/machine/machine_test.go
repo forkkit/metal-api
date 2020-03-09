@@ -4,14 +4,13 @@ package machine
 
 import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"net"
 	"net/http"
 	"testing"
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,37 +24,37 @@ func TestMachineAllocationIntegration(t *testing.T) {
 	defer te.teardown()
 
 	// Empty DB with empty alloc request
-	machine := v1.MachineAllocateRequest{}
+	machine := v12.MachineAllocateRequest{}
 
 	// Register a machine
-	mrr := v1.MachineRegisterRequest{
+	mrr := v12.MachineRegisterRequest{
 		UUID:        "test-uuid",
 		PartitionID: "test-partition",
 		RackID:      "test-rack",
-		Hardware: v1.MachineHardwareExtended{
-			v1.MachineHardwareBase{
+		Hardware: v12.MachineHardwareExtended{
+			v12.MachineHardwareBase{
 				CPUCores: 8,
 				Memory:   1500,
-				Disks: []v1.MachineBlockDevice{
+				Disks: []v12.MachineBlockDevice{
 					{
 						Name: "sda",
 						Size: 2500,
 					},
 				},
 			},
-			v1.MachineNicsExtended{
+			v12.MachineNicsExtended{
 				{
-					v1.MachineNic{
+					v12.MachineNic{
 						Name:       "eth0",
 						MacAddress: "aa:aa:aa:aa:aa:aa",
 					},
-					v1.MachineNicsExtended{
+					v12.MachineNicsExtended{
 						{
-							v1.MachineNic{
+							v12.MachineNic{
 								Name:       "swp1",
 								MacAddress: "bb:aa:aa:aa:aa:aa",
 							},
-							v1.MachineNicsExtended{},
+							v12.MachineNicsExtended{},
 						},
 					},
 				},
@@ -63,7 +62,7 @@ func TestMachineAllocationIntegration(t *testing.T) {
 		},
 	}
 
-	var registeredMachine v1.MachineResponse
+	var registeredMachine v12.MachineResponse
 	status := te.machineRegister(t, mrr, &registeredMachine)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(registeredMachine)
@@ -76,14 +75,14 @@ func TestMachineAllocationIntegration(t *testing.T) {
 	go te.machineWait("test-uuid")
 
 	// DB contains at least a machine which is allocatable
-	machine = v1.MachineAllocateRequest{
+	machine = v12.MachineAllocateRequest{
 		ImageID:     "test-image",
 		PartitionID: "test-partition",
 		ProjectID:   te.project.ID,
 		SizeID:      "test-size",
 	}
 
-	var allocatedMachine v1.MachineResponse
+	var allocatedMachine v12.MachineResponse
 	status = te.machineAllocate(t, machine, &allocatedMachine)
 	require.Equal(http.StatusOK, status)
 	require.NotNil(allocatedMachine)
@@ -103,25 +102,25 @@ func TestMachineAllocationIntegration(t *testing.T) {
 	assert.True(ipnet.Contains(ip), "%s must be within %s", ip, ipnet)
 
 	// Free machine for next test
-	status = te.machineFree(t, "test-uuid", &v1.MachineResponse{})
+	status = te.machineFree(t, "test-uuid", &v12.MachineResponse{})
 	require.Equal(http.StatusOK, status)
 
 	go te.machineWait("test-uuid")
 
 	// DB contains at least a machine which is allocatable
-	machine = v1.MachineAllocateRequest{
+	machine = v12.MachineAllocateRequest{
 		ImageID:     "test-image",
 		PartitionID: "test-partition",
 		ProjectID:   te.project.ID,
 		SizeID:      "test-size",
-		Networks: v1.MachineAllocationNetworks{
+		Networks: v12.MachineAllocationNetworks{
 			{
 				NetworkID: te.privateNetwork.ID,
 			},
 		},
 	}
 
-	allocatedMachine = v1.MachineResponse{}
+	allocatedMachine = v12.MachineResponse{}
 	status = te.machineAllocate(t, machine, &allocatedMachine)
 	require.Equal(http.StatusOK, status)
 	require.NotNil(allocatedMachine)
@@ -141,7 +140,7 @@ func TestMachineAllocationIntegration(t *testing.T) {
 	assert.True(ipnet.Contains(ip), "%s must be within %s", ip, ipnet)
 
 	// Check if allocated machine created a machine <-> switch connection
-	var foundSwitch v1.SwitchResponse
+	var foundSwitch v12.SwitchResponse
 	status = te.switchGet(t, "test-switch01", &foundSwitch)
 	require.Equal(http.StatusOK, status)
 	require.NotNil(foundSwitch)
@@ -159,7 +158,7 @@ func TestMachineAllocationIntegration(t *testing.T) {
 	require.Empty(foundSwitch.Nics[0].BGPFilter.VNIs, "to this switch port a machine with no evpn connections, so no vni filter")
 
 	// Free machine for next test
-	status = te.machineFree(t, "test-uuid", &v1.MachineResponse{})
+	status = te.machineFree(t, "test-uuid", &v12.MachineResponse{})
 	require.Equal(http.StatusOK, status)
 
 	// Check on the switch that connections still exists, but filters are nil,

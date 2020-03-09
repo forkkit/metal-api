@@ -6,7 +6,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -15,7 +15,7 @@ import (
 )
 
 func (r *machineResource) ipmiReport(request *restful.Request, response *restful.Response) {
-	var requestPayload v1.MachineIpmiReport
+	var requestPayload v12.MachineIpmiReport
 	log := utils.Logger(request)
 	logger := log.Sugar()
 	err := request.ReadEntity(&requestPayload)
@@ -33,7 +33,7 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	known := v1.Leases{}
+	known := v12.Leases{}
 	for _, m := range ms {
 		uuid := m.ID
 		if uuid == "" {
@@ -41,9 +41,9 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 		}
 		known[uuid] = m.IPMI.Address
 	}
-	resp := v1.MachineIpmiReportResponse{
-		Updated: v1.Leases{},
-		Created: v1.Leases{},
+	resp := v12.MachineIpmiReportResponse{
+		Updated: v12.Leases{},
+		Created: v12.Leases{},
 	}
 	// create empty machines for uuids that are not yet known to the metal-api
 	const defaultIPMIPort = "623"

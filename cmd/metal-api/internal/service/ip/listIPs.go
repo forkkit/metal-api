@@ -3,7 +3,7 @@ package ip
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -16,9 +16,9 @@ func (r *ipResource) listIPs(request *restful.Request, response *restful.Respons
 		return
 	}
 
-	var result []*v1.IPResponse
+	var result []*v12.IPResponse
 	for i := range ips {
-		result = append(result, v1.NewIPResponse(&ips[i]))
+		result = append(result, v12.NewIPResponse(&ips[i]))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

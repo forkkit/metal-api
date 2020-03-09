@@ -18,11 +18,6 @@ type Describable struct {
 	Description *string `json:"description,omitempty" description:"a description for this entity" optional:"true"`
 }
 
-type Common struct {
-	Identifiable
-	Describable
-}
-
 type Timestamps struct {
 	Created time.Time `json:"created" description:"the creation time of this entity" readOnly:"true"`
 	Changed time.Time `json:"changed" description:"the last changed timestamp of this entity" readOnly:"true"`

@@ -5,7 +5,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -13,7 +13,7 @@ import (
 )
 
 func (r *switchResource) registerSwitch(request *restful.Request, response *restful.Response) {
-	var requestPayload v1.SwitchRegisterRequest
+	var requestPayload v12.SwitchRegisterRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
@@ -40,7 +40,7 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	returnCode := http.StatusOK
 
 	if s == nil {
-		s = v1.NewSwitch(requestPayload)
+		s = v12.ToSwitch(requestPayload)
 
 		if len(requestPayload.Nics) != len(s.Nics.ByMac()) {
 			if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
@@ -61,7 +61,7 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	} else {
 		old := *s
 
-		spec := v1.NewSwitch(requestPayload)
+		spec := v12.ToSwitch(requestPayload)
 
 		if len(requestPayload.Nics) != len(spec.Nics.ByMac()) {
 			if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {

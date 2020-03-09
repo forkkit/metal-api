@@ -94,46 +94,57 @@ func (rs *RethinkStore) sizeTable() *r.Term {
 	res := r.DB(rs.dbname).Table("size")
 	return &res
 }
+
 func (rs *RethinkStore) imageTable() *r.Term {
 	res := r.DB(rs.dbname).Table("image")
 	return &res
 }
+
 func (rs *RethinkStore) partitionTable() *r.Term {
 	res := r.DB(rs.dbname).Table("partition")
 	return &res
 }
+
 func (rs *RethinkStore) machineTable() *r.Term {
 	res := r.DB(rs.dbname).Table("machine")
 	return &res
 }
+
 func (rs *RethinkStore) switchTable() *r.Term {
 	res := r.DB(rs.dbname).Table("switch")
 	return &res
 }
+
 func (rs *RethinkStore) waitTable() *r.Term {
 	res := r.DB(rs.dbname).Table("wait")
 	return &res
 }
+
 func (rs *RethinkStore) eventTable() *r.Term {
 	res := r.DB(rs.dbname).Table("event")
 	return &res
 }
-func (rs *RethinkStore) networkTable() *r.Term {
+
+func (rs *RethinkStore) NetworkTable() *r.Term {
 	res := r.DB(rs.dbname).Table("network")
 	return &res
 }
-func (rs *RethinkStore) ipTable() *r.Term {
+
+func (rs *RethinkStore) IPTable() *r.Term {
 	res := r.DB(rs.dbname).Table("ip")
 	return &res
 }
+
 func (rs *RethinkStore) integerTable() *r.Term {
 	res := r.DB(rs.dbname).Table("integerpool")
 	return &res
 }
+
 func (rs *RethinkStore) integerInfoTable() *r.Term {
 	res := r.DB(rs.dbname).Table("integerpoolinfo")
 	return &res
 }
+
 func (rs *RethinkStore) db() *r.Term {
 	res := r.DB(rs.dbname)
 	return &res

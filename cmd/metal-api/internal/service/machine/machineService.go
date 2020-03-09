@@ -4,7 +4,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"net/http"
 )
@@ -20,7 +20,7 @@ func (r *machineResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "get all machines",
 				Access:  metal.ViewAccess,
-				Writes:  []v1.MachineResponse{},
+				Writes:  []v12.MachineResponse{},
 				Handler: r.listMachines,
 			},
 			{
@@ -29,7 +29,7 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "get machine by id",
 				Access:        metal.ViewAccess,
-				Writes:        v1.MachineResponse{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.findMachine,
 			},
 			{
@@ -37,8 +37,8 @@ func (r *machineResource) webService() *restful.WebService {
 				SubPath: "/find",
 				Doc:     "find machines by multiple criteria",
 				Access:  metal.ViewAccess,
-				Reads:   v1.MachineFindRequest{},
-				Writes:  []v1.MachineResponse{},
+				Reads:   v12.MachineFindRequest{},
+				Writes:  []v12.MachineResponse{},
 				Handler: r.findMachines,
 			},
 			{
@@ -46,8 +46,8 @@ func (r *machineResource) webService() *restful.WebService {
 				SubPath: "/ipmi",
 				Doc:     "reports IPMI ip addresses leased by a management server for machines",
 				Access:  metal.EditAccess,
-				Reads:   v1.MachineIpmiReport{},
-				Writes:  v1.MachineIpmiReportResponse{},
+				Reads:   v12.MachineIpmiReport{},
+				Writes:  v12.MachineIpmiReportResponse{},
 				Handler: r.ipmiReport,
 			},
 			{
@@ -55,8 +55,8 @@ func (r *machineResource) webService() *restful.WebService {
 				SubPath: "/ipmi/find",
 				Doc:     "returns machines including the ipmi connection data",
 				Access:  metal.ViewAccess,
-				Reads:   v1.MachineFindRequest{},
-				Writes:  []v1.MachineIPMIResponse{},
+				Reads:   v12.MachineFindRequest{},
+				Writes:  []v12.MachineIPMIResponse{},
 				Handler: r.findIPMIMachines,
 			},
 			{
@@ -65,7 +65,7 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "returns a machine including the ipmi connection data",
 				Access:        metal.ViewAccess,
-				Writes:        v1.MachineIPMIResponse{},
+				Writes:        v12.MachineIPMIResponse{},
 				Handler:       r.findIPMIMachine,
 			},
 			{
@@ -74,9 +74,9 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "wait for an allocation of this machine",
 				Access:        metal.EditAccess,
-				Writes:        v1.MachineResponse{},
+				Writes:        v12.MachineResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusOK, "OK", v1.MachineResponse{}),
+					service.NewReturn(http.StatusOK, "OK", v12.MachineResponse{}),
 					service.NewReturn(http.StatusGatewayTimeout, "Timeout", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.waitForAllocation,
@@ -86,8 +86,8 @@ func (r *machineResource) webService() *restful.WebService {
 				SubPath: "/allocate",
 				Doc:     "allocate a machine",
 				Access:  metal.EditAccess,
-				Reads:   v1.MachineAllocateRequest{},
-				Writes:  v1.MachineResponse{},
+				Reads:   v12.MachineAllocateRequest{},
+				Writes:  v12.MachineResponse{},
 				Handler: r.allocateMachine,
 			},
 			{
@@ -96,8 +96,8 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "finalize the allocation of the machine by reconfiguring the switch, sent on successful image installation",
 				Access:        metal.EditAccess,
-				Reads:         v1.MachineFinalizeAllocationRequest{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.MachineFinalizeAllocationRequest{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.finalizeAllocation,
 			},
 			{
@@ -105,11 +105,11 @@ func (r *machineResource) webService() *restful.WebService {
 				SubPath: "/register",
 				Doc:     "register a machine",
 				Access:  metal.EditAccess,
-				Reads:   v1.MachineRegisterRequest{},
-				Writes:  v1.MachineResponse{},
+				Reads:   v12.MachineRegisterRequest{},
+				Writes:  v12.MachineResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusOK, "OK", v1.MachineResponse{}),
-					service.NewReturn(http.StatusCreated, "Created", v1.MachineResponse{}),
+					service.NewReturn(http.StatusOK, "OK", v12.MachineResponse{}),
+					service.NewReturn(http.StatusCreated, "Created", v12.MachineResponse{}),
 				},
 				Handler: r.registerMachine,
 			},
@@ -119,10 +119,10 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "reinstall this machine with the given image",
 				Access:        metal.EditAccess,
-				Reads:         v1.MachineReinstallRequest{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.MachineReinstallRequest{},
+				Writes:        v12.MachineResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusOK, "OK", v1.MachineResponse{}),
+					service.NewReturn(http.StatusOK, "OK", v12.MachineResponse{}),
 					service.NewReturn(http.StatusGatewayTimeout, "Timeout", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.reinstallMachine,
@@ -133,7 +133,7 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "free a machine",
 				Access:        metal.EditAccess,
-				Writes:        v1.MachineResponse{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.freeMachine,
 			},
 			{
@@ -142,7 +142,7 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "get the current machine provisioning event container",
 				Access:        metal.EditAccess,
-				Writes:        v1.MachineRecentProvisioningEvents{},
+				Writes:        v12.MachineRecentProvisioningEvents{},
 				Handler:       r.getProvisioningEventContainer,
 			},
 			{
@@ -151,16 +151,16 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "adds a machine provisioning event",
 				Access:        metal.EditAccess,
-				Reads:         v1.MachineProvisioningEvent{},
-				Writes:        v1.MachineRecentProvisioningEvents{},
+				Reads:         v12.MachineProvisioningEvent{},
+				Writes:        v12.MachineRecentProvisioningEvents{},
 				Handler:       r.addProvisioningEvent,
 			},
 			{
 				Method:  http.MethodPost, //TODO Why is this a POST and not a GET?
 				SubPath: "/liveliness",
 				Doc:     "external trigger for evaluating machine liveliness",
-				Reads:   v1.EmptyBody{},
-				Writes:  v1.MachineLivelinessReport{},
+				Reads:   v12.EmptyBody{},
+				Writes:  v12.MachineLivelinessReport{},
 				Handler: r.checkMachineLiveliness,
 			},
 			{
@@ -169,8 +169,8 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "set the state of a machine",
 				Access:        metal.EditAccess,
-				Reads:         v1.MachineState{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.MachineState{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.setMachineState,
 			},
 			{
@@ -179,8 +179,8 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "sends a power-on to the machine",
 				Access:        metal.EditAccess,
-				Reads:         v1.EmptyBody{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.EmptyBody{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.powerMachineOn,
 			},
 			{
@@ -189,8 +189,8 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "sends a power-off to the machine",
 				Access:        metal.EditAccess,
-				Reads:         v1.EmptyBody{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.EmptyBody{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.powerMachineOff,
 			},
 			{
@@ -199,8 +199,8 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "sends a power-reset to the machine",
 				Access:        metal.EditAccess,
-				Reads:         v1.EmptyBody{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.EmptyBody{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.powerResetMachine,
 			},
 			{
@@ -209,8 +209,8 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "boots machine into BIOS on next reboot",
 				Access:        metal.EditAccess,
-				Reads:         v1.EmptyBody{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.EmptyBody{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.bootMachineBIOS,
 			},
 			{
@@ -219,8 +219,8 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "set the state of a chassis identify LED",
 				Access:        metal.EditAccess,
-				Reads:         v1.ChassisIdentifyLEDState{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.ChassisIdentifyLEDState{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.setChassisIdentifyLEDState,
 			},
 			{
@@ -229,8 +229,8 @@ func (r *machineResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the machine"),
 				Doc:           "sends a power-on to the chassis identify LED",
 				Access:        metal.EditAccess,
-				Reads:         v1.EmptyBody{},
-				Writes:        v1.MachineResponse{},
+				Reads:         v12.EmptyBody{},
+				Writes:        v12.MachineResponse{},
 				Handler:       r.powerChassisIdentifyLEDOn,
 			},
 			{
@@ -242,8 +242,8 @@ func (r *machineResource) webService() *restful.WebService {
 				},
 				Doc:     "sends a power-on to the chassis identify LED",
 				Access:  metal.EditAccess,
-				Reads:   v1.EmptyBody{},
-				Writes:  v1.MachineResponse{},
+				Reads:   v12.EmptyBody{},
+				Writes:  v12.MachineResponse{},
 				Handler: r.powerChassisIdentifyLEDOnWithDescription,
 			},
 			{
@@ -255,8 +255,8 @@ func (r *machineResource) webService() *restful.WebService {
 				},
 				Doc:     "sends a power-off to the chassis identify LED",
 				Access:  metal.EditAccess,
-				Reads:   v1.EmptyBody{},
-				Writes:  v1.MachineResponse{},
+				Reads:   v12.EmptyBody{},
+				Writes:  v12.MachineResponse{},
 				Handler: r.powerChassisIdentifyLEDOff,
 			},
 		},

@@ -5,7 +5,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -13,7 +13,7 @@ import (
 )
 
 func (r *networkResource) updateNetwork(request *restful.Request, response *restful.Response) {
-	var requestPayload v1.NetworkUpdateRequest
+	var requestPayload v12.NetworkUpdateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
@@ -86,7 +86,7 @@ func (r *networkResource) updateNetwork(request *restful.Request, response *rest
 	}
 
 	usage := helper.GetNetworkUsage(&newNetwork, r.ipamer)
-	err = response.WriteHeaderAndEntity(http.StatusOK, v1.NewNetworkResponse(&newNetwork, usage))
+	err = response.WriteHeaderAndEntity(http.StatusOK, v12.NewNetworkResponse(&newNetwork, usage))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

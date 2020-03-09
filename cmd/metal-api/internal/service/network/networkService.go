@@ -4,7 +4,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"net/http"
 )
@@ -19,7 +19,7 @@ func (r *networkResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "get all networks",
 				Access:  metal.ViewAccess,
-				Writes:  []v1.NetworkResponse{},
+				Writes:  []v12.NetworkResponse{},
 				Handler: r.listNetworks,
 			},
 			{
@@ -28,7 +28,7 @@ func (r *networkResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the network"),
 				Doc:           "get network by id",
 				Access:        metal.ViewAccess,
-				Writes:        v1.NetworkResponse{},
+				Writes:        v12.NetworkResponse{},
 				Handler:       r.findNetwork,
 			},
 			{
@@ -36,8 +36,8 @@ func (r *networkResource) webService() *restful.WebService {
 				SubPath: "/find",
 				Doc:     "get all networks that match given properties",
 				Access:  metal.ViewAccess,
-				Reads:   v1.NetworkFindRequest{},
-				Writes:  []v1.NetworkResponse{},
+				Reads:   v12.NetworkFindRequest{},
+				Writes:  []v12.NetworkResponse{},
 				Handler: r.findNetworks,
 			},
 			{
@@ -45,10 +45,10 @@ func (r *networkResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "create a network. if the given ID already exists a conflict is returned",
 				Access:  metal.AdminAccess,
-				Reads:   v1.NetworkCreateRequest{},
-				Writes:  v1.NetworkResponse{},
+				Reads:   v12.NetworkCreateRequest{},
+				Writes:  v12.NetworkResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusCreated, "Created", v1.NetworkResponse{}),
+					service.NewReturn(http.StatusCreated, "Created", v12.NetworkResponse{}),
 					service.NewReturn(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.createNetwork,
@@ -58,10 +58,10 @@ func (r *networkResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "updates a network. if the network was changed since this one was read, a conflict is returned",
 				Access:  metal.AdminAccess,
-				Reads:   v1.NetworkUpdateRequest{},
-				Writes:  v1.NetworkResponse{},
+				Reads:   v12.NetworkUpdateRequest{},
+				Writes:  v12.NetworkResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusOK, "OK", v1.NetworkResponse{}),
+					service.NewReturn(http.StatusOK, "OK", v12.NetworkResponse{}),
 					service.NewReturn(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.updateNetwork,
@@ -72,7 +72,7 @@ func (r *networkResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the network"),
 				Doc:           "deletes a network and returns the deleted entity",
 				Access:        metal.AdminAccess,
-				Writes:        v1.NetworkResponse{},
+				Writes:        v12.NetworkResponse{},
 				Handler:       r.deleteNetwork,
 			},
 			{
@@ -81,9 +81,9 @@ func (r *networkResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the network"),
 				Doc:           "frees a network",
 				Access:        metal.EditAccess,
-				Writes:        v1.NetworkResponse{},
+				Writes:        v12.NetworkResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusOK, "OK", v1.NetworkResponse{}),
+					service.NewReturn(http.StatusOK, "OK", v12.NetworkResponse{}),
 					service.NewReturn(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.freeNetwork,
@@ -93,10 +93,10 @@ func (r *networkResource) webService() *restful.WebService {
 				SubPath: "/allocate",
 				Doc:     "allocates a child network from a partition's private super network",
 				Access:  metal.EditAccess,
-				Reads:   v1.NetworkAllocateRequest{},
-				Writes:  v1.NetworkResponse{},
+				Reads:   v12.NetworkAllocateRequest{},
+				Writes:  v12.NetworkResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusCreated, "Created", v1.NetworkResponse{}),
+					service.NewReturn(http.StatusCreated, "Created", v12.NetworkResponse{}),
 					service.NewReturn(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.allocateNetwork,

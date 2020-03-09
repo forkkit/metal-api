@@ -4,7 +4,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"net/http"
 )
@@ -69,7 +69,7 @@ func (r *sizeResource) webService() *restful.WebService {
 				SubPath: "/from-hardware",
 				Doc:     "Searches all sizes for one to match the given hardware specs. If nothing is found, a list of entries is returned, which describe the constraint that did not match",
 				Reads:   v1.MachineHardwareExtended{},
-				Writes:  []v1.SizeMatchingLog{},
+				Writes:  []SizeMatchingLog{},
 				Handler: r.fromHardware,
 			},
 		},

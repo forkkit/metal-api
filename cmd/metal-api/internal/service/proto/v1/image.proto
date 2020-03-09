@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package metal.api.v1;
+
+option go_package = "github.com/metal-stack/metal-api/protobuf/v1";
+
+import "v1/common.proto";
+import "v1/identifiable.proto";
+import "google/protobuf/wrappers.proto";
+
+service ImageService {
+    rpc Create(ImageCreateRequest) returns (ImageResponse);
+    rpc Update(ImageUpdateRequest) returns (ImageResponse);
+    rpc Delete(ImageDeleteRequest) returns (ImageResponse);
+    rpc Get(ImageGetRequest) returns (ImageResponse);
+    rpc Find(ImageFindRequest) returns (ImageListResponse);
+    rpc List(ImageListRequest) returns (ImageListResponse);
+}
+
+// An image can be attached to a machine
+message Image {
+    Common common = 1;
+    google.protobuf.StringValue URL = 2;               // the url of this image
+    repeated google.protobuf.StringValue features = 3; // features of this image
+}
+
+message ImageCreateRequest {
+    Image image = 1;
+}
+
+message ImageUpdateRequest {
+    Image image = 1;
+}
+
+message ImageDeleteRequest {
+    Identifiable identifiable = 1;
+}
+
+message ImageGetRequest {
+    Identifiable identifiable = 1;
+}
+
+message ImageFindRequest {
+    FindCriteria findCriteria = 1;
+}
+
+message ImageListRequest {}
+
+message ImageResponse {
+    Image image = 1;
+}
+
+message ImageListResponse {
+    repeated Image images = 1;
+}

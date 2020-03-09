@@ -5,7 +5,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -26,7 +26,7 @@ func (r *machineResource) findIPMIMachine(request *restful.Request, response *re
 	}
 }
 
-func makeMachineIPMIResponse(m *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.MachineIPMIResponse {
+func makeMachineIPMIResponse(m *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v12.MachineIPMIResponse {
 	s, p, i, ec := helper.FindMachineReferencedEntities(m, ds, logger)
-	return v1.NewMachineIPMIResponse(m, s, p, i, ec)
+	return v12.NewMachineIPMIResponse(m, s, p, i, ec)
 }

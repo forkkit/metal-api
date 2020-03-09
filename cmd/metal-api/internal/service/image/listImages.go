@@ -3,7 +3,8 @@ package image
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -18,7 +19,7 @@ func (r *imageResource) listImages(request *restful.Request, response *restful.R
 
 	result := []*v1.ImageResponse{}
 	for i := range imgs {
-		result = append(result, v1.NewImageResponse(&imgs[i]))
+		result = append(result, v12.NewImageResponse(&imgs[i]))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

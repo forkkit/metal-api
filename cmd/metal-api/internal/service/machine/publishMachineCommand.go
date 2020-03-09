@@ -4,7 +4,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -24,7 +24,7 @@ func (r *machineResource) publishMachineCmd(op string, cmd metal.MachineCommand,
 	switch op {
 	case "powerResetMachine", "powerMachineOff":
 		event := string(metal.ProvisioningEventPlannedReboot)
-		_, err = r.provisioningEventForMachine(id, v1.MachineProvisioningEvent{Time: time.Now(), Event: event, Message: op})
+		_, err = r.provisioningEventForMachine(id, v12.MachineProvisioningEvent{Time: time.Now(), Event: event, Message: op})
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 			return
 		}

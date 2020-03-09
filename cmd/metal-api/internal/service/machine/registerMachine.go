@@ -6,7 +6,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -14,7 +14,7 @@ import (
 )
 
 func (r *machineResource) registerMachine(request *restful.Request, response *restful.Response) {
-	var requestPayload v1.MachineRegisterRequest
+	var requestPayload v12.MachineRegisterRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
@@ -31,7 +31,7 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 		return
 	}
 
-	machineHardware := v1.NewMetalMachineHardware(&requestPayload.Hardware)
+	machineHardware := v12.NewMetalMachineHardware(&requestPayload.Hardware)
 	size, _, err := r.ds.FromHardware(machineHardware)
 	if err != nil {
 		size = metal.UnknownSize
@@ -75,7 +75,7 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 				Description: "Machine registered",
 			},
 			Tags: requestPayload.Tags,
-			IPMI: v1.NewMetalIPMI(&requestPayload.IPMI),
+			IPMI: v12.NewMetalIPMI(&requestPayload.IPMI),
 		}
 
 		err = r.ds.CreateMachine(m)
@@ -95,7 +95,7 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 		m.BIOS.Version = requestPayload.BIOS.Version
 		m.BIOS.Vendor = requestPayload.BIOS.Vendor
 		m.BIOS.Date = requestPayload.BIOS.Date
-		m.IPMI = v1.NewMetalIPMI(&requestPayload.IPMI)
+		m.IPMI = v12.NewMetalIPMI(&requestPayload.IPMI)
 
 		err = r.ds.UpdateMachine(&old, m)
 		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {

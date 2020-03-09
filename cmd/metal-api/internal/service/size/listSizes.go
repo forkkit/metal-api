@@ -3,7 +3,7 @@ package size
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -16,9 +16,9 @@ func (r *sizeResource) listSizes(request *restful.Request, response *restful.Res
 		return
 	}
 
-	var result []*v1.SizeResponse
+	var result []*v12.SizeResponse
 	for i := range ss {
-		result = append(result, v1.NewSizeResponse(&ss[i]))
+		result = append(result, v12.NewSizeResponse(&ss[i]))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

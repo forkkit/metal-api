@@ -9,6 +9,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/network"
 	partition2 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/partition"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	size2 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/size"
 	"io/ioutil"
 	"net"
@@ -26,7 +27,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/eventbus"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 )
@@ -40,8 +41,8 @@ type testEnv struct {
 	partitionService    *restful.WebService
 	machineService      *restful.WebService
 	ipService           *restful.WebService
-	privateSuperNetwork *v1.NetworkResponse
-	privateNetwork      *v1.NetworkResponse
+	privateSuperNetwork *v12.NetworkResponse
+	privateNetwork      *v12.NetworkResponse
 	rethinkContainer    testcontainers.Container
 	ctx                 context.Context
 }
@@ -88,11 +89,11 @@ func createTestEnvironment(t *testing.T) testEnv {
 	imageName := "testimage"
 	imageDesc := "Test Image"
 	image := v1.ImageCreateRequest{
-		Common: v1.Common{
-			Identifiable: v1.Identifiable{
+		Common: Common{
+			Identifiable: v12.Identifiable{
 				ID: imageID,
 			},
-			Describable: v1.Describable{
+			Describable: v12.Describable{
 				Name:        &imageName,
 				Description: &imageDesc,
 			},
@@ -109,35 +110,35 @@ func createTestEnvironment(t *testing.T) testEnv {
 
 	sizeName := "testsize"
 	sizeDesc := "Test Size"
-	size := v1.SizeCreateRequest{
-		Common: v1.Common{
-			Identifiable: v1.Identifiable{
+	size := v12.SizeCreateRequest{
+		Common: Common{
+			Identifiable: v12.Identifiable{
 				ID: "test-size",
 			},
-			Describable: v1.Describable{
+			Describable: v12.Describable{
 				Name:        &sizeName,
 				Description: &sizeDesc,
 			},
 		},
-		SizeConstraints: []v1.SizeConstraint{
-			v1.SizeConstraint{
+		SizeConstraints: []v12.SizeConstraint{
+			v12.SizeConstraint{
 				Type: metal.CoreConstraint,
 				Min:  8,
 				Max:  8,
 			},
-			v1.SizeConstraint{
+			v12.SizeConstraint{
 				Type: metal.MemoryConstraint,
 				Min:  1000,
 				Max:  2000,
 			},
-			v1.SizeConstraint{
+			v12.SizeConstraint{
 				Type: metal.StorageConstraint,
 				Min:  2000,
 				Max:  3000,
 			},
 		},
 	}
-	var createdSize v1.SizeResponse
+	var createdSize v12.SizeResponse
 	status = te.sizeCreate(t, size, &createdSize)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdSize)
@@ -145,18 +146,18 @@ func createTestEnvironment(t *testing.T) testEnv {
 
 	partitionName := "test-partition"
 	partitionDesc := "Test Partition"
-	partition := v1.PartitionCreateRequest{
-		Common: v1.Common{
-			Identifiable: v1.Identifiable{
+	partition := v12.PartitionCreateRequest{
+		Common: Common{
+			Identifiable: v12.Identifiable{
 				ID: "test-partition",
 			},
-			Describable: v1.Describable{
+			Describable: v12.Describable{
 				Name:        &partitionName,
 				Description: &partitionDesc,
 			},
 		},
 	}
-	var createdPartition v1.PartitionResponse
+	var createdPartition v12.PartitionResponse
 	status = te.partitionCreate(t, partition, &createdPartition)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdPartition)
@@ -164,16 +165,16 @@ func createTestEnvironment(t *testing.T) testEnv {
 	require.NotEmpty(createdPartition.ID)
 
 	switchID := "test-switch01"
-	sw := v1.SwitchRegisterRequest{
-		Common: v1.Common{
-			Identifiable: v1.Identifiable{
+	sw := v12.SwitchRegisterRequest{
+		Common: Common{
+			Identifiable: v12.Identifiable{
 				ID: switchID,
 			},
 		},
-		SwitchBase: v1.SwitchBase{
+		SwitchBase: v12.SwitchBase{
 			RackID: "test-rack",
 		},
-		Nics: v1.SwitchNics{
+		Nics: v12.SwitchNics{
 			{
 				MacAddress: "bb:aa:aa:aa:aa:aa",
 				Name:       "swp1",
@@ -181,7 +182,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 		},
 		PartitionID: "test-partition",
 	}
-	var createdSwitch v1.SwitchResponse
+	var createdSwitch v12.SwitchResponse
 
 	status = te.switchRegister(t, sw, &createdSwitch)
 	require.Equal(http.StatusCreated, status)
@@ -191,21 +192,21 @@ func createTestEnvironment(t *testing.T) testEnv {
 	require.Equal(sw.Nics[0].Name, createdSwitch.Nics[0].Name)
 	require.Equal(sw.Nics[0].MacAddress, createdSwitch.Nics[0].MacAddress)
 
-	var createdNetwork v1.NetworkResponse
+	var createdNetwork v12.NetworkResponse
 	networkID := "test-private-super"
 	networkName := "test-private-super-network"
 	networkDesc := "Test Private Super Network"
 	testPrivateSuperCidr := "10.0.0.0/16"
-	ncr := v1.NetworkCreateRequest{
+	ncr := v12.NetworkCreateRequest{
 		ID: &networkID,
-		Describable: v1.Describable{
+		Describable: v12.Describable{
 			Name:        &networkName,
 			Description: &networkDesc,
 		},
-		NetworkBase: v1.NetworkBase{
+		NetworkBase: v12.NetworkBase{
 			PartitionID: &partition.ID,
 		},
-		NetworkImmutable: v1.NetworkImmutable{
+		NetworkImmutable: v12.NetworkImmutable{
 			Prefixes:     []string{testPrivateSuperCidr},
 			PrivateSuper: true,
 		},
@@ -217,16 +218,16 @@ func createTestEnvironment(t *testing.T) testEnv {
 
 	te.privateSuperNetwork = &createdNetwork
 
-	var acquiredPrivateNetwork v1.NetworkResponse
+	var acquiredPrivateNetwork v12.NetworkResponse
 	privateNetworkName := "test-private-network"
 	privateNetworkDesc := "Test Private Network"
 	projectID := "test-project-1"
-	nar := v1.NetworkAllocateRequest{
-		Describable: v1.Describable{
+	nar := v12.NetworkAllocateRequest{
+		Describable: v12.Describable{
 			Name:        &privateNetworkName,
 			Description: &privateNetworkDesc,
 		},
-		NetworkBase: v1.NetworkBase{
+		NetworkBase: v12.NetworkBase{
 			ProjectID:   &projectID,
 			PartitionID: &partition.ID,
 		},
@@ -244,15 +245,15 @@ func createTestEnvironment(t *testing.T) testEnv {
 	return te
 }
 
-func (te *testEnv) sizeCreate(t *testing.T, icr v1.SizeCreateRequest, response interface{}) int {
+func (te *testEnv) sizeCreate(t *testing.T, icr v12.SizeCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.sizeService, icr, "/v1/size/", response)
 }
 
-func (te *testEnv) partitionCreate(t *testing.T, icr v1.PartitionCreateRequest, response interface{}) int {
+func (te *testEnv) partitionCreate(t *testing.T, icr v12.PartitionCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.partitionService, icr, "/v1/partition/", response)
 }
 
-func (te *testEnv) switchRegister(t *testing.T, srr v1.SwitchRegisterRequest, response interface{}) int {
+func (te *testEnv) switchRegister(t *testing.T, srr v12.SwitchRegisterRequest, response interface{}) int {
 	return webRequestPost(t, te.switchService, srr, "/v1/switch/register", response)
 }
 func (te *testEnv) switchGet(t *testing.T, swid string, response interface{}) int {
@@ -261,21 +262,21 @@ func (te *testEnv) switchGet(t *testing.T, swid string, response interface{}) in
 func (te *testEnv) imageCreate(t *testing.T, icr v1.ImageCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.imageService, icr, "/v1/image/", response)
 }
-func (te *testEnv) networkCreate(t *testing.T, icr v1.NetworkCreateRequest, response interface{}) int {
+func (te *testEnv) networkCreate(t *testing.T, icr v12.NetworkCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.networkService, icr, "/v1/network/", response)
 }
-func (te *testEnv) networkAcquire(t *testing.T, nar v1.NetworkAllocateRequest, response interface{}) int {
+func (te *testEnv) networkAcquire(t *testing.T, nar v12.NetworkAllocateRequest, response interface{}) int {
 	return webRequestPost(t, te.networkService, nar, "/v1/network/allocate", response)
 }
 
-func (te *testEnv) machineAllocate(t *testing.T, mar v1.MachineAllocateRequest, response interface{}) int {
+func (te *testEnv) machineAllocate(t *testing.T, mar v12.MachineAllocateRequest, response interface{}) int {
 	return webRequestPost(t, te.machineService, mar, "/v1/machine/allocate", response)
 }
 
 func (te *testEnv) machineFree(t *testing.T, uuid string, response interface{}) int {
 	return webRequestDelete(t, te.machineService, &emptyBody{}, "/v1/machine/"+uuid+"/free", response)
 }
-func (te *testEnv) machineRegister(t *testing.T, mrr v1.MachineRegisterRequest, response interface{}) int {
+func (te *testEnv) machineRegister(t *testing.T, mrr v12.MachineRegisterRequest, response interface{}) int {
 	return webRequestPost(t, te.machineService, mrr, "/v1/machine/register", response)
 }
 

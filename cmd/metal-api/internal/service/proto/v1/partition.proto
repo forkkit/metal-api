@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package metal.api.v1;
+
+option go_package = "github.com/metal-stack/metal-api/protobuf/v1";
+
+import "v1/common.proto";
+import "v1/identifiable.proto";
+import "google/protobuf/wrappers.proto";
+
+service PartitionService {
+    rpc Create(PartitionCreateRequest) returns (PartitionResponse);
+    rpc Update(PartitionUpdateRequest) returns (PartitionResponse);
+//    rpc Delete(PartitionDeleteRequest) returns (PartitionResponse);
+    rpc Get(PartitionGetRequest) returns (PartitionResponse);
+    rpc Find(PartitionFindRequest) returns (PartitionListResponse);
+    rpc List(PartitionListRequest) returns (PartitionListResponse);
+}
+
+// a partition has a distinct location in a data center, individual entities belong to a partition
+message Partition {
+    Common common = 1;
+    google.protobuf.StringValue ImageURL = 2;    // the url to download the initrd for the boot image
+    google.protobuf.StringValue KernelURL = 3;   // the url to download the kernel for the boot image
+    google.protobuf.StringValue CommandLine = 4; // the cmdline to the kernel for the boot image
+    google.protobuf.StringValue mgmtServiceAddress = 5;        // the address to the management service of this partition
+    google.protobuf.Int64Value privateNetworkPrefixLength = 6; // the length of private networks for the machine's child networks in this partition, minimum 16, maximum 30, default 22
+}
+
+message PartitionCreateRequest {
+    Partition partition = 1;
+}
+
+message PartitionUpdateRequest {
+    Partition partition = 1;
+}
+
+//message PartitionDeleteRequest {
+//    Identifiable identifiable = 1;
+//}
+
+message PartitionGetRequest {
+    Identifiable identifiable = 1;
+}
+
+message PartitionFindRequest {
+    FindCriteria findCriteria = 1;
+}
+
+message PartitionResponse {
+    Partition partition = 1;
+}
+
+message PartitionListRequest {}
+
+message PartitionListResponse {
+    repeated Partition partitions = 1;
+}

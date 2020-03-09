@@ -5,7 +5,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -36,7 +36,7 @@ func (r *machineResource) addProvisioningEvent(request *restful.Request, respons
 		}
 	}
 
-	var requestPayload v1.MachineProvisioningEvent
+	var requestPayload v12.MachineProvisioningEvent
 	err = request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
@@ -53,14 +53,14 @@ func (r *machineResource) addProvisioningEvent(request *restful.Request, respons
 		return
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, v1.NewMachineRecentProvisioningEvents(ec))
+	err = response.WriteHeaderAndEntity(http.StatusOK, v12.NewMachineRecentProvisioningEvents(ec))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return
 	}
 }
 
-func (r *machineResource) provisioningEventForMachine(machineID string, e v1.MachineProvisioningEvent) (*metal.ProvisioningEventContainer, error) {
+func (r *machineResource) provisioningEventForMachine(machineID string, e v12.MachineProvisioningEvent) (*metal.ProvisioningEventContainer, error) {
 	ec, err := r.ds.FindProvisioningEventContainer(machineID)
 	if err != nil && !metal.IsNotFound(err) {
 		return nil, err

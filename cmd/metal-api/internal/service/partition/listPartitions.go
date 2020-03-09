@@ -3,7 +3,7 @@ package partition
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -16,9 +16,9 @@ func (r *partitionResource) listPartitions(request *restful.Request, response *r
 		return
 	}
 
-	var result []*v1.PartitionResponse
+	var result []*v12.PartitionResponse
 	for i := range ps {
-		result = append(result, v1.NewPartitionResponse(&ps[i]))
+		result = append(result, v12.NewPartitionResponse(&ps[i]))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

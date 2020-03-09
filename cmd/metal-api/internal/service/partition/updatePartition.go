@@ -3,7 +3,7 @@ package partition
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -11,7 +11,7 @@ import (
 )
 
 func (r *partitionResource) updatePartition(request *restful.Request, response *restful.Response) {
-	var requestPayload v1.PartitionUpdateRequest
+	var requestPayload v12.PartitionUpdateRequest
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
@@ -47,7 +47,7 @@ func (r *partitionResource) updatePartition(request *restful.Request, response *
 	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, v1.NewPartitionResponse(&newPartition))
+	err = response.WriteHeaderAndEntity(http.StatusOK, v12.NewPartitionResponse(&newPartition))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

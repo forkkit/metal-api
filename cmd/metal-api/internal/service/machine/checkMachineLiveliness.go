@@ -6,7 +6,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metrics"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -49,7 +49,7 @@ func (r *machineResource) checkMachineLiveliness(request *restful.Request, respo
 		liveliness[m.PartitionID] = p
 	}
 
-	report := v1.MachineLivelinessReport{
+	report := v12.MachineLivelinessReport{
 		AliveCount:   alive,
 		DeadCount:    dead,
 		UnknownCount: unknown,

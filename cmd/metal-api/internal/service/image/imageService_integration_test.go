@@ -4,7 +4,7 @@ package image
 
 import (
 	"encoding/json"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +14,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,11 +30,11 @@ func TestGetImagesIntegration(t *testing.T) {
 	imageName := "testimage"
 	imageDesc := "Test Image"
 	newImage := v1.ImageCreateRequest{
-		Common: v1.Common{
-			Identifiable: v1.Identifiable{
+		Common: Common{
+			Identifiable: v12.Identifiable{
 				ID: imageID,
 			},
-			Describable: v1.Describable{
+			Describable: v12.Describable{
 				Name:        &imageName,
 				Description: &imageDesc,
 			},

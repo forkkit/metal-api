@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -12,7 +13,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/testdata"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/stretchr/testify/require"
@@ -27,17 +28,17 @@ func TestRegisterSwitch(t *testing.T) {
 	container := restful.NewContainer().Add(switchservice)
 
 	name := "switch999"
-	createRequest := v1.SwitchRegisterRequest{
-		Common: v1.Common{
-			Identifiable: v1.Identifiable{
+	createRequest := v12.SwitchRegisterRequest{
+		Common: Common{
+			Identifiable: v12.Identifiable{
 				ID: "switch999",
 			},
-			Describable: v1.Describable{
+			Describable: v12.Describable{
 				Name: &name,
 			},
 		},
 		PartitionID: "1",
-		SwitchBase: v1.SwitchBase{
+		SwitchBase: v12.SwitchBase{
 			RackID: "1",
 		},
 	}
@@ -51,7 +52,7 @@ func TestRegisterSwitch(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusCreated, resp.StatusCode, w.Body.String())
-	var result v1.SwitchResponse
+	var result v12.SwitchResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -69,14 +70,14 @@ func TestRegisterExistingSwitch(t *testing.T) {
 	switchservice := NewSwitch(ds)
 	container := restful.NewContainer().Add(switchservice)
 
-	createRequest := v1.SwitchRegisterRequest{
-		Common: v1.Common{
-			Identifiable: v1.Identifiable{
+	createRequest := v12.SwitchRegisterRequest{
+		Common: Common{
+			Identifiable: v12.Identifiable{
 				ID: testdata.Switch2.ID,
 			},
 		},
 		PartitionID: testdata.Switch2.PartitionID,
-		SwitchBase: v1.SwitchBase{
+		SwitchBase: v12.SwitchBase{
 			RackID: testdata.Switch2.RackID,
 		},
 	}
@@ -90,7 +91,7 @@ func TestRegisterExistingSwitch(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v1.SwitchResponse
+	var result v12.SwitchResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -110,15 +111,15 @@ func TestRegisterExistingSwitchErrorModifyingNics(t *testing.T) {
 	switchservice := NewSwitch(ds)
 	container := restful.NewContainer().Add(switchservice)
 
-	createRequest := v1.SwitchRegisterRequest{
-		Common: v1.Common{
-			Identifiable: v1.Identifiable{
+	createRequest := v12.SwitchRegisterRequest{
+		Common: Common{
+			Identifiable: v12.Identifiable{
 				ID: testdata.Switch1.ID,
 			},
 		},
-		Nics:        v1.SwitchNics{},
+		Nics:        v12.SwitchNics{},
 		PartitionID: testdata.Switch1.PartitionID,
-		SwitchBase: v1.SwitchBase{
+		SwitchBase: v12.SwitchBase{
 			RackID: testdata.Switch1.RackID,
 		},
 	}
@@ -223,7 +224,7 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want v1.BGPFilter
+		want v12.BGPFilter
 	}{
 		{
 			name: "valid firewall networks with underlay",
@@ -248,7 +249,7 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 					},
 				},
 			},
-			want: v1.NewBGPFilter([]string{"104009", "104010"}, []string{"10.0.0.1/32", "10.0.0.2/32"}),
+			want: v12.NewBGPFilter([]string{"104009", "104010"}, []string{"10.0.0.1/32", "10.0.0.2/32"}),
 		},
 		{
 			name: "no underlay firewall networks",
@@ -265,7 +266,7 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 					},
 				},
 			},
-			want: v1.BGPFilter{
+			want: v12.BGPFilter{
 				VNIs:  []string{"104010"},
 				CIDRs: nil,
 			},
@@ -279,7 +280,7 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 					},
 				},
 			},
-			want: v1.BGPFilter{
+			want: v12.BGPFilter{
 				VNIs:  nil,
 				CIDRs: nil,
 			},
@@ -303,7 +304,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want v1.BGPFilter
+		want v12.BGPFilter
 	}{
 		{
 			name: "valid machine networks",
@@ -345,7 +346,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 					},
 				},
 			},
-			want: v1.NewBGPFilter(nil, []string{"10.1.0.0/22", "10.2.0.0/22", "100.127.1.1/32", "212.89.42.1/32", "212.89.42.2/32"}),
+			want: v12.NewBGPFilter(nil, []string{"10.1.0.0/22", "10.2.0.0/22", "100.127.1.1/32", "212.89.42.1/32", "212.89.42.2/32"}),
 		},
 		{
 			name: "allow only allocated ips",
@@ -367,7 +368,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 					},
 				},
 			},
-			want: v1.NewBGPFilter(nil, []string{"212.89.42.1/32"}),
+			want: v12.NewBGPFilter(nil, []string{"212.89.42.1/32"}),
 		},
 	}
 	for _, tt := range tests {
@@ -390,7 +391,7 @@ func TestMakeSwitchNics(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want v1.SwitchNics
+		want v12.SwitchNics
 	}{
 		{
 			name: "machine and firewall bgp filter",
@@ -457,19 +458,19 @@ func TestMakeSwitchNics(t *testing.T) {
 					},
 				},
 			},
-			want: v1.SwitchNics{
-				v1.SwitchNic{
+			want: v12.SwitchNics{
+				v12.SwitchNic{
 					Name: "swp1",
 					Vrf:  "vrf1",
-					BGPFilter: &v1.BGPFilter{
+					BGPFilter: &v12.BGPFilter{
 						CIDRs: []string{"212.89.1.1/32"},
 						VNIs:  nil,
 					},
 				},
-				v1.SwitchNic{
+				v12.SwitchNic{
 					Name: "swp2",
 					Vrf:  "default",
-					BGPFilter: &v1.BGPFilter{
+					BGPFilter: &v12.BGPFilter{
 						CIDRs: nil,
 						VNIs:  []string{"1", "2"},
 					},

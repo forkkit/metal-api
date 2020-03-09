@@ -5,7 +5,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -31,10 +31,10 @@ func (r *machineResource) findIPMIMachines(request *restful.Request, response *r
 	}
 }
 
-func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.MachineIPMIResponse {
+func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v12.MachineIPMIResponse {
 	sMap, pMap, iMap, ecMap := helper.GetMachineReferencedEntityMaps(ds, logger)
 
-	var result []*v1.MachineIPMIResponse
+	var result []*v12.MachineIPMIResponse
 
 	for index := range ms {
 		var s *metal.Size
@@ -55,7 +55,7 @@ func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, 
 			}
 		}
 		ec := ecMap[ms[index].ID]
-		result = append(result, v1.NewMachineIPMIResponse(&ms[index], s, p, i, &ec))
+		result = append(result, v12.NewMachineIPMIResponse(&ms[index], s, p, i, &ec))
 	}
 
 	return result

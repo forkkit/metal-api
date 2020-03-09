@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package metal.api.v1;
+
+option go_package = "github.com/metal-stack/metal-api/protobuf/v1";
+
+import "v1/common.proto";
+import "v1/identifiable.proto";
+import "google/protobuf/wrappers.proto";
+
+service MachineService {
+    rpc Create(MachineCreateRequest) returns (MachineResponse);
+    rpc Update(MachineUpdateRequest) returns (MachineResponse);
+    rpc Delete(MachineDeleteRequest) returns (MachineResponse);
+    rpc Get(MachineGetRequest) returns (MachineResponse);
+    rpc Find(MachineFindRequest) returns (MachineListResponse);
+    rpc List(MachineListRequest) returns (MachineListResponse);
+}
+
+message Machine {
+    Common common = 1;
+    google.protobuf.StringValue url = 2;               // the url of this machine
+    repeated google.protobuf.StringValue features = 3; // features of this machine
+}
+
+message MachineCreateRequest {
+    Machine machine = 1;
+}
+
+message MachineUpdateRequest {
+    Machine machine = 1;
+}
+
+message MachineDeleteRequest {
+    Identifiable identifiable = 1;
+}
+
+message MachineGetRequest {
+    Identifiable identifiable = 1;
+}
+
+message MachineFindRequest {
+    FindCriteria findCriteria = 1;
+}
+
+message MachineResponse {
+    Machine machine = 1;
+}
+
+message MachineListRequest {}
+
+message MachineListResponse {
+    repeated Machine machines = 1;
+}

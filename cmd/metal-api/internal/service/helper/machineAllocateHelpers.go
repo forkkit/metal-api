@@ -8,7 +8,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"net"
@@ -30,7 +30,7 @@ type MachineAllocationSpec struct {
 	SSHPubKeys  []string
 	UserData    string
 	Tags        []string
-	Networks    v1.MachineAllocationNetworks
+	Networks    v12.MachineAllocationNetworks
 	IPs         []string
 	HA          bool
 	IsFirewall  bool
