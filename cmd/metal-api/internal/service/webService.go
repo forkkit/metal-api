@@ -106,15 +106,15 @@ func (s *WebService) addRoute(route *Route, ws *restful.WebService) {
 		if p == nil {
 			continue
 		}
-		rb.Param(ws.PathParameter(p.name, p.description).DataType("string"))
+		rb.Param(restful.PathParameter(p.name, p.description))
 	}
 
 	if len(route.Returns) == 0 {
 		rb.Returns(http.StatusOK, "OK", route.Writes)
-	}
-
-	for _, ret := range route.Returns {
-		rb.Returns(ret.Status, ret.Message, ret.Model)
+	} else {
+		for _, ret := range route.Returns {
+			rb.Returns(ret.Status, ret.Message, ret.Model)
+		}
 	}
 
 	ws.Route(rb)
