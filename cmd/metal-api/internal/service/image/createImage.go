@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -16,18 +16,18 @@ import (
 func (r *imageResource) createImage(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.ImageCreateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	if requestPayload.ID == "" {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("id should not be empty")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("id should not be empty")) {
 			return
 		}
 	}
 
 	if requestPayload.URL == "" {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("url should not be empty")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("url should not be empty")) {
 			return
 		}
 	}
@@ -44,7 +44,7 @@ func (r *imageResource) createImage(request *restful.Request, response *restful.
 	features := make(map[metal.ImageFeatureType]bool)
 	for _, f := range requestPayload.Features {
 		ft, err := metal.ImageFeatureTypeFrom(f)
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 		features[ft] = true
@@ -61,10 +61,10 @@ func (r *imageResource) createImage(request *restful.Request, response *restful.
 	}
 
 	err = r.ds.CreateImage(img)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusCreated, v12.NewImageResponse(img))
+	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewImageResponse(img))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

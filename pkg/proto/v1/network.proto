@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package metal.api.v1;
+
+option go_package = "github.com/metal-stack/metal-api/pkg/proto/v1";
+
+import "v1/common.proto";
+import "google/protobuf/wrappers.proto";
+
+service NetworkService {
+    rpc Create(NetworkCreateRequest) returns (NetworkResponse);
+    rpc Update(NetworkUpdateRequest) returns (NetworkResponse);
+//    rpc Delete(NetworkDeleteRequest) returns (NetworkResponse);
+//    rpc Get(NetworkGetRequest) returns (NetworkResponse);
+    rpc Find(NetworkFindRequest) returns (NetworkListResponse);
+    rpc List(NetworkListRequest) returns (NetworkListResponse);
+}
+
+message Network {
+    Common common = 1;
+    google.protobuf.StringValue partitionID = 2; // the partition this network belongs to
+    google.protobuf.StringValue projectID = 3;   // the project id this network belongs to, can be empty if globally available
+    map<string, string> labels = 4;              // free labels that you associate with this network
+}
+
+// a network which contains prefixes from which IP addresses can be allocated
+message NetworkImmutable {
+	repeated string prefixes = 1; // the prefixes of this network
+	repeated string destinationPrefixes = 2; // the prefixes that are reachable within this network
+	bool nat = 3; // if set to true, packets leaving this network get masqueraded behind interface ip
+	bool privateSuper = 4; // if set to true, this network will serve as a partition's super network for the internal machine networks,there can only be one privatesuper network per partition
+	bool underlay = 5; // if set to true, this network can be used for underlay communication
+	google.protobuf.UInt64Value vrf = 6;   // the vrf this network is associated with
+	google.protobuf.BoolValue vrfShared = 7; // if set to true, given vrf can be used by multiple networks, which is sometimes useful for network partitioning (default: false)
+	google.protobuf.StringValue parentNetworkID = 8; // the id of the parent network
+}
+
+message NetworkUsage {
+    uint64 availableIPs = 1;      // the total available IPs //TODO readonly
+    uint64 usedIPs = 2;           // the total used IPs //TODO readonly
+    uint64 availablePrefixes = 3; // the total available prefixes //TODO readonly
+    uint64 usedPrefixes = 4;      // the total used prefixes //TODO readonly
+}
+
+// NetworkSearchQuery can be used to search networks.
+message NetworkSearchQuery {
+    google.protobuf.StringValue ID = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue partitionID = 3;
+    google.protobuf.StringValue projectID = 4;
+    repeated google.protobuf.StringValue prefixes = 5;
+    repeated google.protobuf.StringValue destinationPrefixes = 6;
+    google.protobuf.BoolValue nat = 7;
+    google.protobuf.BoolValue privateSuper = 8;
+    google.protobuf.BoolValue underlay = 9;
+    google.protobuf.UInt64Value vrf = 10;
+    google.protobuf.BoolValue vrfShared = 11; //TODO Not used
+    google.protobuf.StringValue parentNetworkID = 12;
+    map<string, string> labels = 13;
+}
+
+message NetworkCreateRequest {
+    Network network = 1;
+    NetworkImmutable networkImmutable = 2;
+}
+
+message NetworkUpdateRequest {
+    Network network = 1;
+    repeated string prefixes = 2; // the prefixes of this network
+}
+
+//message NetworkDeleteRequest {
+//    Identifiable identifiable = 1;
+//}
+//
+//message NetworkGetRequest {
+//    Identifiable identifiable = 1;
+//}
+
+message NetworkFindRequest {
+    NetworkSearchQuery networkSearchQuery = 1;
+}
+
+message NetworkResponse {
+    Network network = 1;
+    NetworkImmutable networkImmutable = 2;
+    NetworkUsage usage = 3; // usage of ips and prefixes in this network //TODO readonly
+}
+
+message NetworkListRequest {}
+
+message NetworkListResponse {
+    repeated Network networks = 1;
+}

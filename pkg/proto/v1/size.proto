@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package metal.api.v1;
+
+option go_package = "github.com/metal-stack/metal-api/pkg/proto/v1";
+
+import "v1/common.proto";
+import "v1/identifiable.proto";
+
+service SizeService {
+    rpc Create(SizeCreateRequest) returns (SizeResponse);
+    rpc Update(SizeUpdateRequest) returns (SizeResponse);
+    rpc Delete(SizeDeleteRequest) returns (SizeResponse);
+    rpc Get(SizeGetRequest) returns (SizeResponse);
+    rpc Find(SizeFindRequest) returns (SizeListResponse);
+    rpc List(SizeListRequest) returns (SizeListResponse);
+}
+
+// a machine matches to a size in order to make them easier to categorize
+message SizeConstraint {
+    enum Type {
+        CORES = 0;
+        MEMORY = 1;
+        STORAGE = 2;
+    }
+    Type type = 1;  // the type of the constraint, default CORES
+    uint64 min = 2; // the minimum value of the constraint
+    uint64 max = 3; // the maximum value of the constraint
+}
+
+message Size {
+    Common common = 1;
+    repeated SizeConstraint constraints = 2; // a list of constraints that defines this size
+}
+
+message SizeCreateRequest {
+    Size size = 1;
+}
+
+message SizeUpdateRequest {
+    Size size = 1;
+}
+
+message SizeDeleteRequest {
+    Identifiable identifiable = 1;
+}
+
+message SizeGetRequest {
+    Identifiable identifiable = 1;
+}
+
+message SizeFindRequest {
+    FindCriteria findCriteria = 1;
+}
+
+message SizeResponse {
+    Size size = 1;
+}
+
+message SizeListRequest {}
+
+message SizeListResponse {
+    repeated Size sizes = 1;
+}

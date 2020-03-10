@@ -3,8 +3,8 @@ package partition
 import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	"github.com/metal-stack/metal-api/pkg"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"net/http"
 )
@@ -18,7 +18,7 @@ func (r *partitionResource) webService() *restful.WebService {
 				Method:  http.MethodGet,
 				SubPath: "/",
 				Doc:     "get all partitions",
-				Writes:  []v12.PartitionResponse{},
+				Writes:  []v1.PartitionResponse{},
 				Handler: r.listPartitions,
 			},
 			{
@@ -26,7 +26,7 @@ func (r *partitionResource) webService() *restful.WebService {
 				SubPath:       "/{id}",
 				PathParameter: service.NewPathParameter("id", "identifier of the partition"),
 				Doc:           "get partition by id",
-				Writes:        v12.PartitionResponse{},
+				Writes:        v1.PartitionResponse{},
 				Handler:       r.findPartition,
 			},
 			{
@@ -34,10 +34,10 @@ func (r *partitionResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "creates a partition. If the given ID already exists a conflict is returned",
 				Access:  metal.AdminAccess,
-				Reads:   v12.PartitionCreateRequest{},
-				Writes:  v12.PartitionResponse{},
+				Reads:   v1.PartitionCreateRequest{},
+				Writes:  v1.PartitionResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusCreated, "Created", v12.PartitionResponse{}),
+					service.NewReturn(http.StatusCreated, "Created", v1.PartitionResponse{}),
 					service.NewReturn(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.createPartition,
@@ -47,10 +47,10 @@ func (r *partitionResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "updates a partition. If the partition was changed since this one was read, a conflict is returned",
 				Access:  metal.AdminAccess,
-				Reads:   v12.PartitionUpdateRequest{},
-				Writes:  v12.PartitionResponse{},
+				Reads:   v1.PartitionUpdateRequest{},
+				Writes:  v1.PartitionResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusOK, "OK", v12.PartitionResponse{}),
+					service.NewReturn(http.StatusOK, "OK", v1.PartitionResponse{}),
 					service.NewReturn(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.updatePartition,
@@ -61,7 +61,7 @@ func (r *partitionResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the partition"),
 				Doc:           "deletes a partition and returns the deleted entity",
 				Access:        metal.AdminAccess,
-				Writes:        v12.PartitionResponse{},
+				Writes:        v1.PartitionResponse{},
 				Handler:       r.deletePartition,
 			},
 			{

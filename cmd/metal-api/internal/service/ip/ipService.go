@@ -3,8 +3,8 @@ package ip
 import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	"github.com/metal-stack/metal-api/pkg"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"net/http"
 )
@@ -19,7 +19,7 @@ func (r *ipResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "get all ips",
 				Access:  metal.ViewAccess,
-				Writes:  []v12.IPResponse{},
+				Writes:  []v1.IPResponse{},
 				Handler: r.listIPs,
 			},
 			{
@@ -28,7 +28,7 @@ func (r *ipResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the ip"),
 				Doc:           "get ip by id",
 				Access:        metal.ViewAccess,
-				Writes:        v12.IPResponse{},
+				Writes:        v1.IPResponse{},
 				Handler:       r.findIP,
 			},
 			{
@@ -36,8 +36,8 @@ func (r *ipResource) webService() *restful.WebService {
 				SubPath: "/find",
 				Doc:     "get all ips that match given properties",
 				Access:  metal.ViewAccess,
-				Reads:   v12.IPFindRequest{},
-				Writes:  []v12.IPResponse{},
+				Reads:   v1.IPFindRequest{},
+				Writes:  []v1.IPResponse{},
 				Handler: r.findIPs,
 			},
 			{
@@ -45,10 +45,10 @@ func (r *ipResource) webService() *restful.WebService {
 				SubPath: "/allocate",
 				Doc:     "allocate an ip in the given network",
 				Access:  metal.EditAccess,
-				Reads:   v12.IPAllocateRequest{},
-				Writes:  v12.IPResponse{},
+				Reads:   v1.IPAllocateRequest{},
+				Writes:  v1.IPResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusCreated, "Created", v12.IPResponse{}),
+					service.NewReturn(http.StatusCreated, "Created", v1.IPResponse{}),
 				},
 				Handler: r.allocateIP,
 			},
@@ -58,10 +58,10 @@ func (r *ipResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("ip", "ip to try to allocate"),
 				Doc:           "allocate a specific ip in the given network",
 				Access:        metal.EditAccess,
-				Reads:         v12.IPAllocateRequest{},
-				Writes:        v12.IPResponse{},
+				Reads:         v1.IPAllocateRequest{},
+				Writes:        v1.IPResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusCreated, "Created", v12.IPResponse{}),
+					service.NewReturn(http.StatusCreated, "Created", v1.IPResponse{}),
 				},
 				Handler: r.allocateSpecificIP,
 			},
@@ -70,10 +70,10 @@ func (r *ipResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "updates an ip. if the ip was changed since this one was read, a conflict is returned",
 				Access:  metal.EditAccess,
-				Reads:   v12.IPUpdateRequest{},
-				Writes:  v12.IPResponse{},
+				Reads:   v1.IPUpdateRequest{},
+				Writes:  v1.IPResponse{},
 				Returns: []*service.Return{
-					service.NewReturn(http.StatusOK, "OK", v12.IPResponse{}),
+					service.NewReturn(http.StatusOK, "OK", v1.IPResponse{}),
 					service.NewReturn(http.StatusConflict, "Conflict", httperrors.HTTPErrorResponse{}),
 				},
 				Handler: r.updateIP,
@@ -84,7 +84,7 @@ func (r *ipResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the ip"),
 				Doc:           "frees an ip",
 				Access:        metal.EditAccess,
-				Writes:        v12.IPResponse{},
+				Writes:        v1.IPResponse{},
 				Handler:       r.freeIP,
 			},
 		},

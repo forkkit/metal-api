@@ -4,35 +4,36 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 func (r *switchResource) registerSwitch(request *restful.Request, response *restful.Response) {
-	var requestPayload v12.SwitchRegisterRequest
+	var requestPayload v1.SwitchRegisterRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	if requestPayload.ID == "" {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
 			return
 		}
 	}
 
 	_, err = r.ds.FindPartition(requestPayload.PartitionID)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	s, err := r.ds.FindSwitch(requestPayload.ID)
 	if err != nil && !metal.IsNotFound(err) {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 	}
@@ -40,16 +41,16 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	returnCode := http.StatusOK
 
 	if s == nil {
-		s = v12.ToSwitch(requestPayload)
+		s = service.ToSwitch(requestPayload)
 
 		if len(requestPayload.Nics) != len(s.Nics.ByMac()) {
-			if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
+			if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
 				return
 			}
 		}
 
 		err = r.ds.CreateSwitch(s)
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 
@@ -61,16 +62,16 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	} else {
 		old := *s
 
-		spec := v12.ToSwitch(requestPayload)
+		spec := service.ToSwitch(requestPayload)
 
 		if len(requestPayload.Nics) != len(spec.Nics.ByMac()) {
-			if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
+			if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
 				return
 			}
 		}
 
 		nics, err := helper.UpdateSwitchNics(old.Nics.ByMac(), spec.Nics.ByMac(), old.MachineConnections)
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 
@@ -88,11 +89,11 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 
 		err = r.ds.UpdateSwitch(&old, s)
 
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 	}
-	err = response.WriteHeaderAndEntity(returnCode, helper.MakeSwitchResponse(s, r.ds, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(returnCode, helper.MakeSwitchResponse(s, r.ds, helper.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

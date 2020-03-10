@@ -5,8 +5,8 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 func (r *firewallResource) allocateFirewall(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.FirewallCreateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
@@ -40,7 +40,7 @@ func (r *firewallResource) allocateFirewall(request *restful.Request, response *
 		userdata = *requestPayload.UserData
 	}
 	if requestPayload.Networks != nil && len(requestPayload.Networks) <= 0 {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("network ids cannot be empty")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("network ids cannot be empty")) {
 			return
 		}
 	}
@@ -49,18 +49,18 @@ func (r *firewallResource) allocateFirewall(request *restful.Request, response *
 		ha = *requestPayload.HA
 	}
 	if ha {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("highly-available firewall not supported for the time being")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("highly-available firewall not supported for the time being")) {
 			return
 		}
 	}
 
 	image, err := r.ds.FindImage(requestPayload.ImageID)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	if !image.HasFeature(metal.ImageFeatureFirewall) {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("given image is not usable for a firewall, features: %s", image.ImageFeatureString())) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("given image is not usable for a firewall, features: %s", image.ImageFeatureString())) {
 			return
 		}
 	}
@@ -84,10 +84,10 @@ func (r *firewallResource) allocateFirewall(request *restful.Request, response *
 	}
 
 	m, err := helper.AllocateMachine(r.ds, r.ipamer, &spec, r.mdc)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, helper.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

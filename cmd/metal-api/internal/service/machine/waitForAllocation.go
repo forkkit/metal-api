@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -32,7 +32,7 @@ type Allocator func(Allocation) error
 func (r *machineResource) waitForAllocation(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 	ctx, cancel := context.WithCancel(request.Request.Context())
-	log := utils.Logger(request)
+	log := helper.Logger(request)
 
 	// after leaving waiting, stop listening for machine table changes in the background
 	defer cancel()
@@ -52,7 +52,7 @@ func (r *machineResource) waitForAllocation(request *restful.Request, response *
 			}
 
 			s, p, i, ec := helper.FindMachineReferencedEntities(a.Machine, r.ds, log.Sugar())
-			err := response.WriteHeaderAndEntity(http.StatusOK, v12.NewMachineResponse(a.Machine, s, p, i, ec))
+			err := response.WriteHeaderAndEntity(http.StatusOK, service.NewMachineResponse(a.Machine, s, p, i, ec))
 			if err != nil {
 				zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 				return nil
@@ -63,7 +63,7 @@ func (r *machineResource) waitForAllocation(request *restful.Request, response *
 		return nil
 	})
 	if err != nil {
-		helper.SendError(log, response, utils.CurrentFuncName(), httperrors.InternalServerError(err))
+		helper.SendError(log, response, helper.CurrentFuncName(), httperrors.InternalServerError(err))
 	}
 }
 

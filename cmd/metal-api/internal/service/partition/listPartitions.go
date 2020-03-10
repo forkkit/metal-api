@@ -2,9 +2,10 @@ package partition
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -12,13 +13,13 @@ import (
 
 func (r *partitionResource) listPartitions(request *restful.Request, response *restful.Response) {
 	ps, err := r.ds.ListPartitions()
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
-	var result []*v12.PartitionResponse
+	var result []*v1.PartitionResponse
 	for i := range ps {
-		result = append(result, v12.NewPartitionResponse(&ps[i]))
+		result = append(result, service.NewPartitionResponse(&ps[i]))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

@@ -2,9 +2,10 @@ package network
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -12,14 +13,14 @@ import (
 
 func (r *networkResource) listNetworks(request *restful.Request, response *restful.Response) {
 	nws, err := r.ds.ListNetworks()
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
-	var result []*v12.NetworkResponse
+	var result []*v1.NetworkResponse
 	for i := range nws {
 		usage := helper.GetNetworkUsage(&nws[i], r.ipamer)
-		result = append(result, v12.NewNetworkResponse(&nws[i], usage))
+		result = append(result, service.NewNetworkResponse(&nws[i], usage))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

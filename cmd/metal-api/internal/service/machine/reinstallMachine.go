@@ -4,23 +4,23 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 )
 
 func (r *machineResource) reinstallMachine(request *restful.Request, response *restful.Response) {
-	log := utils.Logger(request).Sugar()
-	var requestPayload v12.MachineReinstallRequest
+	log := helper.Logger(request).Sugar()
+	var requestPayload v1.MachineReinstallRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	err = r.reinstallOrDeleteMachine(request, response, &requestPayload.ImageID)
 	if err != nil {
-		helper.SendError(log.Desugar(), response, utils.CurrentFuncName(), httperrors.InternalServerError(err))
+		helper.SendError(log.Desugar(), response, helper.CurrentFuncName(), httperrors.InternalServerError(err))
 	}
 }
 

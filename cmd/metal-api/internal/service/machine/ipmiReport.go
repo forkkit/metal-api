@@ -6,8 +6,8 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -15,25 +15,25 @@ import (
 )
 
 func (r *machineResource) ipmiReport(request *restful.Request, response *restful.Response) {
-	var requestPayload v12.MachineIpmiReport
-	log := utils.Logger(request)
+	var requestPayload v1.MachineIpmiReport
+	log := helper.Logger(request)
 	logger := log.Sugar()
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 	if requestPayload.PartitionID == "" {
 		err := fmt.Errorf("given partition id was not found")
-		helper.CheckError(request, response, utils.CurrentFuncName(), err)
+		helper.CheckError(request, response, helper.CurrentFuncName(), err)
 		return
 	}
 
 	var ms metal.Machines
 	err = r.ds.SearchMachines(&datastore.MachineSearchQuery{}, &ms)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	known := v12.Leases{}
+	known := v1.Leases{}
 	for _, m := range ms {
 		uuid := m.ID
 		if uuid == "" {
@@ -41,9 +41,9 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 		}
 		known[uuid] = m.IPMI.Address
 	}
-	resp := v12.MachineIpmiReportResponse{
-		Updated: v12.Leases{},
-		Created: v12.Leases{},
+	resp := v1.MachineIpmiReportResponse{
+		Updated: v1.Leases{},
+		Created: v1.Leases{},
 	}
 	// create empty machines for uuids that are not yet known to the metal-api
 	const defaultIPMIPort = "623"

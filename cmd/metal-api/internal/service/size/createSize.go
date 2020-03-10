@@ -4,29 +4,30 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 func (r *sizeResource) createSize(request *restful.Request, response *restful.Response) {
-	var requestPayload v12.SizeCreateRequest
+	var requestPayload v1.SizeCreateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	if requestPayload.ID == "" {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("id should not be empty")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("id should not be empty")) {
 			return
 		}
 	}
 
 	if requestPayload.ID == metal.UnknownSize.GetID() {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("id cannot be %q", metal.UnknownSize.GetID())) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("id cannot be %q", metal.UnknownSize.GetID())) {
 			return
 		}
 	}
@@ -59,10 +60,10 @@ func (r *sizeResource) createSize(request *restful.Request, response *restful.Re
 	}
 
 	err = r.ds.CreateSize(s)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusCreated, v12.NewSizeResponse(s))
+	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewSizeResponse(s))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

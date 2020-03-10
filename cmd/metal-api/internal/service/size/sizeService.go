@@ -3,8 +3,8 @@ package size
 import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	"github.com/metal-stack/metal-api/pkg"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"net/http"
 )

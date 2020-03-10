@@ -5,17 +5,17 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 func (r *machineResource) allocateMachine(request *restful.Request, response *restful.Response) {
-	var requestPayload v12.MachineAllocateRequest
+	var requestPayload v1.MachineAllocateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
@@ -41,12 +41,12 @@ func (r *machineResource) allocateMachine(request *restful.Request, response *re
 	}
 
 	image, err := r.ds.FindImage(requestPayload.ImageID)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	if !image.HasFeature(metal.ImageFeatureMachine) {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("given image is not usable for a machine, features: %s", image.ImageFeatureString())) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("given image is not usable for a machine, features: %s", image.ImageFeatureString())) {
 			return
 		}
 	}
@@ -70,12 +70,12 @@ func (r *machineResource) allocateMachine(request *restful.Request, response *re
 	}
 
 	m, err := helper.AllocateMachine(r.ds, r.ipamer, &spec, r.mdc)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		// TODO: Trigger network garbage collection
-		utils.Logger(request).Sugar().Errorf("machine allocation went wrong, triggered network garbage collection", "error", err)
+		helper.Logger(request).Sugar().Errorf("machine allocation went wrong, triggered network garbage collection", "error", err)
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, helper.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

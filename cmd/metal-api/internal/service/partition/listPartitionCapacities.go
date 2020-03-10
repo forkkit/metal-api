@@ -3,9 +3,10 @@ package partition
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -27,7 +28,7 @@ type PartitionCapacity struct {
 func (r *partitionResource) listPartitionCapacities(request *restful.Request, response *restful.Response) {
 	partitionCapacities, err := r.calcPartitionCapacities()
 
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, partitionCapacities)
@@ -108,10 +109,10 @@ func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, erro
 
 		pc := PartitionCapacity{
 			Common: v1.Common{
-				Identifiable: v1.Identifiable{
+				Identifiable: service.Identifiable{
 					ID: p.ID,
 				},
-				Describable: v1.Describable{
+				Describable: service.Describable{
 					Name:        &p.Name,
 					Description: &p.Description,
 				},

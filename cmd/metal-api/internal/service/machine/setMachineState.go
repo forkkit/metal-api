@@ -5,35 +5,35 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 func (r *machineResource) setMachineState(request *restful.Request, response *restful.Response) {
-	var requestPayload v12.MachineState
+	var requestPayload v1.MachineState
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	machineState, err := metal.MachineStateFrom(requestPayload.Value)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	if machineState != metal.AvailableState && requestPayload.Description == "" {
 		// we want a cause why this machine is not available
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("you must supply a description")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("you must supply a description")) {
 			return
 		}
 	}
 
 	id := request.PathParameter("id")
 	oldMachine, err := r.ds.FindMachineByID(id)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
@@ -45,10 +45,10 @@ func (r *machineResource) setMachineState(request *restful.Request, response *re
 	}
 
 	err = r.ds.UpdateMachine(oldMachine, &newMachine)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(&newMachine, r.ds, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(&newMachine, r.ds, helper.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

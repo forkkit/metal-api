@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"go.uber.org/zap"
 )
 
@@ -124,14 +125,14 @@ func ConnectMachineWithSwitches(ds *datastore.RethinkStore, m *metal.Machine) er
 	return nil
 }
 
-func MakeSwitchResponse(s *metal.Switch, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v12.SwitchResponse {
+func MakeSwitchResponse(s *metal.Switch, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.SwitchResponse {
 	p, ips, iMap, machines := findSwitchReferencedEntites(s, ds, logger)
 	nics := MakeSwitchNics(s, ips, iMap, machines)
 	cons := makeSwitchCons(s)
-	return v12.NewSwitchResponse(s, p, nics, cons)
+	return service.NewSwitchResponse(s, p, nics, cons)
 }
 
-func MakeBGPFilterFirewall(m metal.Machine) v12.BGPFilter {
+func MakeBGPFilterFirewall(m metal.Machine) v1.BGPFilter {
 	var vnis, cidrs []string
 	for _, net := range m.Allocation.MachineNetworks {
 		if net.Underlay {
@@ -143,10 +144,10 @@ func MakeBGPFilterFirewall(m metal.Machine) v12.BGPFilter {
 			// filter for "project" addresses / cidrs is not possible since EVPN Type-5 routes can not be filtered by prefixes
 		}
 	}
-	return v12.NewBGPFilter(vnis, cidrs)
+	return service.NewBGPFilter(vnis, cidrs)
 }
 
-func MakeBGPFilterMachine(m metal.Machine, ips metal.IPsMap) v12.BGPFilter {
+func MakeBGPFilterMachine(m metal.Machine, ips metal.IPsMap) v1.BGPFilter {
 	var vnis, cidrs []string
 
 	var private *metal.MachineNetwork
@@ -175,11 +176,11 @@ func MakeBGPFilterMachine(m metal.Machine, ips metal.IPsMap) v12.BGPFilter {
 		// Allow all other ip addresses allocated for the project.
 		cidrs = append(cidrs, fmt.Sprintf("%s/32", i.IPAddress))
 	}
-	return v12.NewBGPFilter(vnis, cidrs)
+	return service.NewBGPFilter(vnis, cidrs)
 }
 
-func makeBGPFilter(m metal.Machine, vrf string, ips metal.IPsMap, iMap metal.ImageMap) v12.BGPFilter {
-	var filter v12.BGPFilter
+func makeBGPFilter(m metal.Machine, vrf string, ips metal.IPsMap, iMap metal.ImageMap) v1.BGPFilter {
+	var filter v1.BGPFilter
 	if m.IsFirewall(iMap) {
 		// vrf "default" means: the firewall was successfully allocated and the switch port configured
 		// otherwise the port is still not configured yet (pxe-setup) and a BGPFilter would break the install routine
@@ -192,7 +193,7 @@ func makeBGPFilter(m metal.Machine, vrf string, ips metal.IPsMap, iMap metal.Ima
 	return filter
 }
 
-func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, machines metal.Machines) v12.SwitchNics {
+func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, machines metal.Machines) service.SwitchNics {
 	machinesByID := map[string]*metal.Machine{}
 	for i, m := range machines {
 		machinesByID[m.ID] = &machines[i]
@@ -206,15 +207,15 @@ func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, mach
 			}
 		}
 	}
-	nics := v12.SwitchNics{}
+	nics := service.SwitchNics{}
 	for _, n := range s.Nics {
 		m := machinesBySwp[n.Name]
-		var filter *v12.BGPFilter
+		var filter *v1.BGPFilter
 		if m != nil && m.Allocation != nil {
 			f := makeBGPFilter(*m, n.Vrf, ips, iMap)
 			filter = &f
 		}
-		nic := v12.SwitchNic{
+		nic := v1.SwitchNic{
 			MacAddress: string(n.MacAddress),
 			Name:       n.Name,
 			Vrf:        n.Vrf,
@@ -225,16 +226,16 @@ func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, mach
 	return nics
 }
 
-func makeSwitchCons(s *metal.Switch) []v12.SwitchConnection {
-	var cons []v12.SwitchConnection
+func makeSwitchCons(s *metal.Switch) []v1.SwitchConnection {
+	var cons []v1.SwitchConnection
 	for _, metalConnections := range s.MachineConnections {
 		for _, mc := range metalConnections {
-			nic := v12.SwitchNic{
+			nic := v1.SwitchNic{
 				MacAddress: string(mc.Nic.MacAddress),
 				Name:       mc.Nic.Name,
 				Vrf:        mc.Nic.Vrf,
 			}
-			con := v12.SwitchConnection{
+			con := v1.SwitchConnection{
 				Nic:       nic,
 				MachineID: mc.MachineID,
 			}
@@ -274,9 +275,9 @@ func findSwitchReferencedEntites(s *metal.Switch, ds *datastore.RethinkStore, lo
 	return p, ips.ByProjectID(), imgs.ByID(), m
 }
 
-func MakeSwitchResponseList(ss []metal.Switch, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v12.SwitchResponse {
+func MakeSwitchResponseList(ss []metal.Switch, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.SwitchResponse {
 	pMap, ips, iMap := getSwitchReferencedEntityMaps(ds, logger)
-	var result []*v12.SwitchResponse
+	var result []*v1.SwitchResponse
 	m, err := ds.ListMachines()
 	if err != nil {
 		logger.Errorw("could not find machines")
@@ -290,7 +291,7 @@ func MakeSwitchResponseList(ss []metal.Switch, ds *datastore.RethinkStore, logge
 
 		nics := MakeSwitchNics(&sw, ips, iMap, m)
 		cons := makeSwitchCons(&sw)
-		result = append(result, v12.NewSwitchResponse(&sw, p, nics, cons))
+		result = append(result, service.NewSwitchResponse(&sw, p, nics, cons))
 	}
 
 	return result

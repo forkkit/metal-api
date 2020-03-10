@@ -1,7 +1,6 @@
 package metal
 
 import (
-	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -17,11 +16,6 @@ type IPType string
 type IPScope string
 
 const (
-	// TagIPMachineID is used to tag ips for the usage by machines
-	TagIPMachineID = "metal.metal-pod.io/machineid"
-	// TagIPSeperator is the seperator character for key and values in IP-Tags
-	TagIPSeperator = "="
-
 	// Ephemeral IPs will be cleaned up automatically on machine, network, project deletion
 	Ephemeral IPType = "ephemeral"
 	// Static IPs will not be cleaned up and can be re-used for machines, networks within a project
@@ -131,10 +125,6 @@ func (ip *IP) RemoveMachineId(id string) {
 	t := IpTag(TagIPMachineID, id)
 	ts.Remove(t)
 	ip.Tags = ts.Unique()
-}
-
-func IpTag(key, value string) string {
-	return fmt.Sprintf("%s%s%s", key, TagIPSeperator, value)
 }
 
 type IPs []IP

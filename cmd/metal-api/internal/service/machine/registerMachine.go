@@ -5,42 +5,43 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 func (r *machineResource) registerMachine(request *restful.Request, response *restful.Response) {
-	var requestPayload v12.MachineRegisterRequest
+	var requestPayload v1.MachineRegisterRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	if requestPayload.UUID == "" {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
 			return
 		}
 	}
 
 	partition, err := r.ds.FindPartition(requestPayload.PartitionID)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
-	machineHardware := v12.NewMetalMachineHardware(&requestPayload.Hardware)
+	machineHardware := service.NewMetalMachineHardware(&requestPayload.Hardware)
 	size, _, err := r.ds.FromHardware(machineHardware)
 	if err != nil {
 		size = metal.UnknownSize
-		utils.Logger(request).Sugar().Errorw("no size found for hardware, defaulting to unknown size", "hardware", machineHardware, "error", err)
+		helper.Logger(request).Sugar().Errorw("no size found for hardware, defaulting to unknown size", "hardware", machineHardware, "error", err)
 	}
 
 	m, err := r.ds.FindMachineByID(requestPayload.UUID)
 	if err != nil && !metal.IsNotFound(err) {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 	}
@@ -75,11 +76,11 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 				Description: "Machine registered",
 			},
 			Tags: requestPayload.Tags,
-			IPMI: v12.NewMetalIPMI(&requestPayload.IPMI),
+			IPMI: service.NewMetalIPMI(&requestPayload.IPMI),
 		}
 
 		err = r.ds.CreateMachine(m)
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 
@@ -95,17 +96,17 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 		m.BIOS.Version = requestPayload.BIOS.Version
 		m.BIOS.Vendor = requestPayload.BIOS.Vendor
 		m.BIOS.Date = requestPayload.BIOS.Date
-		m.IPMI = v12.NewMetalIPMI(&requestPayload.IPMI)
+		m.IPMI = service.NewMetalIPMI(&requestPayload.IPMI)
 
 		err = r.ds.UpdateMachine(&old, m)
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 	}
 
 	ec, err := r.ds.FindProvisioningEventContainer(m.ID)
 	if err != nil && !metal.IsNotFound(err) {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 	}
@@ -116,16 +117,16 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 			Liveliness:                   metal.MachineLivelinessAlive,
 			IncompleteProvisioningCycles: "0"},
 		)
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 	}
 
 	err = helper.ConnectMachineWithSwitches(r.ds, m)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(returnCode, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(returnCode, helper.MakeMachineResponse(m, r.ds, helper.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

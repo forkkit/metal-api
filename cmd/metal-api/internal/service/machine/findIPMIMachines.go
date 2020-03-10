@@ -4,9 +4,10 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -15,26 +16,26 @@ import (
 func (r *machineResource) findIPMIMachines(request *restful.Request, response *restful.Response) {
 	var requestPayload datastore.MachineSearchQuery
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	ms := metal.Machines{}
 	err = r.ds.SearchMachines(&requestPayload, &ms)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, makeMachineIPMIResponseList(ms, r.ds, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, makeMachineIPMIResponseList(ms, r.ds, helper.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return
 	}
 }
 
-func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v12.MachineIPMIResponse {
+func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.MachineIPMIResponse {
 	sMap, pMap, iMap, ecMap := helper.GetMachineReferencedEntityMaps(ds, logger)
 
-	var result []*v12.MachineIPMIResponse
+	var result []*v1.MachineIPMIResponse
 
 	for index := range ms {
 		var s *metal.Size
@@ -55,7 +56,7 @@ func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, 
 			}
 		}
 		ec := ecMap[ms[index].ID]
-		result = append(result, v12.NewMachineIPMIResponse(&ms[index], s, p, i, &ec))
+		result = append(result, service.NewMachineIPMIResponse(&ms[index], s, p, i, &ec))
 	}
 
 	return result

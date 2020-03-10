@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package metal.api.v1;
+
+option go_package = "github.com/metal-stack/metal-api/pkg/proto/v1";
+
+import "google/protobuf/wrappers.proto";
+
+message Identifiable {
+    string id = 1;
+}
+
+message FindCriteria {
+    google.protobuf.StringValue id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue description = 3;
+}

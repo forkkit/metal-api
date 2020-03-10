@@ -3,15 +3,15 @@ package size
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/testdata"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/stretchr/testify/require"
@@ -31,7 +31,7 @@ func TestGetSizes(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result []v12.SizeResponse
+	var result []v1.SizeResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -59,7 +59,7 @@ func TestGetSize(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.SizeResponse
+	var result v1.SizeResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -102,7 +102,7 @@ func TestDeleteSize(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.SizeResponse
+	var result v1.SizeResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -118,12 +118,12 @@ func TestCreateSize(t *testing.T) {
 	sizeservice := NewSize(ds)
 	container := restful.NewContainer().Add(sizeservice)
 
-	createRequest := v12.SizeCreateRequest{
+	createRequest := v1.SizeCreateRequest{
 		Common: Common{
-			Identifiable: v12.Identifiable{
+			Identifiable: service.Identifiable{
 				ID: testdata.Sz1.ID,
 			},
-			Describable: v12.Describable{
+			Describable: service.Describable{
 				Name:        &testdata.Sz1.Name,
 				Description: &testdata.Sz1.Description,
 			},
@@ -139,7 +139,7 @@ func TestCreateSize(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusCreated, resp.StatusCode, w.Body.String())
-	var result v12.SizeResponse
+	var result v1.SizeResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -157,17 +157,17 @@ func TestUpdateSize(t *testing.T) {
 
 	minCores := uint64(1)
 	maxCores := uint64(4)
-	updateRequest := v12.SizeUpdateRequest{
+	updateRequest := v1.SizeUpdateRequest{
 		Common: Common{
-			Describable: v12.Describable{
+			Describable: service.Describable{
 				Name:        &testdata.Sz2.Name,
 				Description: &testdata.Sz2.Description,
 			},
-			Identifiable: v12.Identifiable{
+			Identifiable: service.Identifiable{
 				ID: testdata.Sz1.ID,
 			},
 		},
-		SizeConstraints: &[]v12.SizeConstraint{
+		SizeConstraints: &[]v1.SizeConstraint{
 			{
 				Type: metal.CoreConstraint,
 				Min:  minCores,
@@ -185,7 +185,7 @@ func TestUpdateSize(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.SizeResponse
+	var result v1.SizeResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)

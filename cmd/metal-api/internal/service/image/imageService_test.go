@@ -3,15 +3,15 @@ package image
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/testdata"
+	v1 "github.com/metal-stack/metal-api/pkg/proto"
 
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-lib/httperrors"
@@ -110,10 +110,10 @@ func TestCreateImage(t *testing.T) {
 
 	createRequest := v1.ImageCreateRequest{
 		Common: Common{
-			Identifiable: v12.Identifiable{
+			Identifiable: service.Identifiable{
 				ID: testdata.Img1.ID,
 			},
-			Describable: v12.Describable{
+			Describable: service.Describable{
 				Name:        &testdata.Img1.Name,
 				Description: &testdata.Img1.Description,
 			},
@@ -149,11 +149,11 @@ func TestUpdateImage(t *testing.T) {
 
 	updateRequest := v1.ImageUpdateRequest{
 		Common: Common{
-			Describable: v12.Describable{
+			Describable: service.Describable{
 				Name:        &testdata.Img2.Name,
 				Description: &testdata.Img2.Description,
 			},
-			Identifiable: v12.Identifiable{
+			Identifiable: service.Identifiable{
 				ID: testdata.Img1.ID,
 			},
 		},

@@ -5,14 +5,14 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 func (r *machineResource) freeMachine(request *restful.Request, response *restful.Response) {
 	err := r.reinstallOrDeleteMachine(request, response, nil)
-	helper.CheckError(request, response, utils.CurrentFuncName(), err)
+	helper.CheckError(request, response, helper.CurrentFuncName(), err)
 }
 
 func (r *machineResource) releaseMachineNetworks(machine *metal.Machine, machineNetworks []*metal.MachineNetwork) error {
@@ -70,7 +70,7 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 		return fmt.Errorf("machine is locked")
 	}
 
-	log := utils.Logger(request).Sugar()
+	log := helper.Logger(request).Sugar()
 
 	if m.Allocation != nil {
 		old := *m
@@ -98,7 +98,7 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 		}
 
 		err = r.ds.UpdateMachine(&old, m)
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return err
 		}
 	}
@@ -126,7 +126,7 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 		return err
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, utils.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, helper.Logger(request).Sugar()))
 	if err != nil {
 		log.Error("Failed to send response", zap.Error(err))
 	}

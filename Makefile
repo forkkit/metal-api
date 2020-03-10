@@ -22,4 +22,4 @@ redoc:
 
 .PHONY: protoc
 protoc:
-	protoc -I cmd/metal-api/internal/service/proto -I cmd/metal-api/internal/service/proto/v1/*.proto -I ../../.. --go_out cmd/metal-api/internal/service/proto --go_opt=paths=source_relative cmd/metal-api/internal/service/proto/v1/*.proto
+	protoc -I pkg/proto -I pkg/proto/v1/*.proto -I ../../.. --go_out pkg/proto --go_opt=paths=source_relative pkg/proto/v1/*.proto

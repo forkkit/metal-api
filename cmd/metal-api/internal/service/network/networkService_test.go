@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,11 +17,9 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
-
 	restful "github.com/emicklei/go-restful"
 	goipam "github.com/metal-stack/go-ipam"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/testdata"
 	"github.com/stretchr/testify/require"
 )
@@ -38,7 +37,7 @@ func TestGetNetworks(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result []v12.NetworkResponse
+	var result []v1.NetworkResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -64,7 +63,7 @@ func TestGetNetwork(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.NetworkResponse
+	var result v1.NetworkResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -109,7 +108,7 @@ func TestDeleteNetwork(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.NetworkResponse
+	var result v1.NetworkResponse
 	err = json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -153,10 +152,10 @@ func TestCreateNetwork(t *testing.T) {
 	prefixes := []string{"172.0.0.0/24"}
 	destPrefixes := []string{"0.0.0.0/0"}
 	vrf := uint(10000)
-	createRequest := &v12.NetworkCreateRequest{
-		Describable:      v12.Describable{Name: &testdata.Nw1.Name},
-		NetworkBase:      v12.NetworkBase{PartitionID: &testdata.Nw1.PartitionID, ProjectID: &testdata.Nw1.ProjectID},
-		NetworkImmutable: v12.NetworkImmutable{Prefixes: prefixes, DestinationPrefixes: destPrefixes, Vrf: &vrf},
+	createRequest := &v1.NetworkCreateRequest{
+		Describable:      service.Describable{Name: &testdata.Nw1.Name},
+		NetworkBase:      v1.NetworkBase{PartitionID: &testdata.Nw1.PartitionID, ProjectID: &testdata.Nw1.ProjectID},
+		NetworkImmutable: v1.NetworkImmutable{Prefixes: prefixes, DestinationPrefixes: destPrefixes, Vrf: &vrf},
 	}
 	js, _ := json.Marshal(createRequest)
 	body := bytes.NewBuffer(js)
@@ -168,7 +167,7 @@ func TestCreateNetwork(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusCreated, resp.StatusCode, w.Body.String())
-	var result v12.NetworkResponse
+	var result v1.NetworkResponse
 	err = json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -186,10 +185,10 @@ func TestUpdateNetwork(t *testing.T) {
 	container := restful.NewContainer().Add(networkservice)
 
 	newName := "new"
-	updateRequest := &v12.NetworkUpdateRequest{
+	updateRequest := &v1.NetworkUpdateRequest{
 		Common: Common{
-			Identifiable: v12.Identifiable{ID: testdata.Nw1.GetID()},
-			Describable:  v12.Describable{Name: &newName}},
+			Identifiable: service.Identifiable{ID: testdata.Nw1.GetID()},
+			Describable:  service.Describable{Name: &newName}},
 	}
 	js, _ := json.Marshal(updateRequest)
 	body := bytes.NewBuffer(js)
@@ -225,7 +224,7 @@ func TestSearchNetwork(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var results []v12.NetworkResponse
+	var results []v1.NetworkResponse
 	err := json.NewDecoder(resp.Body).Decode(&results)
 
 	require.Nil(t, err)

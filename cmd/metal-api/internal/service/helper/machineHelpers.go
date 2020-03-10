@@ -3,7 +3,8 @@ package helper
 import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/bus"
 	"go.uber.org/zap"
 	"time"
@@ -76,7 +77,7 @@ func ResurrectMachines(ds *datastore.RethinkStore, publisher bus.Publisher, logg
 	return nil
 }
 
-func MachineHasIssues(m *v12.MachineResponse) bool {
+func MachineHasIssues(m *v1.MachineResponse) bool {
 	if m.Partition == nil {
 		return true
 	}
@@ -97,15 +98,15 @@ func MachineHasIssues(m *v12.MachineResponse) bool {
 	return false
 }
 
-func MakeMachineResponse(m *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v12.MachineResponse {
+func MakeMachineResponse(m *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.MachineResponse {
 	s, p, i, ec := FindMachineReferencedEntities(m, ds, logger)
-	return v12.NewMachineResponse(m, s, p, i, ec)
+	return service.NewMachineResponse(m, s, p, i, ec)
 }
 
-func MakeMachineResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v12.MachineResponse {
+func MakeMachineResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.MachineResponse {
 	sMap, pMap, iMap, ecMap := GetMachineReferencedEntityMaps(ds, logger)
 
-	var result []*v12.MachineResponse
+	var result []*v1.MachineResponse
 
 	for index := range ms {
 		var s *metal.Size
@@ -126,7 +127,7 @@ func MakeMachineResponseList(ms metal.Machines, ds *datastore.RethinkStore, logg
 			}
 		}
 		ec := ecMap[ms[index].ID]
-		result = append(result, v12.NewMachineResponse(&ms[index], s, p, i, &ec))
+		result = append(result, service.NewMachineResponse(&ms[index], s, p, i, &ec))
 	}
 
 	return result

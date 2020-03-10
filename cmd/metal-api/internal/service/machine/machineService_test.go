@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -51,7 +51,7 @@ func TestGetMachines(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result []v12.MachineResponse
+	var result []v1.MachineResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -151,15 +151,15 @@ func TestRegisterMachine(t *testing.T) {
 			mock.On(r.DB("mockdb").Table("event").Insert(r.MockAnything(), r.InsertOpts{})).Return(testdata.EmptyResult, nil)
 			testdata.InitMockDBData(mock)
 
-			registerRequest := &v12.MachineRegisterRequest{
+			registerRequest := &v1.MachineRegisterRequest{
 				UUID:        test.uuid,
 				PartitionID: test.partitionid,
 				RackID:      "1",
-				IPMI: v12.MachineIPMI{
+				IPMI: v1.MachineIPMI{
 					Address:    testdata.IPMI1.Address,
 					Interface:  testdata.IPMI1.Interface,
 					MacAddress: testdata.IPMI1.MacAddress,
-					Fru: v12.MachineFru{
+					Fru: v1.MachineFru{
 						ChassisPartNumber:   &testdata.IPMI1.Fru.ChassisPartNumber,
 						ChassisPartSerial:   &testdata.IPMI1.Fru.ChassisPartSerial,
 						BoardMfg:            &testdata.IPMI1.Fru.BoardMfg,
@@ -170,8 +170,8 @@ func TestRegisterMachine(t *testing.T) {
 						ProductSerial:       &testdata.IPMI1.Fru.ProductSerial,
 					},
 				},
-				Hardware: v12.MachineHardwareExtended{
-					MachineHardwareBase: v12.MachineHardwareBase{
+				Hardware: v1.MachineHardwareExtended{
+					MachineHardwareBase: v1.MachineHardwareBase{
 						CPUCores: test.numcores,
 						Memory:   uint64(test.memory),
 					},
@@ -198,7 +198,7 @@ func TestRegisterMachine(t *testing.T) {
 				require.Nil(t, err)
 				require.Regexp(t, test.expectedErrorMessage, result.Message)
 			} else {
-				var result v12.MachineResponse
+				var result v1.MachineResponse
 				err := json.NewDecoder(resp.Body).Decode(&result)
 
 				require.Nil(t, err)
@@ -221,17 +221,17 @@ func TestMachineIPMIReport(t *testing.T) {
 
 	data := []struct {
 		name           string
-		input          v12.MachineIpmiReport
-		output         v12.MachineIpmiReportResponse
+		input          v1.MachineIpmiReport
+		output         v1.MachineIpmiReportResponse
 		wantStatusCode int
 	}{
 		{
 			name: "update machine1 ipmi address",
-			input: v12.MachineIpmiReport{
+			input: v1.MachineIpmiReport{
 				PartitionID: testdata.M1.PartitionID,
 				Leases:      map[string]string{testdata.M1.ID: "192.167.0.1"},
 			},
-			output: v12.MachineIpmiReportResponse{
+			output: v1.MachineIpmiReportResponse{
 				Updated: map[string]string{testdata.M1.ID: "192.167.0.1"},
 				Created: map[string]string{},
 			},
@@ -239,11 +239,11 @@ func TestMachineIPMIReport(t *testing.T) {
 		},
 		{
 			name: "don't update machine with unkown mac",
-			input: v12.MachineIpmiReport{
+			input: v1.MachineIpmiReport{
 				PartitionID: testdata.M1.PartitionID,
 				Leases:      map[string]string{"xyz": "192.167.0.1"},
 			},
-			output: v12.MachineIpmiReportResponse{
+			output: v1.MachineIpmiReportResponse{
 				Updated: map[string]string{},
 				Created: map[string]string{"xyz": "192.167.0.1"},
 			},
@@ -266,7 +266,7 @@ func TestMachineIPMIReport(t *testing.T) {
 			resp := w.Result()
 			require.Equal(t, test.wantStatusCode, resp.StatusCode, w.Body.String())
 
-			var result v12.MachineIpmiReportResponse
+			var result v1.MachineIpmiReportResponse
 			err := json.NewDecoder(resp.Body).Decode(&result)
 			require.Nil(t, err)
 			require.Equal(t, test.output, result)
@@ -315,7 +315,7 @@ func TestMachineFindIPMI(t *testing.T) {
 			resp := w.Result()
 			require.Equal(t, test.wantStatusCode, resp.StatusCode, w.Body.String())
 
-			var results []*v12.MachineIPMIResponse
+			var results []*v1.MachineIPMIResponse
 			err := json.NewDecoder(resp.Body).Decode(&results)
 
 			require.Nil(t, err)
@@ -378,7 +378,7 @@ func TestFinalizeMachineAllocation(t *testing.T) {
 			machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 			container := restful.NewContainer().Add(machineservice)
 
-			finalizeRequest := v12.MachineFinalizeAllocationRequest{
+			finalizeRequest := v1.MachineFinalizeAllocationRequest{
 				ConsolePassword: "blubber",
 			}
 
@@ -403,7 +403,7 @@ func TestFinalizeMachineAllocation(t *testing.T) {
 					require.Regexp(t, test.wantErrMessage, result.Message)
 				}
 			} else {
-				var result v12.MachineResponse
+				var result v1.MachineResponse
 				err := json.NewDecoder(resp.Body).Decode(&result)
 
 				require.Nil(t, err)
@@ -420,7 +420,7 @@ func TestSetMachineState(t *testing.T) {
 	machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
 
-	stateRequest := v12.MachineState{
+	stateRequest := v1.MachineState{
 		Value:       string(metal.ReservedState),
 		Description: "blubber",
 	}
@@ -434,7 +434,7 @@ func TestSetMachineState(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.MachineResponse
+	var result v1.MachineResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -456,7 +456,7 @@ func TestGetMachine(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.MachineResponse
+	var result v1.MachineResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -510,7 +510,7 @@ func TestFreeMachine(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.MachineResponse
+	var result v1.MachineResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -535,7 +535,7 @@ func TestSearchMachine(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var results []v12.MachineResponse
+	var results []v1.MachineResponse
 	err := json.NewDecoder(resp.Body).Decode(&results)
 
 	require.Nil(t, err)
@@ -568,7 +568,7 @@ func TestAddProvisioningEvent(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.MachineRecentProvisioningEvents
+	var result v1.MachineRecentProvisioningEvents
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -682,7 +682,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
-				Networks: []v12.MachineAllocationNetwork{
+				Networks: []v1.MachineAllocationNetwork{
 					{
 						NetworkID: "network",
 					},
@@ -697,7 +697,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			spec: helper.MachineAllocationSpec{
 				UUID:      "gopher-uuid",
 				ProjectID: "123",
-				Networks: []v12.MachineAllocationNetwork{
+				Networks: []v1.MachineAllocationNetwork{
 					{
 						NetworkID:     "network",
 						AutoAcquireIP: &trueValue},
@@ -754,7 +754,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
-				Networks: []v12.MachineAllocationNetwork{
+				Networks: []v1.MachineAllocationNetwork{
 					{
 						NetworkID:     "network",
 						AutoAcquireIP: &falseValue,
@@ -800,7 +800,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
-				Networks: []v12.MachineAllocationNetwork{
+				Networks: []v1.MachineAllocationNetwork{
 					{
 						NetworkID: "network",
 					},
@@ -999,7 +999,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "no networks given",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{},
+				Networks: v1.MachineAllocationNetworks{},
 			},
 			partition:              &testdata.Partition1,
 			partitionSuperNetworks: partitionSuperNetworks,
@@ -1009,8 +1009,8 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "private network given",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
@@ -1033,8 +1033,8 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "private network given, but no auto acquisition and no ip provided",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
 						AutoAcquireIP: &boolFalse,
 					},
@@ -1049,12 +1049,12 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "private network and internet network given",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
-					v12.MachineAllocationNetwork{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1InternetNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
@@ -1084,8 +1084,8 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "ip which does not belong to any related network given",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
@@ -1101,12 +1101,12 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "private network and internet network with no auto acquired internet ip",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
-					v12.MachineAllocationNetwork{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1InternetNetwork.ID,
 						AutoAcquireIP: &boolFalse,
 					},
@@ -1137,8 +1137,8 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "private of other network given",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
@@ -1153,8 +1153,8 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "try to assign machine to private network of other partition",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition2ExistingPrivateNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
@@ -1169,8 +1169,8 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "try to assign machine to super network",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1PrivateSuperNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
@@ -1184,8 +1184,8 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "try to assign machine to underlay network",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1UnderlayNetwork.ID,
 						AutoAcquireIP: &boolTrue,
 					},
@@ -1199,11 +1199,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "try to add machine to multiple private networks",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID: testdata.Partition1ExistingPrivateNetwork.ID,
 					},
-					v12.MachineAllocationNetwork{
+					v1.MachineAllocationNetwork{
 						NetworkID: testdata.Partition2ExistingPrivateNetwork.ID,
 					},
 				},
@@ -1216,11 +1216,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		{
 			name: "try to add the same network a couple of times",
 			allocationSpec: &helper.MachineAllocationSpec{
-				Networks: v12.MachineAllocationNetworks{
-					v12.MachineAllocationNetwork{
+				Networks: v1.MachineAllocationNetworks{
+					v1.MachineAllocationNetwork{
 						NetworkID: testdata.Partition1InternetNetwork.ID,
 					},
-					v12.MachineAllocationNetwork{
+					v1.MachineAllocationNetwork{
 						NetworkID: testdata.Partition1InternetNetwork.ID,
 					},
 				},

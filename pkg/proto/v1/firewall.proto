@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package metal.api.v1;
+
+option go_package = "github.com/metal-stack/metal-api/pkg/proto/v1";
+
+import "v1/common.proto";
+import "v1/identifiable.proto";
+import "google/protobuf/wrappers.proto";
+
+service FirewallService {
+    rpc Create(FirewallCreateRequest) returns (FirewallResponse);
+    rpc Update(FirewallUpdateRequest) returns (FirewallResponse);
+    rpc Delete(FirewallDeleteRequest) returns (FirewallResponse);
+    rpc Get(FirewallGetRequest) returns (FirewallResponse);
+    rpc Find(FirewallFindRequest) returns (FirewallListResponse);
+    rpc List(FirewallListRequest) returns (FirewallListResponse);
+}
+
+message Firewall {
+    Common common = 1;
+    google.protobuf.StringValue ha = 2; // if set to true, this firewall is set up in a High Available manner
+}
+
+message FirewallCreateRequest {
+    Firewall firewall = 1;
+}
+
+message FirewallUpdateRequest {
+    Firewall firewall = 1;
+}
+
+message FirewallDeleteRequest {
+    Identifiable identifiable = 1;
+}
+
+message FirewallGetRequest {
+    Identifiable identifiable = 1;
+}
+
+message FirewallFindRequest {
+    FindCriteria findCriteria = 1;
+}
+
+message FirewallListRequest {}
+
+message FirewallResponse {
+    Firewall firewall = 1;
+}
+
+message FirewallListResponse {
+    repeated Firewall firewalls = 1;
+}

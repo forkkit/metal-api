@@ -6,9 +6,10 @@ import (
 	"github.com/emicklei/go-restful"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -20,19 +21,19 @@ func (r *ipResource) allocateIP(request *restful.Request, response *restful.Resp
 
 func (r *ipResource) allocateSpecificIP(request *restful.Request, response *restful.Response) {
 	specificIP := request.PathParameter("ip")
-	var requestPayload v12.IPAllocateRequest
+	var requestPayload v1.IPAllocateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	if requestPayload.NetworkID == "" {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("networkid should not be empty")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("networkid should not be empty")) {
 			return
 		}
 	}
 	if requestPayload.ProjectID == "" {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("projectid should not be empty")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("projectid should not be empty")) {
 			return
 		}
 	}
@@ -47,12 +48,12 @@ func (r *ipResource) allocateSpecificIP(request *restful.Request, response *rest
 	}
 
 	nw, err := r.ds.FindNetworkByID(requestPayload.NetworkID)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	p, err := r.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: requestPayload.ProjectID})
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
@@ -62,17 +63,17 @@ func (r *ipResource) allocateSpecificIP(request *restful.Request, response *rest
 	}
 
 	tags, err = helper.ProcessTags(tags)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
 	// TODO: Following operations should span a database transaction if possible
 
 	ipAddress, ipParentCidr, err := helper.AllocateIP(nw, specificIP, r.ipamer)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	utils.Logger(request).Sugar().Debugw("found an ip to allocate", "ip", ipAddress, "network", nw.ID)
+	helper.Logger(request).Sugar().Debugw("found an ip to allocate", "ip", ipAddress, "network", nw.ID)
 
 	ipType := metal.Ephemeral
 	if requestPayload.Type == metal.Static {
@@ -91,10 +92,10 @@ func (r *ipResource) allocateSpecificIP(request *restful.Request, response *rest
 	}
 
 	err = r.ds.CreateIP(ip)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusCreated, v12.NewIPResponse(ip))
+	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewIPResponse(ip))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

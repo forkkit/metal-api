@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-api/pkg/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -17,7 +18,7 @@ func (r *machineResource) addProvisioningEvent(request *restful.Request, respons
 	id := request.PathParameter("id")
 	m, err := r.ds.FindMachineByID(id)
 	if err != nil && !metal.IsNotFound(err) {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 	}
@@ -31,36 +32,36 @@ func (r *machineResource) addProvisioningEvent(request *restful.Request, respons
 			},
 		}
 		err = r.ds.CreateMachine(m)
-		if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 			return
 		}
 	}
 
-	var requestPayload v12.MachineProvisioningEvent
+	var requestPayload v1.MachineProvisioningEvent
 	err = request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 	ok := metal.AllProvisioningEventTypes[metal.ProvisioningEventType(requestPayload.Event)]
 	if !ok {
-		if helper.CheckError(request, response, utils.CurrentFuncName(), fmt.Errorf("unknown provisioning event")) {
+		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("unknown provisioning event")) {
 			return
 		}
 	}
 
 	ec, err := r.provisioningEventForMachine(id, requestPayload)
-	if helper.CheckError(request, response, utils.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
 		return
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, v12.NewMachineRecentProvisioningEvents(ec))
+	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewMachineRecentProvisioningEvents(ec))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return
 	}
 }
 
-func (r *machineResource) provisioningEventForMachine(machineID string, e v12.MachineProvisioningEvent) (*metal.ProvisioningEventContainer, error) {
+func (r *machineResource) provisioningEventForMachine(machineID string, e v1.MachineProvisioningEvent) (*metal.ProvisioningEventContainer, error) {
 	ec, err := r.ds.FindProvisioningEventContainer(machineID)
 	if err != nil && !metal.IsNotFound(err) {
 		return nil, err

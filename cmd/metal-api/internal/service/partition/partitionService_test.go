@@ -3,8 +3,9 @@ package partition
 import (
 	"bytes"
 	"encoding/json"
+	service2 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	v12 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +14,6 @@ import (
 
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
-	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/testdata"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/stretchr/testify/require"
@@ -50,7 +50,7 @@ func TestGetPartitions(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result []v12.PartitionResponse
+	var result []v1.PartitionResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -78,7 +78,7 @@ func TestGetPartition(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.PartitionResponse
+	var result v1.PartitionResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -120,7 +120,7 @@ func TestDeletePartition(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.PartitionResponse
+	var result v1.PartitionResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -140,12 +140,12 @@ func TestCreatePartition(t *testing.T) {
 	service := NewPartition(ds, topicCreater)
 	container := restful.NewContainer().Add(service)
 
-	createRequest := v12.PartitionCreateRequest{
+	createRequest := v1.PartitionCreateRequest{
 		Common: Common{
-			Identifiable: v12.Identifiable{
+			Identifiable: service2.Identifiable{
 				ID: testdata.Partition1.ID,
 			},
-			Describable: v12.Describable{
+			Describable: service2.Describable{
 				Name:        &testdata.Partition1.Name,
 				Description: &testdata.Partition1.Description,
 			},
@@ -161,7 +161,7 @@ func TestCreatePartition(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusCreated, resp.StatusCode, w.Body.String())
-	var result v12.PartitionResponse
+	var result v1.PartitionResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -179,18 +179,18 @@ func TestUpdatePartition(t *testing.T) {
 
 	mgmtService := "mgmt"
 	imageURL := "http://somewhere/image1.zip"
-	updateRequest := v12.PartitionUpdateRequest{
+	updateRequest := v1.PartitionUpdateRequest{
 		Common: Common{
-			Describable: v12.Describable{
+			Describable: service2.Describable{
 				Name:        &testdata.Partition2.Name,
 				Description: &testdata.Partition2.Description,
 			},
-			Identifiable: v12.Identifiable{
+			Identifiable: service2.Identifiable{
 				ID: testdata.Partition1.ID,
 			},
 		},
 		MgmtServiceAddress: &mgmtService,
-		PartitionBootConfiguration: &v12.PartitionBootConfiguration{
+		PartitionBootConfiguration: &v1.PartitionBootConfiguration{
 			ImageURL: &imageURL,
 		},
 	}
@@ -204,7 +204,7 @@ func TestUpdatePartition(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result v12.PartitionResponse
+	var result v1.PartitionResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
@@ -230,7 +230,7 @@ func TestPartitionCapacity(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result []v12.PartitionCapacity
+	var result []v1.PartitionCapacity
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)

@@ -105,7 +105,7 @@ func (rs *RethinkStore) partitionTable() *r.Term {
 	return &res
 }
 
-func (rs *RethinkStore) MachineTable() *r.Term {
+func (rs *RethinkStore) machineTable() *r.Term {
 	res := r.DB(rs.dbname).Table("machine")
 	return &res
 }
@@ -125,12 +125,12 @@ func (rs *RethinkStore) eventTable() *r.Term {
 	return &res
 }
 
-func (rs *RethinkStore) NetworkTable() *r.Term {
+func (rs *RethinkStore) networkTable() *r.Term {
 	res := r.DB(rs.dbname).Table("network")
 	return &res
 }
 
-func (rs *RethinkStore) IPTable() *r.Term {
+func (rs *RethinkStore) ipTable() *r.Term {
 	res := r.DB(rs.dbname).Table("ip")
 	return &res
 }
