@@ -22,11 +22,11 @@ func ToIP(ip *metal.IP) *IP {
 	return &IP{
 		Common: &Common{
 			Meta: &mdv1.Meta{
-				Id:                   ip.GetID(),
-				Apiversion:           "v1",
-				Version:              1,
-				CreatedTime:          helper.ToTimestamp(ip.Created),
-				UpdatedTime:          helper.ToTimestamp(ip.Changed),
+				Id:          ip.GetID(),
+				Apiversion:  "v1",
+				Version:     1,
+				CreatedTime: helper.ToTimestamp(ip.Created),
+				UpdatedTime: helper.ToTimestamp(ip.Changed),
 			},
 			Name:        helper.ToStringValue(ip.Name),
 			Description: helper.ToStringValue(ip.Description),

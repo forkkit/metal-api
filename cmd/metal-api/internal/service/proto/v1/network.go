@@ -1,8 +1,10 @@
 package v1
 
 import (
+	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
 	r "gopkg.in/rethinkdb/rethinkdb-go.v5"
 	"strconv"
@@ -13,45 +15,54 @@ func NewNetworkResponse(network *metal.Network, usage *metal.NetworkUsage) *Netw
 		return nil
 	}
 
-	var parentNetworkID *string
-	if network.ParentNetworkID != "" {
-		parentNetworkID = &network.ParentNetworkID
-	}
-
 	return &NetworkResponse{
-		Common: Common{
-			Identifiable: Identifiable{
-				ID: network.ID,
+		Network:          ToNetwork(network),
+		NetworkImmutable: ToNetworkImmutable(network),
+		Usage:            ToNetworkUsage(usage),
+	}
+}
+
+func ToNetwork(network *metal.Network) *Network {
+	if network == nil {
+		return nil
+	}
+	return &Network{
+		Common: &Common{
+			Meta: &mdv1.Meta{
+				Id:          network.GetID(),
+				Apiversion:  "v1",
+				Version:     1,
+				CreatedTime: helper.ToTimestamp(network.Created),
+				UpdatedTime: helper.ToTimestamp(network.Changed),
 			},
-			Describable: Describable{
-				Name:        &network.Name,
-				Description: &network.Description,
-			},
+			Name:        helper.ToStringValue(network.Name),
+			Description: helper.ToStringValue(network.Description),
 		},
-		NetworkBase: NetworkBase{
-			PartitionID: &network.PartitionID,
-			ProjectID:   &network.ProjectID,
-			Labels:      network.Labels,
-		},
-		NetworkImmutable: NetworkImmutable{
-			Prefixes:            network.Prefixes.String(),
-			DestinationPrefixes: network.DestinationPrefixes.String(),
-			Nat:                 network.Nat,
-			PrivateSuper:        network.PrivateSuper,
-			Underlay:            network.Underlay,
-			Vrf:                 &network.Vrf,
-			ParentNetworkID:     parentNetworkID,
-		},
-		Usage: NetworkUsage{
-			AvailableIPs:      usage.AvailableIPs,
-			UsedIPs:           usage.UsedIPs,
-			AvailablePrefixes: usage.AvailablePrefixes,
-			UsedPrefixes:      usage.UsedPrefixes,
-		},
-		Timestamps: Timestamps{
-			Created: network.Created,
-			Changed: network.Changed,
-		},
+		PartitionID: helper.ToStringValue(network.PartitionID),
+		ProjectID:   helper.ToStringValue(network.ProjectID),
+		Labels:      network.Labels,
+	}
+}
+
+func ToNetworkImmutable(network *metal.Network) *NetworkImmutable {
+	return &NetworkImmutable{
+		Prefixes:            network.Prefixes.String(),
+		DestinationPrefixes: network.DestinationPrefixes.String(),
+		Nat:                 network.Nat,
+		PrivateSuper:        network.PrivateSuper,
+		Underlay:            network.Underlay,
+		Vrf:                 helper.ToUInt64Value(network.Vrf),
+		//VrfShared:           helper.ToBoolValue(network.VrfShared), //TODO network.VrfShared is not defined
+		ParentNetworkID: helper.ToStringValue(network.ParentNetworkID),
+	}
+}
+
+func ToNetworkUsage(usage *metal.NetworkUsage) *NetworkUsage {
+	return &NetworkUsage{
+		AvailableIPs:      usage.AvailableIPs,
+		UsedIPs:           usage.UsedIPs,
+		AvailablePrefixes: usage.AvailablePrefixes,
+		UsedPrefixes:      usage.UsedPrefixes,
 	}
 }
 
@@ -120,7 +131,7 @@ func (x *NetworkSearchQuery) GenerateTerm(rs *datastore.RethinkStore) *r.Term {
 	}
 
 	for _, prefix := range x.Prefixes {
-		ip, length := utils.SplitCIDR(prefix)
+		ip, length := utils.SplitCIDR(prefix.GetValue())
 
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("prefixes").Map(func(p r.Term) r.Term {
@@ -138,7 +149,7 @@ func (x *NetworkSearchQuery) GenerateTerm(rs *datastore.RethinkStore) *r.Term {
 	}
 
 	for _, destPrefix := range x.DestinationPrefixes {
-		ip, length := utils.SplitCIDR(destPrefix)
+		ip, length := utils.SplitCIDR(destPrefix.GetValue())
 
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("destinationprefixes").Map(func(dp r.Term) r.Term {

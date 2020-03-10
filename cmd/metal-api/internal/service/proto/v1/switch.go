@@ -37,8 +37,8 @@ func NewSwitchResponse(s *metal.Switch, p *metal.Partition, nics SwitchNics, con
 	}
 
 	return &SwitchResponse{
-		Switch: ToSwitch(s),
-		Partition: NewPartitionResponse(p),
+		Switch:      ToSwitch(s),
+		Partition:   NewPartitionResponse(p),
 		Connections: cons,
 	}
 }
@@ -47,17 +47,17 @@ func ToSwitch(s *metal.Switch) *Switch {
 	return &Switch{
 		Common: &Common{
 			Meta: &mdv1.Meta{
-				Id:                   s.GetID(),
-				Apiversion:           "v1",
-				Version:              1,
-				CreatedTime:          helper.ToTimestamp(s.Created),
-				UpdatedTime:          helper.ToTimestamp(s.Changed),
+				Id:          s.GetID(),
+				Apiversion:  "v1",
+				Version:     1,
+				CreatedTime: helper.ToTimestamp(s.Created),
+				UpdatedTime: helper.ToTimestamp(s.Changed),
 			},
 			Name:        helper.ToStringValue(s.Name),
 			Description: helper.ToStringValue(s.Description),
 		},
 		RackID: s.RackID,
-		Nics: ToNICs(s.Nics),
+		Nics:   ToNICs(s.Nics),
 	}
 }
 
@@ -70,11 +70,11 @@ func ToNICs(nics metal.Nics) SwitchNics {
 }
 
 func ToNIC(nic metal.Nic) *SwitchNic {
-    return &SwitchNic{
-		MacAddress:    string(nic.MacAddress),
-		Name:          nic.Name,
-		Vrf:           helper.ToStringValue(nic.Vrf),
-		BGPFilter:     NewBGPFilter(),
+	return &SwitchNic{
+		MacAddress: string(nic.MacAddress),
+		Name:       nic.Name,
+		Vrf:        helper.ToStringValue(nic.Vrf),
+		BGPFilter:  NewBGPFilter(),
 	}
 }
 

@@ -20,11 +20,11 @@ func ToSize(s *metal.Size) *Size {
 	return &Size{
 		Common: &Common{
 			Meta: &mdv1.Meta{
-				Id:                   s.GetID(),
-				Apiversion:           "v1",
-				Version:              1,
-				CreatedTime:          helper.ToTimestamp(s.Created),
-				UpdatedTime:          helper.ToTimestamp(s.Changed),
+				Id:          s.GetID(),
+				Apiversion:  "v1",
+				Version:     1,
+				CreatedTime: helper.ToTimestamp(s.Created),
+				UpdatedTime: helper.ToTimestamp(s.Changed),
 			},
 			Name:        helper.ToStringValue(s.Name),
 			Description: helper.ToStringValue(s.Description),

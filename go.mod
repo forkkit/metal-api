@@ -6,7 +6,11 @@ require (
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/dustin/go-humanize v1.0.0
+	github.com/emicklei/go-restful v2.11.2+incompatible
+	github.com/emicklei/go-restful-openapi v1.2.0
+	github.com/go-openapi/spec v0.19.6
 	github.com/go-stack/stack v1.8.0
+	github.com/golang/protobuf v1.4.0-rc.2
 	github.com/google/go-cmp v0.4.0
 	github.com/metal-stack/go-ipam v1.3.2
 	github.com/metal-stack/masterdata-api v0.0.0

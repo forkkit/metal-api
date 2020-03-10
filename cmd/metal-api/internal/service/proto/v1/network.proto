@@ -5,7 +5,6 @@ package metal.api.v1;
 option go_package = "github.com/metal-stack/metal-api/protobuf/v1";
 
 import "v1/common.proto";
-import "v1/identifiable.proto";
 import "google/protobuf/wrappers.proto";
 
 service NetworkService {
@@ -31,7 +30,7 @@ message NetworkImmutable {
 	bool nat = 3; // if set to true, packets leaving this network get masqueraded behind interface ip
 	bool privateSuper = 4; // if set to true, this network will serve as a partition's super network for the internal machine networks,there can only be one privatesuper network per partition
 	bool underlay = 5; // if set to true, this network can be used for underlay communication
-	google.protobuf.BoolValue vrf = 6;   // the vrf this network is associated with
+	google.protobuf.UInt64Value vrf = 6;   // the vrf this network is associated with
 	google.protobuf.BoolValue vrfShared = 7; // if set to true, given vrf can be used by multiple networks, which is sometimes useful for network partitioning (default: false)
 	google.protobuf.StringValue parentNetworkID = 8; // the id of the parent network
 }
@@ -54,9 +53,10 @@ message NetworkSearchQuery {
     google.protobuf.BoolValue nat = 7;
     google.protobuf.BoolValue privateSuper = 8;
     google.protobuf.BoolValue underlay = 9;
-    google.protobuf.Int64Value vrf = 10;
-    google.protobuf.StringValue parentNetworkID = 11;
-    map<string, string> labels = 12;
+    google.protobuf.UInt64Value vrf = 10;
+    google.protobuf.BoolValue vrfShared = 11; //TODO Not used
+    google.protobuf.StringValue parentNetworkID = 12;
+    map<string, string> labels = 13;
 }
 
 message NetworkCreateRequest {

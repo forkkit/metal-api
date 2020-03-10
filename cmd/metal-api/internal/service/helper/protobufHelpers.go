@@ -9,7 +9,7 @@ import (
 func ToTimestamp(t time.Time) *timestamp.Timestamp {
 	return &timestamp.Timestamp{
 		Seconds: int64(t.Second()),
-		Nanos: int32(t.Nanosecond()),
+		Nanos:   int32(t.Nanosecond()),
 	}
 }
 
@@ -22,6 +22,12 @@ func ToBoolValue(value bool) *wrappers.BoolValue {
 func ToInt64Value(value int) *wrappers.Int64Value {
 	return &wrappers.Int64Value{
 		Value: int64(value),
+	}
+}
+
+func ToUInt64Value(value uint) *wrappers.UInt64Value {
+	return &wrappers.UInt64Value{
+		Value: uint64(value),
 	}
 }
 

@@ -26,11 +26,11 @@ func ToImage(img *metal.Image) *Image {
 	return &Image{
 		Common: &Common{
 			Meta: &mdv1.Meta{
-				Id:                   img.ID,
-				Apiversion:           "v1",
-				Version:              1,
-				CreatedTime:          helper.ToTimestamp(img.Created),
-				UpdatedTime:          helper.ToTimestamp(img.Changed),
+				Id:          img.ID,
+				Apiversion:  "v1",
+				Version:     1,
+				CreatedTime: helper.ToTimestamp(img.Created),
+				UpdatedTime: helper.ToTimestamp(img.Changed),
 			},
 			Name:        helper.ToStringValue(img.Name),
 			Description: helper.ToStringValue(img.Description),
