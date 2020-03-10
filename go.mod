@@ -13,10 +13,10 @@ require (
 	github.com/golang/protobuf v1.4.0-rc.2
 	github.com/google/go-cmp v0.4.0
 	github.com/metal-stack/go-ipam v1.3.2
-	github.com/metal-stack/masterdata-api v0.0.0
-	github.com/metal-stack/metal-lib v0.3.2
+	github.com/metal-stack/masterdata-api v0.4.2-0.20200309141803-aa9f2a9a2f30
+	github.com/metal-stack/metal-lib v0.3.4
 	github.com/metal-stack/security v0.3.0
-	github.com/metal-stack/v v1.0.1
+	github.com/metal-stack/v v1.0.2
 	github.com/nsqio/go-nsq v1.0.8
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.1
@@ -30,5 +30,3 @@ require (
 	google.golang.org/protobuf v1.20.0
 	gopkg.in/rethinkdb/rethinkdb-go.v5 v5.1.0
 )
-
-replace github.com/metal-stack/masterdata-api => ../masterdata-api
