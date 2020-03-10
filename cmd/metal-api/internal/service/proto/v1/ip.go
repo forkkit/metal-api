@@ -38,7 +38,7 @@ func ToIP(ip *metal.IP) *IP {
 	}
 }
 
-// GenerateTerm generates the project search query term.
+// GenerateTerm generates the IP search query term.
 func (x *IPFindRequest) GenerateTerm(rs *datastore.RethinkStore) *r.Term {
 	q := *rs.IPTable()
 

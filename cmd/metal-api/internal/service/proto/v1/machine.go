@@ -270,7 +270,7 @@ func NewMachineRecentProvisioningEvents(ec *metal.ProvisioningEventContainer) *M
 	}
 }
 
-// GenerateTerm generates the project search query term.
+// GenerateTerm generates the machine search query term
 func (x *MachineSearchQuery) GenerateTerm(rs *datastore.RethinkStore) *r.Term {
 	q := *rs.MachineTable()
 

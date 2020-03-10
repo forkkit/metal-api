@@ -66,7 +66,7 @@ func ToNetworkUsage(usage *metal.NetworkUsage) *NetworkUsage {
 	}
 }
 
-// GenerateTerm generates the project search query term.
+// GenerateTerm generates the network search query term.
 func (x *NetworkSearchQuery) GenerateTerm(rs *datastore.RethinkStore) *r.Term {
 	q := *rs.NetworkTable()
 
