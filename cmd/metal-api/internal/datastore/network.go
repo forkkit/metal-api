@@ -1,11 +1,8 @@
 package datastore
 
 import (
-	"strconv"
-
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
-	r "gopkg.in/rethinkdb/rethinkdb-go.v5"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 )
 
 // FindNetworkByID returns an network of a given id.
@@ -19,13 +16,13 @@ func (rs *RethinkStore) FindNetworkByID(id string) (*metal.Network, error) {
 }
 
 // FindNetwork returns a machine by the given query, fails if there is no record or multiple records found.
-func (rs *RethinkStore) FindNetwork(q *NetworkSearchQuery, n *metal.Network) error {
-	return rs.findEntity(q.generateTerm(rs), &n)
+func (rs *RethinkStore) FindNetwork(q *v1.NetworkSearchQuery, n *metal.Network) error {
+	return rs.findEntity(q.GenerateTerm(rs), &n)
 }
 
 // SearchNetworks returns the networks that match the given properties
-func (rs *RethinkStore) SearchNetworks(q *NetworkSearchQuery, ns *metal.Networks) error {
-	return rs.searchEntities(q.generateTerm(rs), ns)
+func (rs *RethinkStore) SearchNetworks(q *v1.NetworkSearchQuery, ns *metal.Networks) error {
+	return rs.searchEntities(q.GenerateTerm(rs), ns)
 }
 
 // ListNetworks returns all networks.

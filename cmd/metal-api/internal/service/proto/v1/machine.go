@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"time"
+	r "gopkg.in/rethinkdb/rethinkdb-go.v5"
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
@@ -9,241 +9,6 @@ import (
 
 // RecentProvisioningEventsLimit defines how many recent events are added to the MachineRecentProvisioningEvents struct
 const RecentProvisioningEventsLimit = 5
-
-type MachineBase struct {
-	Partition                *PartitionResponse              `json:"partition" modelDescription:"A machine representing a bare metal machine." description:"the partition assigned to this machine" readOnly:"true"`
-	RackID                   string                          `json:"rackid" description:"the rack assigned to this machine" readOnly:"true"`
-	Size                     *SizeResponse                   `json:"size" description:"the size of this machine" readOnly:"true"`
-	Hardware                 MachineHardware                 `json:"hardware" description:"the hardware of this machine"`
-	BIOS                     MachineBIOS                     `json:"bios" description:"bios information of this machine"`
-	Allocation               *MachineAllocation              `json:"allocation" description:"the allocation data of an allocated machine"`
-	State                    MachineState                    `json:"state" rethinkdb:"state" description:"the state of this machine"`
-	LEDState                 ChassisIdentifyLEDState         `json:"ledstate" rethinkdb:"ledstate" description:"the state of this chassis identify LED"`
-	Liveliness               string                          `json:"liveliness" description:"the liveliness of this machine"`
-	RecentProvisioningEvents MachineRecentProvisioningEvents `json:"events" description:"recent events of this machine during provisioning"`
-	Tags                     []string                        `json:"tags" description:"tags for this machine"`
-}
-
-type MachineAllocation struct {
-	Created         time.Time         `json:"created" description:"the time when the machine was created"`
-	Name            string            `json:"name" description:"the name of the machine"`
-	Description     string            `json:"description,omitempty" description:"a description for this machine" optional:"true"`
-	Project         string            `json:"project" description:"the project id that this machine is assigned to" `
-	Image           *ImageResponse    `json:"image" description:"the image assigned to this machine" readOnly:"true" optional:"true"`
-	MachineNetworks []MachineNetwork  `json:"networks" description:"the networks of this machine"`
-	Hostname        string            `json:"hostname" description:"the hostname which will be used when creating the machine"`
-	SSHPubKeys      []string          `json:"ssh_pub_keys" description:"the public ssh keys to access the machine with"`
-	UserData        string            `json:"user_data,omitempty" description:"userdata to execute post installation tasks" optional:"true"`
-	ConsolePassword *string           `json:"console_password" description:"the console password which was generated while provisioning" optional:"true"`
-	Succeeded       bool              `json:"succeeded" description:"if the allocation of the machine was successful, this is set to true"`
-	Reinstall       *MachineReinstall `json:"reinstall" description:"indicates whether to reinstall the machine (if not nil)"`
-}
-
-type MachineReinstall struct {
-	OldImageID   string `json:"old_image_id" description:"the ID of the already existing OS image"`
-	PrimaryDisk  string `json:"primary_disk" description:"device name of the disk that contains the partition on which the OS is installed"`
-	OSPartition  string `json:"os_partition" description:"device name of disk partition that has the OS installed"`
-	Initrd       string `json:"initrd" description:"the initrd image"`
-	Cmdline      string `json:"cmdline" description:"the cmdline"`
-	Kernel       string `json:"kernel" description:"the kernel"`
-	BootloaderID string `json:"bootloaderid" description:"the bootloader ID"`
-}
-
-type MachineNetwork struct {
-	NetworkID           string   `json:"networkid" description:"the networkID of the allocated machine in this vrf"`
-	Prefixes            []string `json:"prefixes" description:"the prefixes of this network"`
-	IPs                 []string `json:"ips" description:"the ip addresses of the allocated machine in this vrf"`
-	Vrf                 uint     `json:"vrf" description:"the vrf of the allocated machine"`
-	ASN                 int64    `json:"asn" description:"ASN number for this network in the bgp configuration"`
-	Private             bool     `json:"private" description:"indicates whether this network is the private network of this machine"`
-	Nat                 bool     `json:"nat" description:"if set to true, packets leaving this network get masqueraded behind interface ip"`
-	DestinationPrefixes []string `json:"destinationprefixes" modelDescription:"prefixes that are reachable within this network" description:"the destination prefixes of this network"`
-	Underlay            bool     `json:"underlay" description:"if set to true, this network can be used for underlay communication"`
-}
-
-type MachineHardwareBase struct {
-	Memory   uint64               `json:"memory" description:"the total memory of the machine"`
-	CPUCores int                  `json:"cpu_cores" description:"the number of cpu cores"`
-	Disks    []MachineBlockDevice `json:"disks" description:"the list of block devices of this machine"`
-}
-
-type MachineHardware struct {
-	MachineHardwareBase
-	Nics MachineNics `json:"nics" description:"the list of network interfaces of this machine"`
-}
-
-type MachineHardwareExtended struct {
-	MachineHardwareBase
-	Nics MachineNicsExtended `json:"nics" description:"the list of network interfaces of this machine with extended information"`
-}
-
-type MachineState struct {
-	Value       string `json:"value" description:"the state of this machine. empty means available for all"`
-	Description string `json:"description" description:"a description why this machine is in the given state"`
-}
-
-type ChassisIdentifyLEDState struct {
-	Value       string `json:"value" description:"the state of this chassis identify LED. empty means LED-OFF"`
-	Description string `json:"description" description:"a description why this chassis identify LED is in the given state"`
-}
-
-type MachineBlockDevice struct {
-	Name       string                `json:"name" description:"the name of this block device"`
-	Size       uint64                `json:"size" description:"the size of this block device"`
-	Partitions MachineDiskPartitions `json:"partitions" description:"the partitions of this disk"`
-	Primary    bool                  `json:"primary" description:"whether this disk has the OS installed"`
-}
-
-type MachineRecentProvisioningEvents struct {
-	Events                       []MachineProvisioningEvent `json:"log" description:"the log of recent machine provisioning events"`
-	LastEventTime                *time.Time                 `json:"last_event_time" description:"the time where the last event was received"`
-	IncompleteProvisioningCycles string                     `json:"incomplete_provisioning_cycles" description:"the amount of incomplete provisioning cycles in the event container"`
-}
-
-type MachineProvisioningEvent struct {
-	Time    time.Time `json:"time" description:"the time that this event was received" optional:"true" readOnly:"true"`
-	Event   string    `json:"event" description:"the event emitted by the machine"`
-	Message string    `json:"message" description:"an additional message to add to the event" optional:"true"`
-}
-
-type MachineNics []MachineNic
-
-type MachineNic struct {
-	MacAddress string `json:"mac"  description:"the mac address of this network interface"`
-	Name       string `json:"name"  description:"the name of this network interface"`
-}
-
-type MachineNicsExtended []MachineNicExtended
-
-type MachineNicExtended struct {
-	MachineNic
-	Neighbors MachineNicsExtended `json:"neighbors" description:"the neighbors visible to this network interface"`
-}
-
-type MachineLivelinessReport struct {
-	AliveCount   int `json:"alive_count" description:"the number of machines alive"`
-	DeadCount    int `json:"dead_count" description:"the number of dead machines"`
-	UnknownCount int `json:"unknown_count" description:"the number of machines with unknown liveliness"`
-}
-
-type MachineBIOS struct {
-	Version string `json:"version" modelDescription:"The bios version" description:"the bios version"`
-	Vendor  string `json:"vendor" description:"the bios vendor"`
-	Date    string `json:"date" description:"the bios date"`
-}
-
-type MachineIPMI struct {
-	Address    string     `json:"address" modelDescription:"The IPMI connection data"`
-	MacAddress string     `json:"mac"`
-	User       string     `json:"user"`
-	Password   string     `json:"password"`
-	Interface  string     `json:"interface"`
-	Fru        MachineFru `json:"fru"`
-	BMCVersion string     `json:"bmcversion"`
-}
-
-type MachineFru struct {
-	ChassisPartNumber   *string `json:"chassis_part_number,omitempty" modelDescription:"The Field Replaceable Unit data" description:"the chassis part number" optional:"true"`
-	ChassisPartSerial   *string `json:"chassis_part_serial,omitempty" description:"the chassis part serial" optional:"true"`
-	BoardMfg            *string `json:"board_mfg,omitempty" description:"the board mfg" optional:"true"`
-	BoardMfgSerial      *string `json:"board_mfg_serial,omitempty" description:"the board mfg serial" optional:"true"`
-	BoardPartNumber     *string `json:"board_part_number,omitempty" description:"the board part number" optional:"true"`
-	ProductManufacturer *string `json:"product_manufacturer,omitempty" description:"the product manufacturer" optional:"true"`
-	ProductPartNumber   *string `json:"product_part_number,omitempty" description:"the product part number" optional:"true"`
-	ProductSerial       *string `json:"product_serial,omitempty" description:"the product serial" optional:"true"`
-}
-
-type MachineRegisterRequest struct {
-	UUID        string                  `json:"uuid" description:"the product uuid of the machine to register"`
-	PartitionID string                  `json:"partitionid" description:"the partition id to register this machine with"`
-	RackID      string                  `json:"rackid" description:"the rack id where this machine is connected to"`
-	Hardware    MachineHardwareExtended `json:"hardware" description:"the hardware of this machine"`
-	BIOS        MachineBIOS             `json:"bios" description:"bios information of this machine"`
-	IPMI        MachineIPMI             `json:"ipmi" description:"the ipmi access infos"`
-	Tags        []string                `json:"tags" description:"tags for this machine"`
-}
-
-type MachineAllocateRequest struct {
-	UUID *string `json:"uuid" description:"if this field is set, this specific machine will be allocated if it is not in available state and not currently allocated. this field overrules size and partition" optional:"true"`
-	Describable
-	Hostname    *string                   `json:"hostname" description:"the hostname for the allocated machine (defaults to metal)" optional:"true"`
-	ProjectID   string                    `json:"projectid" description:"the project id to assign this machine to"`
-	PartitionID string                    `json:"partitionid" description:"the partition id to assign this machine to"`
-	SizeID      string                    `json:"sizeid" description:"the size id to assign this machine to"`
-	ImageID     string                    `json:"imageid" description:"the image id to assign this machine to"`
-	SSHPubKeys  []string                  `json:"ssh_pub_keys" description:"the public ssh keys to access the machine with"`
-	UserData    *string                   `json:"user_data" description:"cloud-init.io compatible userdata must be base64 encoded" optional:"true"`
-	Tags        []string                  `json:"tags" description:"tags for this machine" optional:"true"`
-	Networks    MachineAllocationNetworks `json:"networks" description:"the networks that this machine will be placed in." optional:"true"`
-	IPs         []string                  `json:"ips" description:"the ips to attach to this machine additionally" optional:"true"`
-}
-
-type MachineAllocationNetworks []MachineAllocationNetwork
-
-type MachineAllocationNetwork struct {
-	NetworkID     string `json:"networkid" description:"the id of the network that this machine will be placed in"`
-	AutoAcquireIP *bool  `json:"autoacquire" description:"will automatically acquire an ip in this network if set to true, default is true"`
-}
-
-type MachineDiskPartitions []MachineDiskPartition
-
-type MachineDiskPartition struct {
-	Label        string            `json:"label" description:"the partition label"`
-	Device       string            `json:"device" description:"the partition device name, e.g. sda1"`
-	Number       uint              `json:"number" description:"the partition number"`
-	MountPoint   string            `json:"mountpoint" description:"the partition mount point"`
-	MountOptions []string          `json:"mountoptions" description:"the partition mount options"`
-	Size         int64             `json:"size" description:"the partition size"`
-	Filesystem   string            `json:"filesystem" description:"the partition filesystem"`
-	GPTType      string            `json:"gpttyoe" description:"the partition GPT type"`
-	GPTGuid      string            `json:"gptguid" description:"the partition GPT guid"`
-	Properties   map[string]string `json:"properties" description:"the partition properties"`
-	ContainsOS   bool              `json:"containsos" description:"whether the OS is installed on this partition or not"`
-}
-
-type MachineFinalizeAllocationRequest struct {
-	ConsolePassword string `json:"console_password" description:"the console password which was generated while provisioning"`
-	PrimaryDisk     string `json:"primarydisk" description:"the device name of the primary disk"`
-	OSPartition     string `json:"ospartition" description:"the partition that has the OS installed"`
-	Initrd          string `json:"initrd" description:"the initrd image"`
-	Cmdline         string `json:"cmdline" description:"the cmdline"`
-	Kernel          string `json:"kernel" description:"the kernel"`
-	BootloaderID    string `json:"bootloaderid" description:"the bootloader ID"`
-}
-
-type MachineFindRequest struct {
-	datastore.MachineSearchQuery
-}
-
-type MachineResponse struct {
-	Common
-	MachineBase
-	Timestamps
-}
-
-type MachineIPMIResponse struct {
-	Common
-	MachineBase
-	IPMI MachineIPMI `json:"ipmi" description:"ipmi information of this machine"`
-	Timestamps
-}
-
-type Leases map[string]string
-
-type MachineIpmiReport struct {
-	PartitionID string `json:"partitionid" description:"the partition id for the ipmi report"`
-	Leases      Leases `json:"leases" description:"the active leases to be reported by a management server"`
-}
-
-type MachineIpmiReportResponse struct {
-	Updated Leases `json:"updated" description:"the leases that triggered an update of ipmi data"`
-	Created Leases `json:"created" description:"the leases that triggered a creation of a machine entity"`
-}
-
-type MachineReinstallRequest struct {
-	Common
-	ImageID string `json:"imageid" description:"the image id to be installed"`
-}
 
 func NewMetalMachineHardware(r *MachineHardwareExtended) metal.MachineHardware {
 	var nics metal.Nics
@@ -530,4 +295,315 @@ func NewMachineRecentProvisioningEvents(ec *metal.ProvisioningEventContainer) *M
 		IncompleteProvisioningCycles: ec.IncompleteProvisioningCycles,
 		LastEventTime:                ec.LastEventTime,
 	}
+}
+
+// GenerateTerm generates the project search query term.
+func (x *MachineSearchQuery) GenerateTerm(rs *datastore.RethinkStore) *r.Term {
+	q := *rs.machineTable()
+
+	if x.ID != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("id").Eq(*x.ID)
+		})
+	}
+
+	if x.Name != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("name").Eq(*x.Name)
+		})
+	}
+
+	if x.PartitionID != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("partitionid").Eq(*x.PartitionID)
+		})
+	}
+
+	if x.SizeID != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("sizeid").Eq(*x.SizeID)
+		})
+	}
+
+	if x.RackID != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("rackid").Eq(*x.RackID)
+		})
+	}
+
+	if x.Liveliness != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("liveliness").Eq(*x.Liveliness)
+		})
+	}
+
+	for _, tag := range x.Tags {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("tags").Contains(r.Expr(tag))
+		})
+	}
+
+	if x.AllocationName != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("name").Eq(*x.AllocationName)
+		})
+	}
+
+	if x.AllocationProject != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("project").Eq(*x.AllocationProject)
+		})
+	}
+
+	if x.AllocationImageID != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("imageid").Eq(*x.AllocationImageID)
+		})
+	}
+
+	if x.AllocationHostname != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("hostname").Eq(*x.AllocationHostname)
+		})
+	}
+
+	if x.AllocationSucceeded != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("succeeded").Eq(*x.AllocationSucceeded)
+		})
+	}
+
+	for _, id := range x.NetworkIDs {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("networkid")
+			}).Contains(r.Expr(id))
+		})
+	}
+
+	for _, prefix := range x.NetworkPrefixes {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("prefixes")
+			}).Contains(r.Expr(prefix))
+		})
+	}
+
+	for _, ip := range x.NetworkIPs {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("ips")
+			}).Contains(r.Expr(ip))
+		})
+	}
+
+	for _, destPrefix := range x.NetworkDestinationPrefixes {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("destinationprefixes")
+			}).Contains(r.Expr(destPrefix))
+		})
+	}
+
+	for _, vrf := range x.NetworkVrfs {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("vrf")
+			}).Contains(r.Expr(vrf))
+		})
+	}
+
+	if x.NetworkPrivate != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("private")
+			}).Contains(*x.NetworkPrivate)
+		})
+	}
+
+	for _, asn := range x.NetworkASNs {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("asn")
+			}).Contains(r.Expr(asn))
+		})
+	}
+
+	if x.NetworkNat != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("nat")
+			}).Contains(*x.NetworkNat)
+		})
+	}
+
+	if x.NetworkUnderlay != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
+				return nw.Field("underlay")
+			}).Contains(*x.NetworkUnderlay)
+		})
+	}
+
+	if x.HardwareMemory != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("hardware").Field("memory").Eq(*x.HardwareMemory)
+		})
+	}
+
+	if x.HardwareCPUCores != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("hardware").Field("cpu_cores").Eq(*x.HardwareCPUCores)
+		})
+	}
+
+	for _, mac := range x.NicsMacAddresses {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
+				return nic.Field("macAddress")
+			}).Contains(r.Expr(mac))
+		})
+	}
+
+	for _, name := range x.NicsNames {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
+				return nic.Field("name")
+			}).Contains(r.Expr(name))
+		})
+	}
+
+	for _, vrf := range x.NicsVrfs {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
+				return nic.Field("vrf")
+			}).Contains(r.Expr(vrf))
+		})
+	}
+
+	for _, mac := range x.NicsNeighborMacAddresses {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
+				return nic.Field("neighbors").Map(func(neigh r.Term) r.Term {
+					return neigh.Field("macAddress")
+				})
+			}).Contains(r.Expr(mac))
+		})
+	}
+
+	for _, name := range x.NicsNames {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
+				return nic.Field("neighbors").Map(func(neigh r.Term) r.Term {
+					return neigh.Field("name")
+				})
+			}).Contains(r.Expr(name))
+		})
+	}
+
+	for _, vrf := range x.NicsVrfs {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
+				return nic.Field("neighbors").Map(func(neigh r.Term) r.Term {
+					return neigh.Field("vrf")
+				})
+			}).Contains(r.Expr(vrf))
+		})
+	}
+
+	for _, name := range x.DiskNames {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("block_devices").Map(func(bd r.Term) r.Term {
+				return bd.Field("name")
+			}).Contains(r.Expr(name))
+		})
+	}
+
+	for _, size := range x.DiskSizes {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("block_devices").Map(func(bd r.Term) r.Term {
+				return bd.Field("size")
+			}).Contains(r.Expr(size))
+		})
+	}
+
+	if x.StateValue != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("state_value").Eq(*x.StateValue)
+		})
+	}
+
+	if x.IpmiAddress != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("address").Eq(*x.IpmiAddress)
+		})
+	}
+
+	if x.IpmiMacAddress != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("mac").Eq(*x.IpmiMacAddress)
+		})
+	}
+
+	if x.IpmiUser != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("user").Eq(*x.IpmiUser)
+		})
+	}
+
+	if x.IpmiInterface != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("interface").Eq(*x.IpmiInterface)
+		})
+	}
+
+	if x.FruChassisPartNumber != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("fru").Field("chassis_part_number").Eq(*x.FruChassisPartNumber)
+		})
+	}
+
+	if x.FruChassisPartSerial != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("fru").Field("chassis_part_serial").Eq(*x.FruChassisPartSerial)
+		})
+	}
+
+	if x.FruBoardMfg != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("fru").Field("board_mfg").Eq(*x.FruBoardMfg)
+		})
+	}
+
+	if x.FruBoardMfgSerial != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("fru").Field("board_mfg_serial").Eq(*x.FruBoardMfgSerial)
+		})
+	}
+
+	if x.FruBoardPartNumber != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("fru").Field("board_part_number").Eq(*x.FruBoardPartNumber)
+		})
+	}
+
+	if x.FruProductManufacturer != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("fru").Field("product_manufacturer").Eq(*x.FruProductManufacturer)
+		})
+	}
+
+	if x.FruProductPartNumber != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("fru").Field("product_part_number").Eq(*x.FruProductPartNumber)
+		})
+	}
+
+	if x.FruProductSerial != nil {
+		q = q.Filter(func(row r.Term) r.Term {
+			return row.Field("ipmi").Field("fru").Field("product_serial").Eq(*x.FruProductSerial)
+		})
+	}
+
+	return &q
 }
