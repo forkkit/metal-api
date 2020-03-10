@@ -325,7 +325,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 				}},
 				machine: metal.Machine{
 					Allocation: &metal.MachineAllocation{
-						Project: "project",
+						ProjectID: "project",
 						MachineNetworks: []*metal.MachineNetwork{
 							&metal.MachineNetwork{
 								IPs:      []string{"10.1.0.1"},
@@ -358,7 +358,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 				}},
 				machine: metal.Machine{
 					Allocation: &metal.MachineAllocation{
-						Project: "project",
+						ProjectID: "project",
 						MachineNetworks: []*metal.MachineNetwork{
 							&metal.MachineNetwork{
 								IPs: []string{"212.89.42.2", "212.89.42.1"},
@@ -442,14 +442,14 @@ func TestMakeSwitchNics(t *testing.T) {
 					metal.Machine{
 						Base: metal.Base{ID: "m1"},
 						Allocation: &metal.MachineAllocation{
-							Project: "project",
+							ProjectID: "project",
 						},
 					},
 					metal.Machine{
 						Base: metal.Base{ID: "fw1"},
 						Allocation: &metal.MachineAllocation{
-							Project: "p",
-							ImageID: "fwimg",
+							ProjectID: "p",
+							ImageID:   "fwimg",
 							MachineNetworks: []*metal.MachineNetwork{
 								&metal.MachineNetwork{Vrf: 1},
 								&metal.MachineNetwork{Vrf: 2},

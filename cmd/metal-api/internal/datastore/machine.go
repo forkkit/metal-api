@@ -3,6 +3,7 @@ package datastore
 import (
 	"context"
 	"fmt"
+	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/proto/v1"
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 )
@@ -10,7 +11,7 @@ import (
 // FindMachineByID returns a machine for a given id.
 func (rs *RethinkStore) FindMachineByID(id string) (*metal.Machine, error) {
 	var m metal.Machine
-	err := rs.findEntityByID(rs.machineTable(), &m, id)
+	err := rs.findEntityByID(rs.MachineTable(), &m, id)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +31,7 @@ func (rs *RethinkStore) SearchMachines(q *v1.MachineSearchQuery, ms *metal.Machi
 // ListMachines returns all machines.
 func (rs *RethinkStore) ListMachines() (metal.Machines, error) {
 	ms := make(metal.Machines, 0)
-	err := rs.listEntities(rs.machineTable(), &ms)
+	err := rs.listEntities(rs.MachineTable(), &ms)
 	return ms, err
 }
 
@@ -43,18 +44,18 @@ func (rs *RethinkStore) CreateMachine(m *metal.Machine) error {
 	if m.Allocation != nil {
 		return fmt.Errorf("a machine cannot be created when it is allocated: %q: %+v", m.ID, *m.Allocation)
 	}
-	return rs.createEntity(rs.machineTable(), m)
+	return rs.createEntity(rs.MachineTable(), m)
 }
 
 // DeleteMachine removes a machine from the database.
 func (rs *RethinkStore) DeleteMachine(m *metal.Machine) error {
-	return rs.deleteEntity(rs.machineTable(), m)
+	return rs.deleteEntity(rs.MachineTable(), m)
 }
 
 // UpdateMachine replaces a machine in the database if the 'changed' field of
 // the old value equals the 'changed' field of the recored in the database.
 func (rs *RethinkStore) UpdateMachine(oldMachine *metal.Machine, newMachine *metal.Machine) error {
-	return rs.updateEntity(rs.machineTable(), newMachine, oldMachine)
+	return rs.updateEntity(rs.MachineTable(), newMachine, oldMachine)
 }
 
 // InsertWaitingMachine adds a machine to the wait table.

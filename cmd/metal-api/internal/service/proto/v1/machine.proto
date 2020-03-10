@@ -64,7 +64,7 @@ message MachineAllocation {
 
 message MachineHardwareBase {
     uint64 memory = 1; // the total memory of the machine
-    int64 cpuCores = 2; // the number of cpu cores
+    uint32 cpuCores = 2; // the number of cpu cores
     repeated MachineBlockDevice disks = 3; // the list of block devices of this machine
 }
 
@@ -148,8 +148,8 @@ message MachineRegisterRequest {
     string partitionID = 2; // the partition id to register this machine with
     string rackID = 3; // the rack id where this machine is connected to
     MachineHardwareExtended hardware = 4; // the hardware of this machine
-    MachineBIOS bios = 5; // bios information of this machine
-    MachineIPMI ipmi = 6; // the ipmi access infos
+    MachineBIOS BIOS = 5; // bios information of this machine
+    MachineIPMI IPMI = 6; // the ipmi access infos
     repeated google.protobuf.StringValue tags = 7; // tags for this machine
 }
 
@@ -259,7 +259,7 @@ message MachineSearchQuery {
 message MachineIPMIResponse {
     Common common = 1;
     Machine machine = 2;
-    MachineIPMI ipmi = 3; // ipmi information of this machine
+    MachineIPMI IPMI = 3; // ipmi information of this machine
 }
 
 message MachineIpmiReport {
@@ -283,7 +283,7 @@ message MachineNic {
 }
 
 message MachineNicExtended {
-    string machineNic = 1;
+    MachineNic machineNic = 1;
     repeated MachineNicExtended neighbors = 2; // the neighbors visible to this network interface
 }
 
@@ -294,7 +294,7 @@ message Machine {
     string rackID = 3; // the rack assigned to this machine //TODO readonly
     SizeResponse size = 4; // the size of this machine //TODO readonly
     MachineHardware hardware = 5; // the hardware of this machine
-    MachineBIOS bios = 6; // bios information of this machine
+    MachineBIOS BIOS = 6; // bios information of this machine
     MachineAllocation allocation = 7; // the allocation data of an allocated machine
     MachineState state = 8; // the state of this machine
     ChassisIdentifyLEDState ledState = 9; // the state of this chassis identify LED

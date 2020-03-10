@@ -117,11 +117,10 @@ type MachineAllocation struct {
 	Created         time.Time         `rethinkdb:"created" json:"created"`
 	Name            string            `rethinkdb:"name" json:"name"`
 	Description     string            `rethinkdb:"description" json:"description"`
-	Project         string            `rethinkdb:"project" json:"project"`
+	ProjectID       string            `rethinkdb:"projectid" json:"projectid"`
 	ImageID         string            `rethinkdb:"imageid" json:"imageid"`
 	MachineNetworks []*MachineNetwork `rethinkdb:"networks" json:"networks"`
 	Hostname        string            `rethinkdb:"hostname" json:"hostname"`
-	SSHPubKeys      []string          `rethinkdb:"sshPubKeys" json:"sshPubKeys"`
 	UserData        string            `rethinkdb:"userdata" json:"userdata"`
 	ConsolePassword string            `rethinkdb:"console_password" json:"console_password"`
 	Succeeded       bool              `rethinkdb:"succeeded" json:"succeeded"`
@@ -132,6 +131,7 @@ type MachineAllocation struct {
 	Cmdline         string            `rethinkdb:"cmdline" json:"cmdline"`
 	Kernel          string            `rethinkdb:"kernel" json:"kernel"`
 	BootloaderID    string            `rethinkdb:"bootloaderid" json:"bootloaderid"`
+	SSHPubKeys      []string          `rethinkdb:"sshPubKeys" json:"sshPubKeys"`
 }
 
 // ByProjectID creates a map of machines with the project id as the index.
@@ -139,7 +139,7 @@ func (ms Machines) ByProjectID() map[string]Machines {
 	res := make(map[string]Machines)
 	for i, m := range ms {
 		if m.Allocation != nil {
-			res[m.Allocation.Project] = append(res[m.Allocation.Project], ms[i])
+			res[m.Allocation.ProjectID] = append(res[m.Allocation.ProjectID], ms[i])
 		}
 	}
 	return res
@@ -161,7 +161,7 @@ type MachineNetwork struct {
 // MachineHardware stores the data which is collected by our system on the hardware when it registers itself.
 type MachineHardware struct {
 	Memory   uint64        `rethinkdb:"memory" json:"memory"`
-	CPUCores int           `rethinkdb:"cpu_cores" json:"cpu_cores"`
+	CPUCores uint          `rethinkdb:"cpu_cores" json:"cpu_cores"`
 	Nics     Nics          `rethinkdb:"network_interfaces" json:"network_interfaces"`
 	Disks    []BlockDevice `rethinkdb:"block_devices" json:"block_devices"`
 }
@@ -212,7 +212,7 @@ type DiskPartition struct {
 	Number       uint              `rethinkdb:"number" json:"number"`
 	MountPoint   string            `rethinkdb:"mountpoint" json:"mountpoint"`
 	MountOptions []string          `rethinkdb:"mountoptions" json:"mountoptions"`
-	Size         int64             `rethinkdb:"size" json:"size"`
+	Size         uint64            `rethinkdb:"size" json:"size"`
 	Filesystem   string            `rethinkdb:"filesystem" json:"filesystem"`
 	GPTType      string            `rethinkdb:"gpttyoe" json:"gpttyoe"`
 	GPTGuid      string            `rethinkdb:"gptguid" json:"gptguid"`

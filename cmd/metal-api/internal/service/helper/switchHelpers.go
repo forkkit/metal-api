@@ -163,7 +163,7 @@ func MakeBGPFilterMachine(m metal.Machine, ips metal.IPsMap) v12.BGPFilter {
 	if private != nil {
 		cidrs = append(cidrs, private.Prefixes...)
 	}
-	for _, i := range ips[m.Allocation.Project] {
+	for _, i := range ips[m.Allocation.ProjectID] {
 		// No need to add /32 addresses of the primary network to the whitelist.
 		if private != nil && private.ContainsIP(i.IPAddress) {
 			continue

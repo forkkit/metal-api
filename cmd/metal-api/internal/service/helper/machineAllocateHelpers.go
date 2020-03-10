@@ -91,7 +91,7 @@ func AllocateMachine(ds *datastore.RethinkStore, ipamer ipam.IPAMer, allocationS
 		Name:            allocationSpec.Name,
 		Description:     allocationSpec.Description,
 		Hostname:        allocationSpec.Hostname,
-		Project:         projectID,
+		ProjectID:       projectID,
 		ImageID:         allocationSpec.Image.ID,
 		UserData:        allocationSpec.UserData,
 		SSHPubKeys:      allocationSpec.SSHPubKeys,

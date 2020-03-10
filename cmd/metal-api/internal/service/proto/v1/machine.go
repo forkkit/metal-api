@@ -1,6 +1,8 @@
 package v1
 
 import (
+	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	r "gopkg.in/rethinkdb/rethinkdb-go.v5"
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
@@ -10,26 +12,26 @@ import (
 // RecentProvisioningEventsLimit defines how many recent events are added to the MachineRecentProvisioningEvents struct
 const RecentProvisioningEventsLimit = 5
 
-func NewMetalMachineHardware(r *MachineHardwareExtended) metal.MachineHardware {
+func NewMetalMachineHardware(hw *MachineHardwareExtended) metal.MachineHardware {
 	var nics metal.Nics
-	for i := range r.Nics {
+	for _, n := range hw.Nics {
 		var neighbors metal.Nics
-		for i2 := range r.Nics[i].Neighbors {
+		for _, neigh := range n.Neighbors {
 			neighbor := metal.Nic{
-				MacAddress: metal.MacAddress(r.Nics[i].Neighbors[i2].MacAddress),
-				Name:       r.Nics[i].Neighbors[i2].Name,
+				MacAddress: metal.MacAddress(neigh.MachineNic.MacAddress),
+				Name:       neigh.MachineNic.Name,
 			}
 			neighbors = append(neighbors, neighbor)
 		}
 		nic := metal.Nic{
-			MacAddress: metal.MacAddress(r.Nics[i].MacAddress),
-			Name:       r.Nics[i].Name,
+			MacAddress: metal.MacAddress(n.MachineNic.MacAddress),
+			Name:       n.MachineNic.Name,
 			Neighbors:  neighbors,
 		}
 		nics = append(nics, nic)
 	}
 	var disks []metal.BlockDevice
-	for _, d := range r.Disks {
+	for _, d := range hw.Base.Disks {
 		disk := metal.BlockDevice{
 			Name:    d.Name,
 			Size:    d.Size,
@@ -39,13 +41,13 @@ func NewMetalMachineHardware(r *MachineHardwareExtended) metal.MachineHardware {
 			disk.Partitions = append(disk.Partitions, &metal.DiskPartition{
 				Label:        p.Label,
 				Device:       p.Device,
-				Number:       p.Number,
+				Number:       uint(p.Number),
 				MountPoint:   p.MountPoint,
 				MountOptions: p.MountOptions,
 				Size:         p.Size,
 				Filesystem:   p.Filesystem,
-				GPTType:      p.GPTType,
-				GPTGuid:      p.GPTGuid,
+				GPTType:      p.GptType,
+				GPTGuid:      p.GptGuid,
 				Properties:   p.Properties,
 				ContainsOS:   p.ContainsOS,
 			})
@@ -53,63 +55,30 @@ func NewMetalMachineHardware(r *MachineHardwareExtended) metal.MachineHardware {
 		disks = append(disks, disk)
 	}
 	return metal.MachineHardware{
-		Memory:   r.Memory,
-		CPUCores: r.CPUCores,
+		Memory:   hw.Base.Memory,
+		CPUCores: uint(hw.Base.CpuCores),
 		Nics:     nics,
 		Disks:    disks,
 	}
 }
 
-func NewMetalIPMI(r *MachineIPMI) metal.IPMI {
-	var chassisPartNumber string
-	if r.Fru.ChassisPartNumber != nil {
-		chassisPartNumber = *r.Fru.ChassisPartNumber
-	}
-	var chassisPartSerial string
-	if r.Fru.ChassisPartSerial != nil {
-		chassisPartSerial = *r.Fru.ChassisPartSerial
-	}
-	var boardMfg string
-	if r.Fru.BoardMfg != nil {
-		boardMfg = *r.Fru.BoardMfg
-	}
-	var boardMfgSerial string
-	if r.Fru.BoardMfgSerial != nil {
-		boardMfgSerial = *r.Fru.BoardMfgSerial
-	}
-	var boardPartNumber string
-	if r.Fru.BoardPartNumber != nil {
-		boardPartNumber = *r.Fru.BoardPartNumber
-	}
-	var productManufacturer string
-	if r.Fru.ProductManufacturer != nil {
-		productManufacturer = *r.Fru.ProductManufacturer
-	}
-	var productPartNumber string
-	if r.Fru.ProductPartNumber != nil {
-		productPartNumber = *r.Fru.ProductPartNumber
-	}
-	var productSerial string
-	if r.Fru.ProductSerial != nil {
-		productSerial = *r.Fru.ProductSerial
-	}
-
+func NewMetalIPMI(ipmi *MachineIPMI) metal.IPMI {
 	return metal.IPMI{
-		Address:    r.Address,
-		MacAddress: r.MacAddress,
-		User:       r.User,
-		Password:   r.Password,
-		Interface:  r.Interface,
-		BMCVersion: r.BMCVersion,
+		Address:    ipmi.Address,
+		MacAddress: ipmi.MacAddress,
+		User:       ipmi.User,
+		Password:   ipmi.Password,
+		Interface:  ipmi.Interface,
+		BMCVersion: ipmi.BmcVersion,
 		Fru: metal.Fru{
-			ChassisPartNumber:   chassisPartNumber,
-			ChassisPartSerial:   chassisPartSerial,
-			BoardMfg:            boardMfg,
-			BoardMfgSerial:      boardMfgSerial,
-			BoardPartNumber:     boardPartNumber,
-			ProductManufacturer: productManufacturer,
-			ProductPartNumber:   productPartNumber,
-			ProductSerial:       productSerial,
+			ChassisPartNumber:   ipmi.Fru.ChassisPartNumber.GetValue(),
+			ChassisPartSerial:   ipmi.Fru.ChassisPartSerial.GetValue(),
+			BoardMfg:            ipmi.Fru.BoardMfg.GetValue(),
+			BoardMfgSerial:      ipmi.Fru.BoardMfgSerial.GetValue(),
+			BoardPartNumber:     ipmi.Fru.BoardPartNumber.GetValue(),
+			ProductManufacturer: ipmi.Fru.ProductManufacturer.GetValue(),
+			ProductPartNumber:   ipmi.Fru.ProductPartNumber.GetValue(),
+			ProductSerial:       ipmi.Fru.ProductSerial.GetValue(),
 		},
 	}
 }
@@ -117,189 +86,193 @@ func NewMetalIPMI(r *MachineIPMI) metal.IPMI {
 func NewMachineIPMIResponse(m *metal.Machine, s *metal.Size, p *metal.Partition, i *metal.Image, ec *metal.ProvisioningEventContainer) *MachineIPMIResponse {
 	machineResponse := NewMachineResponse(m, s, p, i, ec)
 	return &MachineIPMIResponse{
-		Common:      machineResponse.Common,
-		MachineBase: machineResponse.MachineBase,
-		IPMI: MachineIPMI{
-			Address:    m.IPMI.Address,
-			MacAddress: m.IPMI.MacAddress,
-			User:       m.IPMI.User,
-			Password:   m.IPMI.Password,
-			Interface:  m.IPMI.Interface,
-			BMCVersion: m.IPMI.BMCVersion,
-			Fru: MachineFru{
-				ChassisPartNumber:   &m.IPMI.Fru.ChassisPartNumber,
-				ChassisPartSerial:   &m.IPMI.Fru.ChassisPartSerial,
-				BoardMfg:            &m.IPMI.Fru.BoardMfg,
-				BoardMfgSerial:      &m.IPMI.Fru.BoardMfgSerial,
-				BoardPartNumber:     &m.IPMI.Fru.BoardPartNumber,
-				ProductManufacturer: &m.IPMI.Fru.ProductManufacturer,
-				ProductPartNumber:   &m.IPMI.Fru.ProductPartNumber,
-				ProductSerial:       &m.IPMI.Fru.ProductSerial,
-			},
-		},
-		Timestamps: machineResponse.Timestamps,
+		Common:  machineResponse.Common,
+		Machine: machineResponse.Machine,
+		IPMI:    ToMachineIPMI(m.IPMI),
 	}
 }
 
-func NewMachineResponse(m *metal.Machine, s *metal.Size, p *metal.Partition, i *metal.Image, ec *metal.ProvisioningEventContainer) *MachineResponse {
-	var hardware MachineHardware
-	var nics MachineNics
-	for i := range m.Hardware.Nics {
-		nic := MachineNic{
-			MacAddress: string(m.Hardware.Nics[i].MacAddress),
-			Name:       m.Hardware.Nics[i].Name,
+func ToMachineIPMI(ipmi metal.IPMI) *MachineIPMI {
+	return &MachineIPMI{
+		Address:    ipmi.Address,
+		MacAddress: ipmi.MacAddress,
+		User:       ipmi.User,
+		Password:   ipmi.Password,
+		Interface:  ipmi.Interface,
+		BmcVersion: ipmi.BMCVersion,
+		Fru:        ToMachineFRU(ipmi.Fru),
+	}
+}
+
+func ToMachineFRU(fru metal.Fru) *MachineFru {
+	return &MachineFru{
+		ChassisPartNumber:   helper.ToStringValue(fru.ChassisPartNumber),
+		ChassisPartSerial:   helper.ToStringValue(fru.ChassisPartSerial),
+		BoardMfg:            helper.ToStringValue(fru.BoardMfg),
+		BoardMfgSerial:      helper.ToStringValue(fru.BoardMfgSerial),
+		BoardPartNumber:     helper.ToStringValue(fru.BoardPartNumber),
+		ProductManufacturer: helper.ToStringValue(fru.ProductManufacturer),
+		ProductPartNumber:   helper.ToStringValue(fru.ProductPartNumber),
+		ProductSerial:       helper.ToStringValue(fru.ProductSerial),
+	}
+}
+
+func NewMachineResponse(m *metal.Machine, s *metal.Size, p *metal.Partition, img *metal.Image, ec *metal.ProvisioningEventContainer) *MachineResponse {
+	return &MachineResponse{
+		Common: &Common{
+			Meta: &mdv1.Meta{
+				Id:          m.GetID(),
+				Apiversion:  "v1",
+				Version:     1,
+				CreatedTime: helper.ToTimestamp(m.Created),
+				UpdatedTime: helper.ToTimestamp(m.Changed),
+			},
+			Name:        helper.ToStringValue(m.Name),
+			Description: helper.ToStringValue(m.Description),
+		},
+		Machine: ToMachine(m, s, p, img, ec),
+	}
+}
+
+func ToMachine(m *metal.Machine, s *metal.Size, p *metal.Partition, img *metal.Image, ec *metal.ProvisioningEventContainer) *Machine {
+	var hardware *MachineHardware
+	var nics []*MachineNic
+	for _, n := range m.Hardware.Nics {
+		nic := &MachineNic{
+			MacAddress: string(n.MacAddress),
+			Name:       n.Name,
 		}
 		nics = append(nics, nic)
 
-		var disks []MachineBlockDevice
-		for i := range m.Hardware.Disks {
-			disk := MachineBlockDevice{
-				Name: m.Hardware.Disks[i].Name,
-				Size: m.Hardware.Disks[i].Size,
+		var disks []*MachineBlockDevice
+		for _, d := range m.Hardware.Disks {
+			disk := &MachineBlockDevice{
+				Name: d.Name,
+				Size: d.Size,
 			}
 			disks = append(disks, disk)
 		}
-		hardware = MachineHardware{
-			MachineHardwareBase: MachineHardwareBase{
+		hardware = &MachineHardware{
+			Base: &MachineHardwareBase{
 				Memory:   m.Hardware.Memory,
-				CPUCores: m.Hardware.CPUCores,
+				CpuCores: uint32(m.Hardware.CPUCores),
 				Disks:    disks,
 			},
 			Nics: nics,
 		}
 	}
 
-	var allocation *MachineAllocation
-	if m.Allocation != nil {
-		var networks []MachineNetwork
-		for _, nw := range m.Allocation.MachineNetworks {
-			ips := append([]string{}, nw.IPs...)
-			network := MachineNetwork{
-				NetworkID:           nw.NetworkID,
-				IPs:                 ips,
-				Vrf:                 nw.Vrf,
-				ASN:                 nw.ASN,
-				Private:             nw.Private,
-				Nat:                 nw.Nat,
-				Underlay:            nw.Underlay,
-				DestinationPrefixes: nw.DestinationPrefixes,
-				Prefixes:            nw.Prefixes,
-			}
-			networks = append(networks, network)
-		}
-
-		var consolePassword *string
-		if m.Allocation.ConsolePassword != "" {
-			consolePassword = &m.Allocation.ConsolePassword
-		}
-
-		allocation = &MachineAllocation{
-			Created:         m.Allocation.Created,
-			Name:            m.Allocation.Name,
-			Description:     m.Allocation.Description,
-			Image:           NewImageResponse(i),
-			Project:         m.Allocation.Project,
-			Hostname:        m.Allocation.Hostname,
-			SSHPubKeys:      m.Allocation.SSHPubKeys,
-			UserData:        m.Allocation.UserData,
-			ConsolePassword: consolePassword,
-			MachineNetworks: networks,
-			Succeeded:       m.Allocation.Succeeded,
-		}
-
-		if m.Allocation.Reinstall {
-			allocation.Reinstall = &MachineReinstall{
-				OldImageID:   m.Allocation.ImageID,
-				PrimaryDisk:  m.Allocation.PrimaryDisk,
-				OSPartition:  m.Allocation.OSPartition,
-				Initrd:       m.Allocation.Initrd,
-				Cmdline:      m.Allocation.Cmdline,
-				Kernel:       m.Allocation.Kernel,
-				BootloaderID: m.Allocation.BootloaderID,
-			}
-		}
-	}
-
-	var tags []string
-	if len(m.Tags) > 0 {
-		tags = m.Tags
-	}
 	liveliness := ""
 	if ec != nil {
 		liveliness = string(ec.Liveliness)
 	}
 
-	return &MachineResponse{
-		Common: Common{
-			Identifiable: Identifiable{
-				ID: m.ID,
-			},
-			Describable: Describable{
-				Name:        &m.Name,
-				Description: &m.Description,
-			},
+	return &Machine{
+		Partition:  NewPartitionResponse(p),
+		Size:       NewSizeResponse(s),
+		Allocation: ToMachineAllocation(m.Allocation, img),
+		RackID:     m.RackID,
+		Hardware:   hardware,
+		BIOS: &MachineBIOS{
+			Version: m.BIOS.Version,
+			Vendor:  m.BIOS.Vendor,
+			Date:    m.BIOS.Date,
 		},
-		MachineBase: MachineBase{
-			Partition:  NewPartitionResponse(p),
-			Size:       NewSizeResponse(s),
-			Allocation: allocation,
-			RackID:     m.RackID,
-			Hardware:   hardware,
-			BIOS: MachineBIOS{
-				Version: m.BIOS.Version,
-				Vendor:  m.BIOS.Vendor,
-				Date:    m.BIOS.Date,
-			},
-			State: MachineState{
-				Value:       string(m.State.Value),
-				Description: m.State.Description,
-			},
-			LEDState: ChassisIdentifyLEDState{
-				Value:       string(m.LEDState.Value),
-				Description: m.LEDState.Description,
-			},
-			Liveliness:               liveliness,
-			RecentProvisioningEvents: *NewMachineRecentProvisioningEvents(ec),
-			Tags:                     tags,
+		State: &MachineState{
+			Value:       string(m.State.Value),
+			Description: m.State.Description,
 		},
-		Timestamps: Timestamps{
-			Created: m.Created,
-			Changed: m.Changed,
+		LedState: &ChassisIdentifyLEDState{
+			Value:       string(m.LEDState.Value),
+			Description: m.LEDState.Description,
 		},
+		Liveliness:               liveliness,
+		RecentProvisioningEvents: NewMachineRecentProvisioningEvents(ec),
+		Tags:                     helper.ToStringValueSlice(m.Tags...),
+	}
+}
+
+func ToMachineAllocation(alloc *metal.MachineAllocation, img *metal.Image) *MachineAllocation {
+	if alloc == nil {
+		return nil
+	}
+	var networks []*MachineNetwork
+	for _, nw := range alloc.MachineNetworks {
+		ips := append([]string{}, nw.IPs...)
+		network := &MachineNetwork{
+			NetworkID:           nw.NetworkID,
+			IPs:                 ips,
+			Vrf:                 uint64(nw.Vrf),
+			ASN:                 nw.ASN,
+			Private:             nw.Private,
+			Nat:                 nw.Nat,
+			Underlay:            nw.Underlay,
+			DestinationPrefixes: nw.DestinationPrefixes,
+			Prefixes:            nw.Prefixes,
+		}
+		networks = append(networks, network)
+	}
+
+	ma := &MachineAllocation{
+		Created:         helper.ToTimestamp(alloc.Created),
+		Name:            alloc.Name,
+		Description:     helper.ToStringValue(alloc.Description),
+		Image:           NewImageResponse(img),
+		ProjectID:       alloc.ProjectID,
+		Hostname:        alloc.Hostname,
+		UserData:        helper.ToStringValue(alloc.UserData),
+		ConsolePassword: helper.ToStringValue(alloc.ConsolePassword),
+		MachineNetworks: networks,
+		Succeeded:       alloc.Succeeded,
+		SshPubKeys:      alloc.SSHPubKeys,
+	}
+	if alloc.Reinstall {
+		ma.Reinstall = &MachineReinstall{
+			OldImageID: alloc.ImageID,
+			Setup:      ToMachineSetup(alloc),
+		}
+	}
+	return ma
+}
+
+func ToMachineSetup(alloc *metal.MachineAllocation) *MachineSetup {
+	return &MachineSetup{
+		PrimaryDisk:  alloc.PrimaryDisk,
+		OsPartition:  alloc.OSPartition,
+		Initrd:       alloc.Initrd,
+		Cmdline:      alloc.Cmdline,
+		Kernel:       alloc.Kernel,
+		BootloaderID: alloc.BootloaderID,
 	}
 }
 
 func NewMachineRecentProvisioningEvents(ec *metal.ProvisioningEventContainer) *MachineRecentProvisioningEvents {
-	var es []MachineProvisioningEvent
-	if ec == nil {
-		return &MachineRecentProvisioningEvents{
-			Events:                       es,
-			LastEventTime:                nil,
-			IncompleteProvisioningCycles: "0",
-		}
+	if ec == nil || ec.LastEventTime == nil {
+		return &MachineRecentProvisioningEvents{}
 	}
 	machineEvents := ec.Events
 	if len(machineEvents) >= RecentProvisioningEventsLimit {
 		machineEvents = machineEvents[:RecentProvisioningEventsLimit]
 	}
+	var events []*MachineProvisioningEvent
 	for _, machineEvent := range machineEvents {
-		e := MachineProvisioningEvent{
-			Time:    machineEvent.Time,
+		e := &MachineProvisioningEvent{
+			Time:    helper.ToTimestamp(machineEvent.Time),
 			Event:   string(machineEvent.Event),
-			Message: machineEvent.Message,
+			Message: helper.ToStringValue(machineEvent.Message),
 		}
-		es = append(es, e)
+		events = append(events, e)
 	}
 	return &MachineRecentProvisioningEvents{
-		Events:                       es,
+		Events:                       events,
 		IncompleteProvisioningCycles: ec.IncompleteProvisioningCycles,
-		LastEventTime:                ec.LastEventTime,
+		LastEventTime:                helper.ToTimestamp(*ec.LastEventTime),
 	}
 }
 
 // GenerateTerm generates the project search query term.
 func (x *MachineSearchQuery) GenerateTerm(rs *datastore.RethinkStore) *r.Term {
-	q := *rs.machineTable()
+	q := *rs.MachineTable()
 
 	if x.ID != nil {
 		q = q.Filter(func(row r.Term) r.Term {

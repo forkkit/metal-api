@@ -35,9 +35,9 @@ var (
 		PartitionID: "1",
 		SizeID:      "1",
 		Allocation: &metal.MachineAllocation{
-			Name:    "d1",
-			ImageID: "1",
-			Project: "p1",
+			Name:      "d1",
+			ImageID:   "1",
+			ProjectID: "p1",
 		},
 		IPMI: IPMI1,
 		Tags: []string{"1"},
@@ -47,9 +47,9 @@ var (
 		PartitionID: "1",
 		SizeID:      "1",
 		Allocation: &metal.MachineAllocation{
-			Name:    "d2",
-			ImageID: "1",
-			Project: "p2",
+			Name:      "d2",
+			ImageID:   "1",
+			ProjectID: "p2",
 		},
 	}
 	M3 = metal.Machine{
@@ -85,9 +85,9 @@ var (
 		PartitionID: "999",
 		SizeID:      "1", // No Size
 		Allocation: &metal.MachineAllocation{
-			Name:    "6",
-			ImageID: "999",
-			Project: "p2",
+			Name:      "6",
+			ImageID:   "999",
+			ProjectID: "p2",
 		},
 		Hardware: MachineHardware1,
 	}
@@ -101,9 +101,9 @@ var (
 		PartitionID: "1",
 		SizeID:      "999", // No Size
 		Allocation: &metal.MachineAllocation{
-			Name:    "7",
-			ImageID: "1",
-			Project: "p2",
+			Name:      "7",
+			ImageID:   "1",
+			ProjectID: "p2",
 		},
 		Hardware: MachineHardware1,
 	}
@@ -117,9 +117,9 @@ var (
 		PartitionID: "1",
 		SizeID:      "1", // No Size
 		Allocation: &metal.MachineAllocation{
-			Name:    "8",
-			ImageID: "999",
-			Project: "p2",
+			Name:      "8",
+			ImageID:   "999",
+			ProjectID: "p2",
 		},
 		Hardware: MachineHardware1,
 	}

@@ -105,7 +105,7 @@ func (rs *RethinkStore) partitionTable() *r.Term {
 	return &res
 }
 
-func (rs *RethinkStore) machineTable() *r.Term {
+func (rs *RethinkStore) MachineTable() *r.Term {
 	res := r.DB(rs.dbname).Table("machine")
 	return &res
 }
