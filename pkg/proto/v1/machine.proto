@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package metal.api.v1;
-
 option go_package = "github.com/metal-stack/metal-api/pkg/proto/v1";
+
+package v1;
 
 import "v1/common.proto";
 import "v1/identifiable.proto";
@@ -52,7 +52,7 @@ message MachineAllocation {
     string name = 2; // the name of the machine
     google.protobuf.StringValue description = 3; // a description for this machine
     string projectID = 4; // the project id that this machine is assigned to
-    ImageResponse image = 5; // the image assigned to this machine //TODO readonly
+    v1.ImageResponse image = 5; // the image assigned to this machine //TODO readonly
     repeated MachineNetwork machineNetworks = 6; // the networks of this machine
     string hostname = 7; // the hostname which will be used when creating the machine
     repeated string sshPubKeys = 8; // the public ssh keys to access the machine with
@@ -154,7 +154,7 @@ message MachineRegisterRequest {
 }
 
 message MachineAllocateRequest {
-    Common common = 1;
+    v1.Common common = 1;
     google.protobuf.StringValue UUID = 2; // if this field is set, this specific machine will be allocated if it is not in available state and not currently allocated (overrules size and partition)
     google.protobuf.StringValue Hostname = 3; // the hostname for the allocated machine (defaults to metal)
 	string projectID = 4; // the project id to assign this machine to
@@ -257,7 +257,7 @@ message MachineSearchQuery {
 }
 
 message MachineIPMIResponse {
-    Common common = 1;
+    v1.Common common = 1;
     Machine machine = 2;
     MachineIPMI IPMI = 3; // ipmi information of this machine
 }
@@ -273,7 +273,7 @@ message MachineIpmiReportResponse {
 }
 
 message MachineReinstallRequest {
-    Common common = 1;
+    v1.Common common = 1;
     string imageID = 2; // the image id to be installed
 }
 
@@ -289,10 +289,10 @@ message MachineNicExtended {
 
 // A machine representing a bare metal machine
 message Machine {
-    Common common = 1;
-    PartitionResponse partition = 2; // the partition assigned to this machine //TODO readonly
+    v1.Common common = 1;
+    v1.PartitionResponse partition = 2; // the partition assigned to this machine //TODO readonly
     string rackID = 3; // the rack assigned to this machine //TODO readonly
-    SizeResponse size = 4; // the size of this machine //TODO readonly
+    v1.SizeResponse size = 4; // the size of this machine //TODO readonly
     MachineHardware hardware = 5; // the hardware of this machine
     MachineBIOS BIOS = 6; // bios information of this machine
     MachineAllocation allocation = 7; // the allocation data of an allocated machine
@@ -312,11 +312,11 @@ message MachineUpdateRequest {
 }
 
 message MachineDeleteRequest {
-    Identifiable identifiable = 1;
+    v1.Identifiable identifiable = 1;
 }
 
 message MachineGetRequest {
-    Identifiable identifiable = 1;
+    v1.Identifiable identifiable = 1;
 }
 
 message MachineFindRequest {
@@ -324,7 +324,7 @@ message MachineFindRequest {
 }
 
 message MachineResponse {
-    Common common = 1;
+    v1.Common common = 1;
     Machine machine = 2;
 }
 

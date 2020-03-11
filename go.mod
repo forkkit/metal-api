@@ -15,7 +15,7 @@ require (
 	github.com/golang/protobuf v1.4.0-rc.2
 	github.com/google/go-cmp v0.4.0
 	github.com/metal-stack/go-ipam v1.3.2
-	github.com/metal-stack/masterdata-api v0.4.2-0.20200310120321-ae8d93c2f0f2
+	github.com/metal-stack/masterdata-api v0.4.2-0.20200311053446-35f845616bff
 	github.com/metal-stack/metal-lib v0.3.4
 	github.com/metal-stack/security v0.3.0
 	github.com/metal-stack/v v1.0.2

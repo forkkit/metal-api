@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package metal.api.v1;
-
 option go_package = "github.com/metal-stack/metal-api/pkg/proto/v1";
+
+package v1;
 
 import "v1/common.proto";
 import "v1/partition.proto";
@@ -38,7 +38,7 @@ message SwitchConnection {
 
 // A switch that can register at the api
 message Switch {
-    Common common = 1;
+    v1.Common common = 1;
     string rackID = 2; // the id of the rack in which this switch is located
     repeated SwitchNic nics = 3; // the list of network interfaces on the switch
 }
@@ -57,25 +57,25 @@ message SwitchRegisterRequest {
 }
 
 //message SwitchDeleteRequest {
-//    Identifiable identifiable = 1;
+//    v1.Identifiable identifiable = 1;
 //}
 
 message SwitchGetRequest {
-    Identifiable identifiable = 1;
+    v1.Identifiable identifiable = 1;
 }
 
 message SwitchFindRequest {
-    FindCriteria findCriteria = 1;
+    v1.FindCriteria findCriteria = 1;
 }
 
 message SwitchResponse {
     Switch switch = 1;
     repeated SwitchConnection connections = 2; // a connection between a switch port and a machine
-    PartitionResponse partition = 3;           // the partition in which this switch is located
+    v1.PartitionResponse partition = 3;           // the partition in which this switch is located
 }
 
 message SwitchListRequest {}
 
 message SwitchListResponse {
-    repeated Switch switchs = 1;
+    repeated Switch switches = 1;
 }

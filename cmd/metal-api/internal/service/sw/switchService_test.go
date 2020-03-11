@@ -24,8 +24,8 @@ package sw
 //	ds, mock := datastore.InitMockDB()
 //	testdata.InitMockDBData(mock)
 //
-//	switchservice := NewSwitch(ds)
-//	container := restful.NewContainer().Add(switchservice)
+//	switchService := NewSwitch(ds)
+//	container := restful.NewContainer().Add(switchService)
 //
 //	name := "switch999"
 //	createRequest := v1.SwitchRegisterRequest{
@@ -67,8 +67,8 @@ package sw
 //	ds, mock := datastore.InitMockDB()
 //	testdata.InitMockDBData(mock)
 //
-//	switchservice := NewSwitch(ds)
-//	container := restful.NewContainer().Add(switchservice)
+//	switchService := NewSwitch(ds)
+//	container := restful.NewContainer().Add(switchService)
 //
 //	createRequest := v1.SwitchRegisterRequest{
 //		Common: Common{
@@ -108,8 +108,8 @@ package sw
 //	ds, mock := datastore.InitMockDB()
 //	testdata.InitMockDBData(mock)
 //
-//	switchservice := NewSwitch(ds)
-//	container := restful.NewContainer().Add(switchservice)
+//	switchService := NewSwitch(ds)
+//	container := restful.NewContainer().Add(switchService)
 //
 //	createRequest := v1.SwitchRegisterRequest{
 //		Common: Common{

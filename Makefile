@@ -22,4 +22,4 @@ redoc:
 
 .PHONY: protoc
 protoc:
-	protoc -I pkg/proto -I pkg/proto/v1/*.proto -I ../../.. --go_out pkg/proto --go_opt=paths=source_relative pkg/proto/v1/*.proto
+	cd pkg/proto && protoc v1/*.proto -I. -I ../../../../.. --go_out :../../..
