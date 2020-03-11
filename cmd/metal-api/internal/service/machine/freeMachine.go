@@ -101,6 +101,13 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return err
 		}
+
+		if imageID != nil {
+			err = PublishMachineCmd(log, m, r, metal.MachineReinstall)
+			if err != nil {
+				log.Errorw("unable to publish ’Reinstall' command", "machineID", m.ID, "error", err)
+			}
+		}
 	}
 
 	// do the next steps in any case, so a client can call this function multiple times to
