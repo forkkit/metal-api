@@ -6,8 +6,8 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -16,12 +16,12 @@ import (
 func (r *partitionResource) createPartition(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.PartitionCreateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	if requestPayload.ID == "" {
-		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("id should not be empty")) {
+		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("id should not be empty")) {
 			return
 		}
 	}
@@ -42,7 +42,7 @@ func (r *partitionResource) createPartition(request *restful.Request, response *
 	if requestPayload.PrivateNetworkPrefixLength != nil {
 		prefixLength = *requestPayload.PrivateNetworkPrefixLength
 		if prefixLength < 16 || prefixLength > 30 {
-			if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("private network prefix length is out of range")) {
+			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("private network prefix length is out of range")) {
 				return
 			}
 		}
@@ -78,14 +78,14 @@ func (r *partitionResource) createPartition(request *restful.Request, response *
 	fqns := []string{metal.TopicMachine.GetFQN(p.GetID()), metal.TopicSwitch.GetFQN(p.GetID())}
 	for _, fqn := range fqns {
 		if err := r.topicCreater.CreateTopic(p.GetID(), fqn); err != nil {
-			if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+			if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 				return
 			}
 		}
 	}
 
 	err = r.ds.CreatePartition(p)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 

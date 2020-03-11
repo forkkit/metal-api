@@ -1,75 +1,75 @@
 package v1
 
 import (
-	"github.com/metal-stack/metal-api/pkg/helper"
+	"github.com/metal-stack/metal-api/pkg/util"
 	r "gopkg.in/rethinkdb/rethinkdb-go.v5"
 	"strconv"
 )
 
 // GenerateTerm generates the network search query term.
-func (x *NetworkSearchQuery) GenerateTerm(q r.Term) *r.Term {
-	if x.ID != nil {
+func (nw *NetworkSearchQuery) GenerateTerm(q r.Term) *r.Term {
+	if nw.ID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("id").Eq(*x.ID)
+			return row.Field("id").Eq(nw.ID.GetValue())
 		})
 	}
 
-	if x.ProjectID != nil {
+	if nw.ProjectID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("projectid").Eq(*x.ProjectID)
+			return row.Field("projectid").Eq(nw.ProjectID.GetValue())
 		})
 	}
 
-	if x.PartitionID != nil {
+	if nw.PartitionID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("partitionid").Eq(*x.PartitionID)
+			return row.Field("partitionid").Eq(nw.PartitionID.GetValue())
 		})
 	}
 
-	if x.ParentNetworkID != nil {
+	if nw.ParentNetworkID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("parentnetworkid").Eq(*x.ParentNetworkID)
+			return row.Field("parentnetworkid").Eq(nw.ParentNetworkID.GetValue())
 		})
 	}
 
-	if x.Name != nil {
+	if nw.Name != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("name").Eq(*x.Name)
+			return row.Field("name").Eq(nw.Name.GetValue())
 		})
 	}
 
-	if x.Vrf != nil {
+	if nw.Vrf != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("vrf").Eq(*x.Vrf)
+			return row.Field("vrf").Eq(nw.Vrf.GetValue())
 		})
 	}
 
-	if x.Nat != nil {
+	if nw.Nat != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("nat").Eq(*x.Nat)
+			return row.Field("nat").Eq(nw.Nat.GetValue())
 		})
 	}
 
-	if x.PrivateSuper != nil {
+	if nw.PrivateSuper != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("privatesuper").Eq(*x.PrivateSuper)
+			return row.Field("privatesuper").Eq(nw.PrivateSuper.GetValue())
 		})
 	}
 
-	if x.Underlay != nil {
+	if nw.Underlay != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("underlay").Eq(*x.Underlay)
+			return row.Field("underlay").Eq(nw.Underlay.GetValue())
 		})
 	}
 
-	for k, v := range x.Labels {
+	for k, v := range nw.Labels {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("labels").Field(k).Eq(v)
 		})
 	}
 
-	for _, prefix := range x.Prefixes {
-		ip, length := helper.SplitCIDR(prefix.GetValue())
+	for _, prefix := range nw.Prefixes {
+		ip, length := util.SplitCIDR(prefix.GetValue())
 
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("prefixes").Map(func(p r.Term) r.Term {
@@ -86,8 +86,8 @@ func (x *NetworkSearchQuery) GenerateTerm(q r.Term) *r.Term {
 		}
 	}
 
-	for _, destPrefix := range x.DestinationPrefixes {
-		ip, length := helper.SplitCIDR(destPrefix.GetValue())
+	for _, destPrefix := range nw.DestinationPrefixes {
+		ip, length := util.SplitCIDR(destPrefix.GetValue())
 
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("destinationprefixes").Map(func(dp r.Term) r.Term {

@@ -16,7 +16,7 @@ type ImageFeatureType string
 
 // ImageFeatureString returns the features of an image as a string.
 func (i *Image) ImageFeatureString() string {
-	features := make([]string, 0, len(i.Features))
+	features := make([]string, len(i.Features))
 	for k := range i.Features {
 		features = append(features, string(k))
 	}

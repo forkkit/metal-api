@@ -7,14 +7,14 @@ import (
 	"github.com/go-stack/stack"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/pkg/helper"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 func CheckError(rq *restful.Request, rsp *restful.Response, opname string, err error) bool {
-	log := helper.Logger(rq)
+	log := util.Logger(rq)
 	if err != nil {
 		if metal.IsNotFound(err) {
 			sendErrorImpl(log, rsp, opname, httperrors.NotFound(err), 2)

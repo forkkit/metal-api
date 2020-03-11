@@ -486,7 +486,7 @@ func resurrectDeadMachines() {
 	if nsqer != nil {
 		p = nsqer.Publisher
 	}
-	err := helper.ResurrectMachines(ds, p, logger)
+	err := machine.ResurrectMachines(ds, p, logger)
 	if err != nil {
 		logger.Errorw("unable to resurrect machines", "error", err)
 	}

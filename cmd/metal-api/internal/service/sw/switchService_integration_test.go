@@ -28,7 +28,7 @@ package sw
 //	"github.com/metal-stack/metal-api/cmd/metal-api/internal/eventbus"
 //	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 //	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-//	v1 "github.com/metal-stack/metal-api/pkg/proto"
+//	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 //	"github.com/stretchr/testify/require"
 //	"github.com/testcontainers/testcontainers-go"
 //)

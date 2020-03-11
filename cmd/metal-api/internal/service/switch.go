@@ -2,8 +2,8 @@ package service
 
 import (
 	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"sort"
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
@@ -14,7 +14,7 @@ func NewBGPFilter(vnis, cidrs []string) v1.BGPFilter {
 	sort.Strings(vnis)
 	sort.Strings(cidrs)
 	return v1.BGPFilter{
-		VNIs:  helper.ToStringValueSlice(vnis...),
+		VNIs:  util.ToStringValueSlice(vnis...),
 		CIDRs: cidrs,
 	}
 }
@@ -51,11 +51,11 @@ func ToSwitch(s *metal.Switch) *v1.Switch {
 				Id:          s.GetID(),
 				Apiversion:  "v1",
 				Version:     1,
-				CreatedTime: helper.ToTimestamp(s.Created),
-				UpdatedTime: helper.ToTimestamp(s.Changed),
+				CreatedTime: util.ToTimestamp(s.Created),
+				UpdatedTime: util.ToTimestamp(s.Changed),
 			},
-			Name:        helper.ToStringValue(s.Name),
-			Description: helper.ToStringValue(s.Description),
+			Name:        util.ToStringValue(s.Name),
+			Description: util.ToStringValue(s.Description),
 		},
 		RackID: s.RackID,
 		Nics:   ToNICs(s.Nics),
@@ -63,7 +63,7 @@ func ToSwitch(s *metal.Switch) *v1.Switch {
 }
 
 func ToNICs(nics metal.Nics) SwitchNics {
-	nn := make(SwitchNics, 0, len(nics))
+	nn := make(SwitchNics, len(nics))
 	for i, n := range nics {
 		nn[i] = ToNIC(n)
 	}
@@ -74,13 +74,13 @@ func ToNIC(nic metal.Nic) *v1.SwitchNic {
 	return &v1.SwitchNic{
 		MacAddress: string(nic.MacAddress),
 		Name:       nic.Name,
-		Vrf:        helper.ToStringValue(nic.Vrf),
-		BGPFilter:  NewBGPFilter(),
+		Vrf:        util.ToStringValue(nic.Vrf),
+		//BGPFilter:  NewBGPFilter(), //TODO
 	}
 }
 
 func NewSwitch(r v1.SwitchRegisterRequest) *metal.Switch {
-	nics := make(metal.Nics, 0, len(r.Switch.Nics))
+	nics := make(metal.Nics, len(r.Switch.Nics))
 	for i, nic := range r.Switch.Nics {
 		nics[i] = metal.Nic{
 			MacAddress: metal.MacAddress(nic.MacAddress),
@@ -91,12 +91,12 @@ func NewSwitch(r v1.SwitchRegisterRequest) *metal.Switch {
 
 	return &metal.Switch{
 		Base: metal.Base{
-			ID:          r.GetSwitch().GetCommon().GetMeta().ID,
-			Name:        r.GetSwitch().GetCommon().GetName().GetValue(),
-			Description: r.GetSwitch().GetCommon().GetDescription().GetValue(),
+			ID:          r.Switch.Common.Meta.Id,
+			Name:        r.Switch.Common.Name.GetValue(),
+			Description: r.Switch.Common.Description.GetValue(),
 		},
 		PartitionID:        r.GetPartitionID(),
-		RackID:             r.GetSwitch().GetRackID(),
+		RackID:             r.Switch.GetRackID(),
 		MachineConnections: make(metal.ConnectionMap),
 		Nics:               nics,
 	}

@@ -2,7 +2,7 @@ package v1
 
 import (
 	"fmt"
-	"github.com/metal-stack/metal-api/pkg/helper"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/pkg/tag"
 	r "gopkg.in/rethinkdb/rethinkdb-go.v5"
 )
@@ -12,44 +12,44 @@ func IpTag(key, value string) string {
 }
 
 // GenerateTerm generates the IP search query term.
-func (x *IPFindRequest) GenerateTerm(q r.Term) *r.Term {
-	if x.IPAddress != nil {
+func (ip *IPFindRequest) GenerateTerm(q r.Term) *r.Term {
+	if ip.IPAddress != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("id").Eq(*x.IPAddress)
+			return row.Field("id").Eq(ip.IPAddress.GetValue())
 		})
 	}
 
-	if x.ProjectID != nil {
+	if ip.ProjectID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("projectid").Eq(*x.ProjectID)
+			return row.Field("projectid").Eq(ip.ProjectID.GetValue())
 		})
 	}
 
-	if x.NetworkID != nil {
+	if ip.NetworkID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("networkid").Eq(*x.NetworkID)
+			return row.Field("networkid").Eq(ip.NetworkID.GetValue())
 		})
 	}
 
-	if x.ParentPrefixCidr != nil {
+	if ip.ParentPrefixCidr != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("networkprefix").Eq(*x.ParentPrefixCidr)
+			return row.Field("networkprefix").Eq(ip.ParentPrefixCidr.GetValue())
 		})
 	}
 
-	if x.MachineID != nil {
-		x.Tags = append(x.Tags, helper.ToStringValue(IpTag(tag.MachineID, x.MachineID.GetValue())))
+	if ip.MachineID != nil {
+		ip.Tags = append(ip.Tags, util.ToStringValue(IpTag(tag.MachineID, ip.MachineID.GetValue())))
 	}
 
-	for _, tag := range x.Tags {
+	for _, tag := range ip.Tags {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("tags").Contains(r.Expr(tag))
+			return row.Field("tags").Contains(r.Expr(tag.GetValue()))
 		})
 	}
 
-	if x.Type != nil {
+	if ip.Type != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("type").Eq(*x.Type)
+			return row.Field("type").Eq(ip.Type.GetValue())
 		})
 	}
 

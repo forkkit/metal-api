@@ -20,12 +20,12 @@ func (rs *RethinkStore) FindMachineByID(id string) (*metal.Machine, error) {
 
 // FindMachine returns a machine by the given query, fails if there is no record or multiple records found.
 func (rs *RethinkStore) FindMachine(q *v1.MachineSearchQuery, ms *metal.Machine) error {
-	return rs.findEntity(q.GenerateTerm(rs), &ms)
+	return rs.findEntity(q.GenerateTerm(*rs.machineTable()), &ms)
 }
 
 // SearchMachines returns the result of the machines search request query.
 func (rs *RethinkStore) SearchMachines(q *v1.MachineSearchQuery, ms *metal.Machines) error {
-	return rs.searchEntities(q.GenerateTerm(rs), ms)
+	return rs.searchEntities(q.GenerateTerm(*rs.machineTable()), ms)
 }
 
 // ListMachines returns all machines.

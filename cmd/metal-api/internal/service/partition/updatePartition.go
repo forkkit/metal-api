@@ -4,8 +4,8 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -14,12 +14,12 @@ import (
 func (r *partitionResource) updatePartition(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.PartitionUpdateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	oldPartition, err := r.ds.FindPartition(requestPayload.ID)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -45,7 +45,7 @@ func (r *partitionResource) updatePartition(request *restful.Request, response *
 	}
 
 	err = r.ds.UpdatePartition(oldPartition, &newPartition)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewPartitionResponse(&newPartition))

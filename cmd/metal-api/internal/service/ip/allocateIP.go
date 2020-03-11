@@ -8,8 +8,9 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -23,79 +24,75 @@ func (r *ipResource) allocateSpecificIP(request *restful.Request, response *rest
 	specificIP := request.PathParameter("ip")
 	var requestPayload v1.IPAllocateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
-	if requestPayload.NetworkID == "" {
-		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("networkid should not be empty")) {
+	ip := requestPayload.IP
+
+	if ip.NetworkID == "" {
+		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("networkid should not be empty")) {
 			return
 		}
 	}
-	if requestPayload.ProjectID == "" {
-		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("projectid should not be empty")) {
+	if ip.ProjectID == "" {
+		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("projectid should not be empty")) {
 			return
 		}
 	}
 
-	var name string
-	if requestPayload.Name != nil {
-		name = *requestPayload.Name
-	}
-	var description string
-	if requestPayload.Description != nil {
-		description = *requestPayload.Description
-	}
-
-	nw, err := r.ds.FindNetworkByID(requestPayload.NetworkID)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	nw, err := r.ds.FindNetworkByID(ip.NetworkID)
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
-	p, err := r.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: requestPayload.ProjectID})
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	p, err := r.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: ip.ProjectID})
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
-	tags := requestPayload.Tags
+	tags := make([]string, len(ip.Tags))
+	for i, t := range ip.Tags {
+		tags[i] = t.GetValue()
+	}
 	if requestPayload.MachineID != nil {
-		tags = append(tags, metal.IpTag(metal.TagIPMachineID, *requestPayload.MachineID))
+		tags = append(tags, v1.IpTag(tag.MachineID, requestPayload.MachineID.GetValue()))
 	}
 
 	tags, err = helper.ProcessTags(tags)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	// TODO: Following operations should span a database transaction if possible
 
-	ipAddress, ipParentCidr, err := helper.AllocateIP(nw, specificIP, r.ipamer)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	ipAddress, ipParentCidr, err := AllocateIP(nw, specificIP, r.ipamer)
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	helper.Logger(request).Sugar().Debugw("found an ip to allocate", "ip", ipAddress, "network", nw.ID)
+	util.Logger(request).Sugar().Debugw("found an ip to allocate", "ip", ipAddress, "network", nw.ID)
 
 	ipType := metal.Ephemeral
-	if requestPayload.Type == metal.Static {
+	if ip.Type == v1.IP_STATIC {
 		ipType = metal.Static
 	}
 
-	ip := &metal.IP{
+	metalIP := &metal.IP{
 		IPAddress:        ipAddress,
 		ParentPrefixCidr: ipParentCidr,
-		Name:             name,
-		Description:      description,
+		Name:             ip.Common.Name.GetValue(),
+		Description:      ip.Common.Description.GetValue(),
 		NetworkID:        nw.ID,
 		ProjectID:        p.GetProject().GetMeta().GetId(),
 		Type:             ipType,
 		Tags:             tags,
 	}
 
-	err = r.ds.CreateIP(ip)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	err = r.ds.CreateIP(metalIP)
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewIPResponse(ip))
+	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewIPResponse(metalIP))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

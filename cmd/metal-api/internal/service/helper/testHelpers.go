@@ -52,7 +52,7 @@ func NewUserDirectory(providerTenant string) *UserDirectory {
 }
 
 func (ud *UserDirectory) UserNames() []string {
-	keys := make([]string, 0, len(ud.metalUsers))
+	keys := make([]string, len(ud.metalUsers))
 	for k := range ud.metalUsers {
 		keys = append(keys, k)
 	}

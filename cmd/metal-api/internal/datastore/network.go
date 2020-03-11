@@ -17,12 +17,12 @@ func (rs *RethinkStore) FindNetworkByID(id string) (*metal.Network, error) {
 
 // FindNetwork returns a machine by the given query, fails if there is no record or multiple records found.
 func (rs *RethinkStore) FindNetwork(q *v1.NetworkSearchQuery, n *metal.Network) error {
-	return rs.findEntity(q.GenerateTerm(rs), &n)
+	return rs.findEntity(q.GenerateTerm(*rs.networkTable()), &n)
 }
 
 // SearchNetworks returns the networks that match the given properties
 func (rs *RethinkStore) SearchNetworks(q *v1.NetworkSearchQuery, ns *metal.Networks) error {
-	return rs.searchEntities(q.GenerateTerm(rs), ns)
+	return rs.searchEntities(q.GenerateTerm(*rs.networkTable()), ns)
 }
 
 // ListNetworks returns all networks.

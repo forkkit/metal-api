@@ -1,6 +1,8 @@
 package datastore
 
 import (
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"testing"
 	"testing/quick"
 
@@ -140,13 +142,13 @@ func TestRethinkStore_SearchMachine(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got metal.Machines
-			err := tt.rs.SearchMachines(&MachineSearchQuery{NicsMacAddresses: []string{tt.args.mac}}, &got)
+			err := tt.rs.SearchMachines(&v1.MachineSearchQuery{NicsMacAddresses: util.ToStringValueSlice(tt.args.mac)}, &got)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RethinkStore.FindMachines() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RethinkStore.SearchMachines() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Errorf("RethinkStore.FindMachines() mismatch (-want +got):\n%s", diff)
+				t.Errorf("RethinkStore.SearchMachines() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -192,13 +194,13 @@ func TestRethinkStore_SearchMachine2(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got metal.Machines
-			err := tt.rs.SearchMachines(&MachineSearchQuery{DiskSizes: []int64{tt.args.size}}, &got)
+			err := tt.rs.SearchMachines(&v1.MachineSearchQuery{DiskSizes: util.ToInt64ValueSlice(tt.args.size)}, &got)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RethinkStore.FindMachines() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RethinkStore.SearchMachines() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Errorf("RethinkStore.FindMachines() mismatch (-want +got):\n%s", diff)
+				t.Errorf("RethinkStore.SearchMachines() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -244,13 +246,13 @@ func TestRethinkStore_SearchMachine3(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got metal.Machines
-			err := tt.rs.SearchMachines(&MachineSearchQuery{NetworkIDs: []string{tt.args.networkID}}, &got)
+			err := tt.rs.SearchMachines(&v1.MachineSearchQuery{NetworkIDs: util.ToStringValueSlice(tt.args.networkID)}, &got)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RethinkStore.FindMachines() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RethinkStore.SearchMachines() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Errorf("RethinkStore.FindMachines() mismatch (-want +got):\n%s", diff)
+				t.Errorf("RethinkStore.SearchMachines() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -296,13 +298,13 @@ func TestRethinkStore_SearchMachine4(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got metal.Machines
-			err := tt.rs.SearchMachines(&MachineSearchQuery{NetworkIPs: []string{tt.args.ip}}, &got)
+			err := tt.rs.SearchMachines(&v1.MachineSearchQuery{NetworkIPs: util.ToStringValueSlice(tt.args.ip)}, &got)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RethinkStore.FindMachines() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RethinkStore.SearchMachines() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Errorf("RethinkStore.FindMachines() mismatch (-want +got):\n%s", diff)
+				t.Errorf("RethinkStore.SearchMachines() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -348,13 +350,13 @@ func TestRethinkStore_SearchMachine5(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got metal.Machines
-			err := tt.rs.SearchMachines(&MachineSearchQuery{NetworkPrefixes: []string{tt.args.prefix}}, &got)
+			err := tt.rs.SearchMachines(&v1.MachineSearchQuery{NetworkPrefixes: util.ToStringValueSlice(tt.args.prefix)}, &got)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RethinkStore.FindMachines() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RethinkStore.SearchMachines() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Errorf("RethinkStore.FindMachines() mismatch (-want +got):\n%s", diff)
+				t.Errorf("RethinkStore.SearchMachines() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -402,13 +404,13 @@ func TestRethinkStore_SearchMachine6(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got metal.Machines
-			err := tt.rs.SearchMachines(&MachineSearchQuery{NicsNeighborMacAddresses: []string{tt.args.mac}}, &got)
+			err := tt.rs.SearchMachines(&v1.MachineSearchQuery{NicsNeighborMacAddresses: util.ToStringValueSlice(tt.args.mac)}, &got)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RethinkStore.FindMachines() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RethinkStore.SearchMachines() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Errorf("RethinkStore.FindMachines() mismatch (-want +got):\n%s", diff)
+				t.Errorf("RethinkStore.SearchMachines() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -442,7 +444,7 @@ func TestRethinkStore_ListMachines(t *testing.T) {
 				return
 			}
 			if diff := cmp.Diff(got, tt.want); diff != "" {
-				t.Errorf("RethinkStore.FindMachines() mismatch (-want +got):\n%s", diff)
+				t.Errorf("RethinkStore.SearchMachines() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

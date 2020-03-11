@@ -6,8 +6,8 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -16,21 +16,21 @@ import (
 
 func (r *machineResource) ipmiReport(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineIpmiReport
-	log := helper.Logger(request)
+	log := util.Logger(request)
 	logger := log.Sugar()
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	if requestPayload.PartitionID == "" {
 		err := fmt.Errorf("given partition id was not found")
-		helper.CheckError(request, response, helper.CurrentFuncName(), err)
+		helper.CheckError(request, response, util.CurrentFuncName(), err)
 		return
 	}
 
 	var ms metal.Machines
 	err = r.ds.SearchMachines(&datastore.MachineSearchQuery{}, &ms)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	known := v1.Leases{}

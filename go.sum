@@ -297,6 +297,8 @@ github.com/metal-stack/go-ipam v1.3.2/go.mod h1:bF6RNMnsul7hpHLTTkMIAnIxOS+So21r
 github.com/metal-stack/masterdata-api v0.4.0 h1:DZRbOiOMKZMnxCIl050NiP6uUMucWy/HuetthI9E+VQ=
 github.com/metal-stack/masterdata-api v0.4.0/go.mod h1:FAS6IUAvpzrXd1Q+oN0c+utES7IHBK+W4C6H5C1715s=
 github.com/metal-stack/masterdata-api v0.4.1 h1:Uyk9D3eR0HK6wya1iFfcOi5QcyU8e9qmWmXGTAnEMC4=
+github.com/metal-stack/masterdata-api v0.4.2-0.20200228072935-7bd05f18024d h1:agrx6lTNCc/zmTNKwhXyTZGtFPVLBIVL9KjRO/ua6Pk=
+github.com/metal-stack/masterdata-api v0.4.2-0.20200228072935-7bd05f18024d/go.mod h1:gBXDIfBSzePke0u6mnlvPo9+Dp4dOZx0fB2DOzT9PE4=
 github.com/metal-stack/masterdata-api v0.4.2-0.20200309141803-aa9f2a9a2f30/go.mod h1:8vjcodIv3pJK+SpTZWLPAllC+zkR0gIKTICdJMed8AY=
 github.com/metal-stack/masterdata-api v0.4.2-0.20200310120321-ae8d93c2f0f2 h1:loLVKCZpVWc0ABU3Vn4mZ5PO3Zvry5EkfH6uvL0ovks=
 github.com/metal-stack/masterdata-api v0.4.2-0.20200310120321-ae8d93c2f0f2/go.mod h1:4hrnKEcamag0PgHeBh9FKH/Co1heWVYNZSJ0G/ibA7I=

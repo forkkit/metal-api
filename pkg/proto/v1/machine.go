@@ -5,308 +5,308 @@ import (
 )
 
 // GenerateTerm generates the machine search query term
-func (x *MachineSearchQuery) GenerateTerm(q r.Term) *r.Term {
-	if x.ID != nil {
+func (m *MachineSearchQuery) GenerateTerm(q r.Term) *r.Term {
+	if m.ID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("id").Eq(*x.ID)
+			return row.Field("id").Eq(m.ID.GetValue())
 		})
 	}
 
-	if x.Name != nil {
+	if m.Name != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("name").Eq(*x.Name)
+			return row.Field("name").Eq(m.Name.GetValue())
 		})
 	}
 
-	if x.PartitionID != nil {
+	if m.PartitionID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("partitionid").Eq(*x.PartitionID)
+			return row.Field("partitionid").Eq(m.PartitionID.GetValue())
 		})
 	}
 
-	if x.SizeID != nil {
+	if m.SizeID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("sizeid").Eq(*x.SizeID)
+			return row.Field("sizeid").Eq(m.SizeID.GetValue())
 		})
 	}
 
-	if x.RackID != nil {
+	if m.RackID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("rackid").Eq(*x.RackID)
+			return row.Field("rackid").Eq(m.RackID.GetValue())
 		})
 	}
 
-	if x.Liveliness != nil {
+	if m.Liveliness != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("liveliness").Eq(*x.Liveliness)
+			return row.Field("liveliness").Eq(m.Liveliness.GetValue())
 		})
 	}
 
-	for _, tag := range x.Tags {
+	for _, tag := range m.Tags {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("tags").Contains(r.Expr(tag))
+			return row.Field("tags").Contains(r.Expr(tag.GetValue()))
 		})
 	}
 
-	if x.AllocationName != nil {
+	if m.AllocationName != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("allocation").Field("name").Eq(*x.AllocationName)
+			return row.Field("allocation").Field("name").Eq(m.AllocationName.GetValue())
 		})
 	}
 
-	if x.AllocationProject != nil {
+	if m.AllocationProject != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("allocation").Field("project").Eq(*x.AllocationProject)
+			return row.Field("allocation").Field("project").Eq(m.AllocationProject.GetValue())
 		})
 	}
 
-	if x.AllocationImageID != nil {
+	if m.AllocationImageID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("allocation").Field("imageid").Eq(*x.AllocationImageID)
+			return row.Field("allocation").Field("imageid").Eq(m.AllocationImageID.GetValue())
 		})
 	}
 
-	if x.AllocationHostname != nil {
+	if m.AllocationHostname != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("allocation").Field("hostname").Eq(*x.AllocationHostname)
+			return row.Field("allocation").Field("hostname").Eq(m.AllocationHostname.GetValue())
 		})
 	}
 
-	if x.AllocationSucceeded != nil {
+	if m.AllocationSucceeded != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("allocation").Field("succeeded").Eq(*x.AllocationSucceeded)
+			return row.Field("allocation").Field("succeeded").Eq(m.AllocationSucceeded.GetValue())
 		})
 	}
 
-	for _, id := range x.NetworkIDs {
+	for _, id := range m.NetworkIDs {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("networkid")
-			}).Contains(r.Expr(id))
+			}).Contains(r.Expr(id.GetValue()))
 		})
 	}
 
-	for _, prefix := range x.NetworkPrefixes {
+	for _, prefix := range m.NetworkPrefixes {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("prefixes")
-			}).Contains(r.Expr(prefix))
+			}).Contains(r.Expr(prefix.GetValue()))
 		})
 	}
 
-	for _, ip := range x.NetworkIPs {
+	for _, ip := range m.NetworkIPs {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("ips")
-			}).Contains(r.Expr(ip))
+			}).Contains(r.Expr(ip.GetValue()))
 		})
 	}
 
-	for _, destPrefix := range x.NetworkDestinationPrefixes {
+	for _, destPrefix := range m.NetworkDestinationPrefixes {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("destinationprefixes")
-			}).Contains(r.Expr(destPrefix))
+			}).Contains(r.Expr(destPrefix.GetValue()))
 		})
 	}
 
-	for _, vrf := range x.NetworkVrfs {
+	for _, vrf := range m.NetworkVrfs {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("vrf")
-			}).Contains(r.Expr(vrf))
+			}).Contains(r.Expr(vrf.GetValue()))
 		})
 	}
 
-	if x.NetworkPrivate != nil {
+	if m.NetworkPrivate != nil {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("private")
-			}).Contains(*x.NetworkPrivate)
+			}).Contains(m.NetworkPrivate.GetValue())
 		})
 	}
 
-	for _, asn := range x.NetworkASNs {
+	for _, asn := range m.NetworkASNs {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("asn")
-			}).Contains(r.Expr(asn))
+			}).Contains(r.Expr(asn.GetValue()))
 		})
 	}
 
-	if x.NetworkNat != nil {
+	if m.NetworkNat != nil {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("nat")
-			}).Contains(*x.NetworkNat)
+			}).Contains(m.NetworkNat.GetValue())
 		})
 	}
 
-	if x.NetworkUnderlay != nil {
+	if m.NetworkUnderlay != nil {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("allocation").Field("networks").Map(func(nw r.Term) r.Term {
 				return nw.Field("underlay")
-			}).Contains(*x.NetworkUnderlay)
+			}).Contains(m.NetworkUnderlay.GetValue())
 		})
 	}
 
-	if x.HardwareMemory != nil {
+	if m.HardwareMemory != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("hardware").Field("memory").Eq(*x.HardwareMemory)
+			return row.Field("hardware").Field("memory").Eq(m.HardwareMemory.GetValue())
 		})
 	}
 
-	if x.HardwareCPUCores != nil {
+	if m.HardwareCPUCores != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("hardware").Field("cpu_cores").Eq(*x.HardwareCPUCores)
+			return row.Field("hardware").Field("cpu_cores").Eq(m.HardwareCPUCores.GetValue())
 		})
 	}
 
-	for _, mac := range x.NicsMacAddresses {
+	for _, mac := range m.NicsMacAddresses {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
 				return nic.Field("macAddress")
-			}).Contains(r.Expr(mac))
+			}).Contains(r.Expr(mac.GetValue()))
 		})
 	}
 
-	for _, name := range x.NicsNames {
+	for _, name := range m.NicsNames {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
 				return nic.Field("name")
-			}).Contains(r.Expr(name))
+			}).Contains(r.Expr(name.GetValue()))
 		})
 	}
 
-	for _, vrf := range x.NicsVrfs {
+	for _, vrf := range m.NicsVrfs {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
 				return nic.Field("vrf")
-			}).Contains(r.Expr(vrf))
+			}).Contains(r.Expr(vrf.GetValue()))
 		})
 	}
 
-	for _, mac := range x.NicsNeighborMacAddresses {
+	for _, mac := range m.NicsNeighborMacAddresses {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
 				return nic.Field("neighbors").Map(func(neigh r.Term) r.Term {
 					return neigh.Field("macAddress")
 				})
-			}).Contains(r.Expr(mac))
+			}).Contains(r.Expr(mac.GetValue()))
 		})
 	}
 
-	for _, name := range x.NicsNames {
+	for _, name := range m.NicsNames {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
 				return nic.Field("neighbors").Map(func(neigh r.Term) r.Term {
 					return neigh.Field("name")
 				})
-			}).Contains(r.Expr(name))
+			}).Contains(r.Expr(name.GetValue()))
 		})
 	}
 
-	for _, vrf := range x.NicsVrfs {
+	for _, vrf := range m.NicsVrfs {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("hardware").Field("network_interfaces").Map(func(nic r.Term) r.Term {
 				return nic.Field("neighbors").Map(func(neigh r.Term) r.Term {
 					return neigh.Field("vrf")
 				})
-			}).Contains(r.Expr(vrf))
+			}).Contains(r.Expr(vrf.GetValue()))
 		})
 	}
 
-	for _, name := range x.DiskNames {
+	for _, name := range m.DiskNames {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("block_devices").Map(func(bd r.Term) r.Term {
 				return bd.Field("name")
-			}).Contains(r.Expr(name))
+			}).Contains(r.Expr(name.GetValue()))
 		})
 	}
 
-	for _, size := range x.DiskSizes {
+	for _, size := range m.DiskSizes {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("block_devices").Map(func(bd r.Term) r.Term {
 				return bd.Field("size")
-			}).Contains(r.Expr(size))
+			}).Contains(r.Expr(size.GetValue()))
 		})
 	}
 
-	if x.StateValue != nil {
+	if m.StateValue != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("state_value").Eq(*x.StateValue)
+			return row.Field("state_value").Eq(m.StateValue.GetValue())
 		})
 	}
 
-	if x.IpmiAddress != nil {
+	if m.IpmiAddress != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("address").Eq(*x.IpmiAddress)
+			return row.Field("ipmi").Field("address").Eq(m.IpmiAddress.GetValue())
 		})
 	}
 
-	if x.IpmiMacAddress != nil {
+	if m.IpmiMacAddress != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("mac").Eq(*x.IpmiMacAddress)
+			return row.Field("ipmi").Field("mac").Eq(m.IpmiMacAddress.GetValue())
 		})
 	}
 
-	if x.IpmiUser != nil {
+	if m.IpmiUser != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("user").Eq(*x.IpmiUser)
+			return row.Field("ipmi").Field("user").Eq(m.IpmiUser.GetValue())
 		})
 	}
 
-	if x.IpmiInterface != nil {
+	if m.IpmiInterface != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("interface").Eq(*x.IpmiInterface)
+			return row.Field("ipmi").Field("interface").Eq(m.IpmiInterface.GetValue())
 		})
 	}
 
-	if x.FruChassisPartNumber != nil {
+	if m.FruChassisPartNumber != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("fru").Field("chassis_part_number").Eq(*x.FruChassisPartNumber)
+			return row.Field("ipmi").Field("fru").Field("chassis_part_number").Eq(m.FruChassisPartNumber.GetValue())
 		})
 	}
 
-	if x.FruChassisPartSerial != nil {
+	if m.FruChassisPartSerial != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("fru").Field("chassis_part_serial").Eq(*x.FruChassisPartSerial)
+			return row.Field("ipmi").Field("fru").Field("chassis_part_serial").Eq(m.FruChassisPartSerial.GetValue())
 		})
 	}
 
-	if x.FruBoardMfg != nil {
+	if m.FruBoardMfg != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("fru").Field("board_mfg").Eq(*x.FruBoardMfg)
+			return row.Field("ipmi").Field("fru").Field("board_mfg").Eq(m.FruBoardMfg.GetValue())
 		})
 	}
 
-	if x.FruBoardMfgSerial != nil {
+	if m.FruBoardMfgSerial != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("fru").Field("board_mfg_serial").Eq(*x.FruBoardMfgSerial)
+			return row.Field("ipmi").Field("fru").Field("board_mfg_serial").Eq(m.FruBoardMfgSerial.GetValue())
 		})
 	}
 
-	if x.FruBoardPartNumber != nil {
+	if m.FruBoardPartNumber != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("fru").Field("board_part_number").Eq(*x.FruBoardPartNumber)
+			return row.Field("ipmi").Field("fru").Field("board_part_number").Eq(m.FruBoardPartNumber.GetValue())
 		})
 	}
 
-	if x.FruProductManufacturer != nil {
+	if m.FruProductManufacturer != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("fru").Field("product_manufacturer").Eq(*x.FruProductManufacturer)
+			return row.Field("ipmi").Field("fru").Field("product_manufacturer").Eq(m.FruProductManufacturer.GetValue())
 		})
 	}
 
-	if x.FruProductPartNumber != nil {
+	if m.FruProductPartNumber != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("fru").Field("product_part_number").Eq(*x.FruProductPartNumber)
+			return row.Field("ipmi").Field("fru").Field("product_part_number").Eq(m.FruProductPartNumber.GetValue())
 		})
 	}
 
-	if x.FruProductSerial != nil {
+	if m.FruProductSerial != nil {
 		q = q.Filter(func(row r.Term) r.Term {
-			return row.Field("ipmi").Field("fru").Field("product_serial").Eq(*x.FruProductSerial)
+			return row.Field("ipmi").Field("fru").Field("product_serial").Eq(m.FruProductSerial.GetValue())
 		})
 	}
 

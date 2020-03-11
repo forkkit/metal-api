@@ -4,50 +4,37 @@ option go_package = "github.com/metal-stack/metal-api/pkg/proto/v1";
 
 package v1;
 
-import "v1/common.proto";
-import "v1/identifiable.proto";
+import "v1/machine.proto";
 import "google/protobuf/wrappers.proto";
 
 service FirewallService {
     rpc Create(FirewallCreateRequest) returns (FirewallResponse);
-    rpc Update(FirewallUpdateRequest) returns (FirewallResponse);
-    rpc Delete(FirewallDeleteRequest) returns (FirewallResponse);
-    rpc Get(FirewallGetRequest) returns (FirewallResponse);
-    rpc Find(FirewallFindRequest) returns (FirewallListResponse);
-    rpc List(FirewallListRequest) returns (FirewallListResponse);
-}
-
-message Firewall {
-    v1.Common common = 1;
-    google.protobuf.StringValue ha = 2; // if set to true, this firewall is set up in a High Available manner
+//    rpc Update(FirewallUpdateRequest) returns (FirewallResponse);
+//    rpc Delete(FirewallDeleteRequest) returns (FirewallResponse);
+//    rpc Get(FirewallGetRequest) returns (FirewallResponse);
+    rpc Find(FirewallFindRequest) returns (FirewallResponse);
+//    rpc List(FirewallListRequest) returns (FirewallListResponse);
 }
 
 message FirewallCreateRequest {
-    Firewall firewall = 1;
+    v1.MachineAllocateRequest machineAllocateRequest = 1;
+    google.protobuf.BoolValue HA = 2; // if set to true, this firewall is set up in a High Available manner
 }
 
-message FirewallUpdateRequest {
-    Firewall firewall = 1;
-}
-
-message FirewallDeleteRequest {
-    v1.Identifiable identifiable = 1;
-}
-
-message FirewallGetRequest {
-    v1.Identifiable identifiable = 1;
-}
+//message FirewallDeleteRequest {
+//    v1.Identifiable identifiable = 1;
+//}
+//
+//message FirewallGetRequest {
+//    v1.Identifiable identifiable = 1;
+//}
 
 message FirewallFindRequest {
-    v1.FindCriteria findCriteria = 1;
+    v1.MachineFindRequest machineFindRequest = 1;
 }
 
-message FirewallListRequest {}
+//message FirewallListRequest {}
 
 message FirewallResponse {
-    Firewall firewall = 1;
-}
-
-message FirewallListResponse {
-    repeated Firewall firewalls = 1;
+    v1.MachineResponse machineResponse = 1;
 }

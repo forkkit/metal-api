@@ -1,6 +1,8 @@
 package metal
 
 import (
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -15,21 +17,21 @@ func TestAddMachineId(t *testing.T) {
 		{
 			name:         "ip without machine tag",
 			ip:           IP{},
-			expectedTags: []string{IpTag(TagIPMachineID, "123")},
+			expectedTags: []string{v1.IpTag(tag.MachineID, "123")},
 		},
 		{
 			name: "ip with empty machine tag",
 			ip: IP{
-				Tags: []string{TagIPMachineID},
+				Tags: []string{tag.MachineID},
 			},
-			expectedTags: []string{IpTag(TagIPMachineID, "123")},
+			expectedTags: []string{v1.IpTag(tag.MachineID, "123")},
 		},
 		{
 			name: "ip with other machine tag",
 			ip: IP{
-				Tags: []string{IpTag(TagIPMachineID, "1")},
+				Tags: []string{v1.IpTag(tag.MachineID, "1")},
 			},
-			expectedTags: []string{IpTag(TagIPMachineID, "1"), IpTag(TagIPMachineID, "123")},
+			expectedTags: []string{v1.IpTag(tag.MachineID, "1"), v1.IpTag(tag.MachineID, "123")},
 		},
 	}
 	for _, tt := range tests {
@@ -55,21 +57,21 @@ func TestRemoveMachineId(t *testing.T) {
 		{
 			name: "ip with empty machine tag",
 			ip: IP{
-				Tags: []string{TagIPMachineID},
+				Tags: []string{tag.MachineID},
 			},
-			expectedTags: []string{TagIPMachineID},
+			expectedTags: []string{tag.MachineID},
 		},
 		{
 			name: "ip with other machine tag",
 			ip: IP{
-				Tags: []string{IpTag(TagIPMachineID, "1")},
+				Tags: []string{v1.IpTag(tag.MachineID, "1")},
 			},
-			expectedTags: []string{IpTag(TagIPMachineID, "1")},
+			expectedTags: []string{v1.IpTag(tag.MachineID, "1")},
 		},
 		{
 			name: "ip with matching machine tag",
 			ip: IP{
-				Tags: []string{IpTag(TagIPMachineID, "123")},
+				Tags: []string{v1.IpTag(tag.MachineID, "123")},
 			},
 			expectedTags: nil,
 		},
@@ -93,7 +95,7 @@ func TestGetScope(t *testing.T) {
 		{
 			name: "empty scope ip",
 			ip: IP{
-				Tags: []string{IpTag(TagIPMachineID, "102")},
+				Tags: []string{v1.IpTag(tag.MachineID, "102")},
 			},
 			expectedScope: ScopeEmpty,
 		},
@@ -101,7 +103,7 @@ func TestGetScope(t *testing.T) {
 			name: "machine ip",
 			ip: IP{
 				ProjectID: "1",
-				Tags:      []string{IpTag(TagIPMachineID, "102")},
+				Tags:      []string{v1.IpTag(tag.MachineID, "102")},
 			},
 			expectedScope: ScopeMachine,
 		},

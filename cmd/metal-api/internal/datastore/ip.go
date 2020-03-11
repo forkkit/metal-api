@@ -17,12 +17,12 @@ func (rs *RethinkStore) FindIPByID(id string) (*metal.IP, error) {
 
 // FindIPs returns an IP by the given query, fails if there is no record or multiple records found.
 func (rs *RethinkStore) FindIPs(q *v1.IPFindRequest, ip *metal.IP) error {
-	return rs.findEntity(q.GenerateTerm(rs), &ip)
+	return rs.findEntity(q.GenerateTerm(*rs.ipTable()), &ip)
 }
 
 // SearchIPs returns the result of the ips search request query.
 func (rs *RethinkStore) SearchIPs(q *v1.IPFindRequest, ips *metal.IPs) error {
-	return rs.searchEntities(q.GenerateTerm(rs), ips)
+	return rs.searchEntities(q.GenerateTerm(*rs.ipTable()), ips)
 }
 
 // ListIPs returns all ips.

@@ -3,8 +3,8 @@ package service
 import (
 	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 )
 
 func NewNetworkResponse(network *metal.Network, usage *metal.NetworkUsage) *v1.NetworkResponse {
@@ -19,6 +19,24 @@ func NewNetworkResponse(network *metal.Network, usage *metal.NetworkUsage) *v1.N
 	}
 }
 
+func FromNetwork(network *v1.Network) *metal.Network {
+	if network == nil {
+		return nil
+	}
+	return &metal.Network{
+		Base: metal.Base{
+			ID:          network.Common.Meta.Id,
+			Name:        network.Common.Name.GetValue(),
+			Description: network.Common.Description.GetValue(),
+			Created:     util.FromTimestamp(network.Common.Meta.CreatedTime),
+			Changed:     util.FromTimestamp(network.Common.Meta.UpdatedTime),
+		},
+		PartitionID: network.PartitionID.GetValue(),
+		ProjectID:   network.ProjectID.GetValue(),
+		Labels:      network.Labels,
+	}
+}
+
 func ToNetwork(network *metal.Network) *v1.Network {
 	if network == nil {
 		return nil
@@ -29,14 +47,14 @@ func ToNetwork(network *metal.Network) *v1.Network {
 				Id:          network.GetID(),
 				Apiversion:  "v1",
 				Version:     1,
-				CreatedTime: helper.ToTimestamp(network.Created),
-				UpdatedTime: helper.ToTimestamp(network.Changed),
+				CreatedTime: util.ToTimestamp(network.Created),
+				UpdatedTime: util.ToTimestamp(network.Changed),
 			},
-			Name:        helper.ToStringValue(network.Name),
-			Description: helper.ToStringValue(network.Description),
+			Name:        util.ToStringValue(network.Name),
+			Description: util.ToStringValue(network.Description),
 		},
-		PartitionID: helper.ToStringValue(network.PartitionID),
-		ProjectID:   helper.ToStringValue(network.ProjectID),
+		PartitionID: util.ToStringValue(network.PartitionID),
+		ProjectID:   util.ToStringValue(network.ProjectID),
 		Labels:      network.Labels,
 	}
 }
@@ -48,9 +66,9 @@ func ToNetworkImmutable(network *metal.Network) *v1.NetworkImmutable {
 		Nat:                 network.Nat,
 		PrivateSuper:        network.PrivateSuper,
 		Underlay:            network.Underlay,
-		Vrf:                 helper.ToUInt64Value(network.Vrf),
+		Vrf:                 util.ToUInt64Value(network.Vrf),
 		//VrfShared:           helper.ToBoolValue(network.VrfShared), //TODO network.VrfShared is not defined
-		ParentNetworkID: helper.ToStringValue(network.ParentNetworkID),
+		ParentNetworkID: util.ToStringValue(network.ParentNetworkID),
 	}
 }
 

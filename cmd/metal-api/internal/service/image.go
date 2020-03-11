@@ -3,8 +3,8 @@ package service
 import (
 	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 )
 
 func NewImageResponse(img *metal.Image) *v1.ImageResponse {
@@ -30,13 +30,13 @@ func ToImage(img *metal.Image) *v1.Image {
 				Id:          img.ID,
 				Apiversion:  "v1",
 				Version:     1,
-				CreatedTime: helper.ToTimestamp(img.Created),
-				UpdatedTime: helper.ToTimestamp(img.Changed),
+				CreatedTime: util.ToTimestamp(img.Created),
+				UpdatedTime: util.ToTimestamp(img.Changed),
 			},
-			Name:        helper.ToStringValue(img.Name),
-			Description: helper.ToStringValue(img.Description),
+			Name:        util.ToStringValue(img.Name),
+			Description: util.ToStringValue(img.Description),
 		},
-		URL:      helper.ToStringValue(img.URL),
-		Features: helper.ToStringValueSlice(features...),
+		URL:      util.ToStringValue(img.URL),
+		Features: util.ToStringValueSlice(features...),
 	}
 }

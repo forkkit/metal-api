@@ -7,7 +7,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -32,7 +32,7 @@ type Allocator func(Allocation) error
 func (r *machineResource) waitForAllocation(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 	ctx, cancel := context.WithCancel(request.Request.Context())
-	log := helper.Logger(request)
+	log := util.Logger(request)
 
 	// after leaving waiting, stop listening for machine table changes in the background
 	defer cancel()
@@ -63,7 +63,7 @@ func (r *machineResource) waitForAllocation(request *restful.Request, response *
 		return nil
 	})
 	if err != nil {
-		helper.SendError(log, response, helper.CurrentFuncName(), httperrors.InternalServerError(err))
+		helper.SendError(log, response, util.CurrentFuncName(), httperrors.InternalServerError(err))
 	}
 }
 

@@ -3,8 +3,8 @@ package service
 import (
 	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"strings"
 )
 
@@ -24,16 +24,16 @@ func ToIP(ip *metal.IP) *v1.IP {
 				Id:          ip.GetID(),
 				Apiversion:  "v1",
 				Version:     1,
-				CreatedTime: helper.ToTimestamp(ip.Created),
-				UpdatedTime: helper.ToTimestamp(ip.Changed),
+				CreatedTime: util.ToTimestamp(ip.Created),
+				UpdatedTime: util.ToTimestamp(ip.Changed),
 			},
-			Name:        helper.ToStringValue(ip.Name),
-			Description: helper.ToStringValue(ip.Description),
+			Name:        util.ToStringValue(ip.Name),
+			Description: util.ToStringValue(ip.Description),
 		},
 		NetworkID: ip.NetworkID,
 		ProjectID: ip.ProjectID,
 		Type:      toIPType(ip.Type),
-		Tags:      helper.ToStringValueSlice(ip.Tags...),
+		Tags:      util.ToStringValueSlice(ip.Tags...),
 	}
 }
 

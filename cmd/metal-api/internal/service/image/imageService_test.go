@@ -3,15 +3,16 @@ package image
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/testdata"
-	v1 "github.com/metal-stack/metal-api/pkg/proto"
 
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-lib/httperrors"
@@ -35,12 +36,12 @@ func TestGetImages(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Len(t, result, 3)
-	require.Equal(t, testdata.Img1.ID, result[0].ID)
-	require.Equal(t, testdata.Img1.Name, *result[0].Name)
-	require.Equal(t, testdata.Img2.ID, result[1].ID)
-	require.Equal(t, testdata.Img2.Name, *result[1].Name)
-	require.Equal(t, testdata.Img3.ID, result[2].ID)
-	require.Equal(t, testdata.Img3.Name, *result[2].Name)
+	require.Equal(t, testdata.Img1.ID, result[0].Image.Common.Meta.Id)
+	require.Equal(t, testdata.Img1.Name, result[0].Image.Common.Name.GetValue())
+	require.Equal(t, testdata.Img2.ID, result[1].Image.Common.Meta.Id)
+	require.Equal(t, testdata.Img2.Name, result[1].Image.Common.Name.GetValue())
+	require.Equal(t, testdata.Img3.ID, result[2].Image.Common.Meta.Id)
+	require.Equal(t, testdata.Img3.Name, result[2].Image.Common.Name.GetValue())
 }
 
 func TestGetImage(t *testing.T) {
@@ -59,8 +60,8 @@ func TestGetImage(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Img1.ID, result.ID)
-	require.Equal(t, testdata.Img1.Name, *result.Name)
+	require.Equal(t, testdata.Img1.ID, result.Image.Common.Meta.Id)
+	require.Equal(t, testdata.Img1.Name, result.Image.Common.Name.GetValue())
 }
 
 func TestGetImageNotFound(t *testing.T) {
@@ -100,25 +101,25 @@ func TestDeleteImage(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Img3.ID, result.ID)
-	require.Equal(t, testdata.Img3.Name, *result.Name)
+	require.Equal(t, testdata.Img3.ID, result.Image.Common.Meta.Id)
+	require.Equal(t, testdata.Img3.Name, result.Image.Common.Name.GetValue())
 }
 
 func TestCreateImage(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	createRequest := v1.ImageCreateRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: testdata.Img1.ID,
+	createRequest := v1.ImageUpdateRequest{
+		Image: &v1.Image{
+			Common: &v1.Common{
+				Meta: &mdv1.Meta{
+					Id: testdata.Img1.ID,
+				},
+				Name:        util.ToStringValue(testdata.Img1.Name),
+				Description: util.ToStringValue(testdata.Img1.Description),
 			},
-			Describable: service.Describable{
-				Name:        &testdata.Img1.Name,
-				Description: &testdata.Img1.Description,
-			},
+			URL: util.ToStringValue(testdata.Img1.URL),
 		},
-		URL: testdata.Img1.URL,
 	}
 	js, _ := json.Marshal(createRequest)
 	body := bytes.NewBuffer(js)
@@ -134,10 +135,10 @@ func TestCreateImage(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Img1.ID, result.ID)
-	require.Equal(t, testdata.Img1.Name, *result.Name)
-	require.Equal(t, testdata.Img1.Description, *result.Description)
-	require.Equal(t, testdata.Img1.URL, *result.URL)
+	require.Equal(t, testdata.Img1.ID, result.Image.Common.Meta.Id)
+	require.Equal(t, testdata.Img1.Name, result.Image.Common.Name.GetValue())
+	require.Equal(t, testdata.Img1.Description, result.Image.Common.Description.GetValue())
+	require.Equal(t, testdata.Img1.URL, result.Image.URL.GetValue())
 }
 
 func TestUpdateImage(t *testing.T) {
@@ -148,17 +149,15 @@ func TestUpdateImage(t *testing.T) {
 	container := restful.NewContainer().Add(imageservice)
 
 	updateRequest := v1.ImageUpdateRequest{
-		Common: Common{
-			Describable: service.Describable{
-				Name:        &testdata.Img2.Name,
-				Description: &testdata.Img2.Description,
+		Image: &v1.Image{
+			Common: &v1.Common{
+				Meta: &mdv1.Meta{
+					Id: testdata.Img1.ID,
+				},
+				Name:        util.ToStringValue(testdata.Img2.Name),
+				Description: util.ToStringValue(testdata.Img2.Description),
 			},
-			Identifiable: service.Identifiable{
-				ID: testdata.Img1.ID,
-			},
-		},
-		ImageBase: v1.ImageBase{
-			URL: &testdata.Img2.URL,
+			URL: util.ToStringValue(testdata.Img2.URL),
 		},
 	}
 	js, _ := json.Marshal(updateRequest)
@@ -175,8 +174,8 @@ func TestUpdateImage(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Img1.ID, result.ID)
-	require.Equal(t, testdata.Img2.Name, *result.Name)
-	require.Equal(t, testdata.Img2.Description, *result.Description)
-	require.Equal(t, testdata.Img2.URL, *result.URL)
+	require.Equal(t, testdata.Img1.ID, result.Image.Common.Meta.Id)
+	require.Equal(t, testdata.Img2.Name, result.Image.Common.Name.GetValue())
+	require.Equal(t, testdata.Img2.Description, result.Image.Common.Description.GetValue())
+	require.Equal(t, testdata.Img2.URL, result.Image.URL.GetValue())
 }

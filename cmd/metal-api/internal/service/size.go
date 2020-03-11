@@ -3,8 +3,8 @@ package service
 import (
 	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 )
 
 func NewSizeResponse(s *metal.Size) *v1.SizeResponse {
@@ -24,11 +24,11 @@ func ToSize(s *metal.Size) *v1.Size {
 				Id:          s.GetID(),
 				Apiversion:  "v1",
 				Version:     1,
-				CreatedTime: helper.ToTimestamp(s.Created),
-				UpdatedTime: helper.ToTimestamp(s.Changed),
+				CreatedTime: util.ToTimestamp(s.Created),
+				UpdatedTime: util.ToTimestamp(s.Changed),
 			},
-			Name:        helper.ToStringValue(s.Name),
-			Description: helper.ToStringValue(s.Description),
+			Name:        util.ToStringValue(s.Name),
+			Description: util.ToStringValue(s.Description),
 		},
 		Constraints: toConstraintSlice(s.Constraints...),
 	}

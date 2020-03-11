@@ -6,7 +6,7 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"net/http"
 	"strings"
@@ -87,14 +87,14 @@ func (s *WebService) addRoute(route *Route, ws *restful.WebService) {
 		rb.To(helper.Viewer(route.Handler))
 	}
 
-	tags := make([]string, 0, len(s.Tags))
+	tags := make([]string, len(s.Tags))
 	copy(tags, s.Tags)
 	if len(tags) == 0 {
 		tags = []string{s.Path}
 	}
 	rb.Metadata(restfulspec.KeyOpenAPITags, tags)
 
-	op := helper.GetFunctionName(route.Handler)
+	op := util.GetFunctionName(route.Handler)
 	rb.Operation(op)
 
 	if route.Reads != nil {

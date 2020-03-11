@@ -6,8 +6,8 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -16,31 +16,32 @@ import (
 func (r *ipResource) updateIP(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.IPUpdateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
-	oldIP, err := r.ds.FindIPByID(requestPayload.IPAddress)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	oldIP, err := r.ds.FindIPByID(requestPayload.Identifiable.IPAddress)
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	newIP := *oldIP
-	if requestPayload.Name != nil {
-		newIP.Name = *requestPayload.Name
+	newIP.Name = requestPayload.Common.Name.GetValue()
+	newIP.Description = requestPayload.Common.Description.GetValue()
+
+	tags := make([]string, len(requestPayload.Tags))
+	for i, t := range requestPayload.Tags {
+		tags[i] = t.GetValue()
 	}
-	if requestPayload.Description != nil {
-		newIP.Description = *requestPayload.Description
-	}
-	if requestPayload.Tags != nil {
-		newIP.Tags = requestPayload.Tags
-	}
-	if requestPayload.Type == metal.Static || requestPayload.Type == metal.Ephemeral {
-		newIP.Type = requestPayload.Type
+
+	if requestPayload.Type == v1.IP_STATIC {
+		newIP.Type = metal.Static
+	} else if requestPayload.Type == v1.IP_EPHEMERAL {
+		newIP.Type = metal.Ephemeral
 	}
 
 	err = r.validateAndUpateIP(oldIP, &newIP)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewIPResponse(&newIP))

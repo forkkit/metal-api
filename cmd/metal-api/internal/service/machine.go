@@ -3,8 +3,8 @@ package service
 import (
 	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 )
 
 // RecentProvisioningEventsLimit defines how many recent events are added to the MachineRecentProvisioningEvents struct
@@ -104,14 +104,14 @@ func ToMachineIPMI(ipmi metal.IPMI) *v1.MachineIPMI {
 
 func ToMachineFRU(fru metal.Fru) *v1.MachineFru {
 	return &v1.MachineFru{
-		ChassisPartNumber:   helper.ToStringValue(fru.ChassisPartNumber),
-		ChassisPartSerial:   helper.ToStringValue(fru.ChassisPartSerial),
-		BoardMfg:            helper.ToStringValue(fru.BoardMfg),
-		BoardMfgSerial:      helper.ToStringValue(fru.BoardMfgSerial),
-		BoardPartNumber:     helper.ToStringValue(fru.BoardPartNumber),
-		ProductManufacturer: helper.ToStringValue(fru.ProductManufacturer),
-		ProductPartNumber:   helper.ToStringValue(fru.ProductPartNumber),
-		ProductSerial:       helper.ToStringValue(fru.ProductSerial),
+		ChassisPartNumber:   util.ToStringValue(fru.ChassisPartNumber),
+		ChassisPartSerial:   util.ToStringValue(fru.ChassisPartSerial),
+		BoardMfg:            util.ToStringValue(fru.BoardMfg),
+		BoardMfgSerial:      util.ToStringValue(fru.BoardMfgSerial),
+		BoardPartNumber:     util.ToStringValue(fru.BoardPartNumber),
+		ProductManufacturer: util.ToStringValue(fru.ProductManufacturer),
+		ProductPartNumber:   util.ToStringValue(fru.ProductPartNumber),
+		ProductSerial:       util.ToStringValue(fru.ProductSerial),
 	}
 }
 
@@ -122,11 +122,11 @@ func NewMachineResponse(m *metal.Machine, s *metal.Size, p *metal.Partition, img
 				Id:          m.GetID(),
 				Apiversion:  "v1",
 				Version:     1,
-				CreatedTime: helper.ToTimestamp(m.Created),
-				UpdatedTime: helper.ToTimestamp(m.Changed),
+				CreatedTime: util.ToTimestamp(m.Created),
+				UpdatedTime: util.ToTimestamp(m.Changed),
 			},
-			Name:        helper.ToStringValue(m.Name),
-			Description: helper.ToStringValue(m.Description),
+			Name:        util.ToStringValue(m.Name),
+			Description: util.ToStringValue(m.Description),
 		},
 		Machine: ToMachine(m, s, p, img, ec),
 	}
@@ -186,7 +186,7 @@ func ToMachine(m *metal.Machine, s *metal.Size, p *metal.Partition, img *metal.I
 		},
 		Liveliness:               liveliness,
 		RecentProvisioningEvents: NewMachineRecentProvisioningEvents(ec),
-		Tags:                     helper.ToStringValueSlice(m.Tags...),
+		Tags:                     util.ToStringValueSlice(m.Tags...),
 	}
 }
 
@@ -212,14 +212,14 @@ func ToMachineAllocation(alloc *metal.MachineAllocation, img *metal.Image) *v1.M
 	}
 
 	ma := &v1.MachineAllocation{
-		Created:         helper.ToTimestamp(alloc.Created),
+		Created:         util.ToTimestamp(alloc.Created),
 		Name:            alloc.Name,
-		Description:     helper.ToStringValue(alloc.Description),
+		Description:     util.ToStringValue(alloc.Description),
 		Image:           NewImageResponse(img),
 		ProjectID:       alloc.ProjectID,
 		Hostname:        alloc.Hostname,
-		UserData:        helper.ToStringValue(alloc.UserData),
-		ConsolePassword: helper.ToStringValue(alloc.ConsolePassword),
+		UserData:        util.ToStringValue(alloc.UserData),
+		ConsolePassword: util.ToStringValue(alloc.ConsolePassword),
 		MachineNetworks: networks,
 		Succeeded:       alloc.Succeeded,
 		SshPubKeys:      alloc.SSHPubKeys,
@@ -255,15 +255,15 @@ func NewMachineRecentProvisioningEvents(ec *metal.ProvisioningEventContainer) *v
 	var events []*v1.MachineProvisioningEvent
 	for _, machineEvent := range machineEvents {
 		e := &v1.MachineProvisioningEvent{
-			Time:    helper.ToTimestamp(machineEvent.Time),
+			Time:    util.ToTimestamp(machineEvent.Time),
 			Event:   string(machineEvent.Event),
-			Message: helper.ToStringValue(machineEvent.Message),
+			Message: util.ToStringValue(machineEvent.Message),
 		}
 		events = append(events, e)
 	}
 	return &v1.MachineRecentProvisioningEvents{
 		Events:                       events,
 		IncompleteProvisioningCycles: ec.IncompleteProvisioningCycles,
-		LastEventTime:                helper.ToTimestamp(*ec.LastEventTime),
+		LastEventTime:                util.ToTimestamp(*ec.LastEventTime),
 	}
 }

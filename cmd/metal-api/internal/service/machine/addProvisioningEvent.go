@@ -6,8 +6,8 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -18,7 +18,7 @@ func (r *machineResource) addProvisioningEvent(request *restful.Request, respons
 	id := request.PathParameter("id")
 	m, err := r.ds.FindMachineByID(id)
 	if err != nil && !metal.IsNotFound(err) {
-		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
@@ -32,25 +32,25 @@ func (r *machineResource) addProvisioningEvent(request *restful.Request, respons
 			},
 		}
 		err = r.ds.CreateMachine(m)
-		if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
 
 	var requestPayload v1.MachineProvisioningEvent
 	err = request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	ok := metal.AllProvisioningEventTypes[metal.ProvisioningEventType(requestPayload.Event)]
 	if !ok {
-		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("unknown provisioning event")) {
+		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("unknown provisioning event")) {
 			return
 		}
 	}
 
 	ec, err := r.provisioningEventForMachine(id, requestPayload)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 

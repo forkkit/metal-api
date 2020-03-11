@@ -672,13 +672,13 @@ func Test_validateAllocationSpec(t *testing.T) {
 	falseValue := false
 
 	tests := []struct {
-		spec     helper.MachineAllocationSpec
+		spec     machine.AllocationSpec
 		isError  bool
 		name     string
 		expected string
 	}{
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
@@ -694,7 +694,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "auto acquire network and additional ip",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				UUID:      "gopher-uuid",
 				ProjectID: "123",
 				Networks: []v1.MachineAllocationNetwork{
@@ -707,7 +707,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:    "good case (explicit network)",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
@@ -717,7 +717,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "good case (no network)",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				PartitionID: "42",
 				ProjectID:   "123",
 				SizeID:      "42",
@@ -726,7 +726,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:    "partition and size id for absent uuid",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				PartitionID: "42",
 				ProjectID:   "123",
 			},
@@ -735,7 +735,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "missing size id",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				SizeID:    "42",
 				ProjectID: "123",
 			},
@@ -744,13 +744,13 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "missing partition id",
 		},
 		{
-			spec:     helper.MachineAllocationSpec{},
+			spec:     machine.AllocationSpec{},
 			isError:  true,
 			expected: "project id must be specified",
 			name:     "absent project id",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
@@ -766,7 +766,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "missing ip definition for noauto network",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				UUID:      "42",
 				ProjectID: "123",
 				IPs:       []string{"42"},
@@ -776,7 +776,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "illegal ip",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				UUID:       "42",
 				ProjectID:  "123",
 				IsFirewall: true,
@@ -786,7 +786,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "missing network/ ip in case of firewall",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				UUID:       "42",
 				ProjectID:  "123",
 				SSHPubKeys: []string{"42"},
@@ -796,7 +796,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "invalid ssh",
 		},
 		{
-			spec: helper.MachineAllocationSpec{
+			spec: machine.AllocationSpec{
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
@@ -988,7 +988,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 	}
 	tests := []struct {
 		name                   string
-		allocationSpec         *helper.MachineAllocationSpec
+		allocationSpec         *machine.AllocationSpec
 		partition              *metal.Partition
 		partitionSuperNetworks metal.Networks
 		mocks                  []mock
@@ -998,7 +998,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 	}{
 		{
 			name: "no networks given",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{},
 			},
 			partition:              &testdata.Partition1,
@@ -1008,7 +1008,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private network given",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
@@ -1032,7 +1032,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private network given, but no auto acquisition and no ip provided",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
@@ -1048,7 +1048,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private network and internet network given",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
@@ -1083,7 +1083,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "ip which does not belong to any related network given",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
@@ -1100,7 +1100,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private network and internet network with no auto acquired internet ip",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
@@ -1136,7 +1136,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private of other network given",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
@@ -1152,7 +1152,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to assign machine to private network of other partition",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition2ExistingPrivateNetwork.ID,
@@ -1168,7 +1168,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to assign machine to super network",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1PrivateSuperNetwork.ID,
@@ -1183,7 +1183,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to assign machine to underlay network",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID:     testdata.Partition1UnderlayNetwork.ID,
@@ -1198,7 +1198,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to add machine to multiple private networks",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID: testdata.Partition1ExistingPrivateNetwork.ID,
@@ -1215,7 +1215,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to add the same network a couple of times",
-			allocationSpec: &helper.MachineAllocationSpec{
+			allocationSpec: &machine.AllocationSpec{
 				Networks: v1.MachineAllocationNetworks{
 					v1.MachineAllocationNetwork{
 						NetworkID: testdata.Partition1InternetNetwork.ID,

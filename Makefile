@@ -22,4 +22,4 @@ redoc:
 
 .PHONY: protoc
 protoc:
-	protoc -I pkg/proto -I../../.. --go_out :.. pkg/proto/v1/*.proto
+	docker run -it --rm -v $(PWD)/../..:/work/github.com metalstack/builder bash -c "cd github.com/metal-stack/metal-api && protoc -I pkg/proto -I../../.. --go_out plugin=grpc:../../.. pkg/proto/v1/*.proto"

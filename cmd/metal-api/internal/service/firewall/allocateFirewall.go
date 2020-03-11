@@ -5,8 +5,9 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/pkg/helper"
-	v1 "github.com/metal-stack/metal-api/pkg/proto"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -15,79 +16,85 @@ import (
 func (r *firewallResource) allocateFirewall(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.FirewallCreateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
+	allocReq := requestPayload.MachineAllocateRequest
 
-	var uuid string
-	if requestPayload.UUID != nil {
-		uuid = *requestPayload.UUID
-	}
-	var name string
-	if requestPayload.Name != nil {
-		name = *requestPayload.Name
-	}
-	var description string
-	if requestPayload.Description != nil {
-		description = *requestPayload.Description
-	}
 	hostname := "metal"
-	if requestPayload.Hostname != nil {
-		hostname = *requestPayload.Hostname
+	if allocReq.Hostname != nil {
+		hostname = allocReq.Hostname.GetValue()
 	}
-	var userdata string
-	if requestPayload.UserData != nil {
-		userdata = *requestPayload.UserData
-	}
-	if requestPayload.Networks != nil && len(requestPayload.Networks) <= 0 {
-		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("network ids cannot be empty")) {
+
+	if allocReq.Networks != nil && len(allocReq.Networks) <= 0 {
+		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("network ids cannot be empty")) {
 			return
 		}
 	}
 	ha := false
 	if requestPayload.HA != nil {
-		ha = *requestPayload.HA
+		ha = requestPayload.HA.GetValue()
 	}
 	if ha {
-		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("highly-available firewall not supported for the time being")) {
+		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("highly-available firewall not supported for the time being")) {
 			return
 		}
 	}
 
-	image, err := r.ds.FindImage(requestPayload.ImageID)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	image, err := r.ds.FindImage(allocReq.ImageID)
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	if !image.HasFeature(metal.ImageFeatureFirewall) {
-		if helper.CheckError(request, response, helper.CurrentFuncName(), fmt.Errorf("given image is not usable for a firewall, features: %s", image.ImageFeatureString())) {
+		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("given image is not usable for a firewall, features: %s", image.ImageFeatureString())) {
 			return
 		}
 	}
 
-	spec := helper.MachineAllocationSpec{
-		UUID:        uuid,
-		Name:        name,
-		Description: description,
+	sshPubKeys := make([]string, len(allocReq.SSHPubKeys))
+	for i, pubKey := range allocReq.SSHPubKeys {
+		sshPubKeys[i] = pubKey.GetValue()
+	}
+
+	tags := make([]string, len(allocReq.Tags))
+	for i, tag := range allocReq.Tags {
+		tags[i] = tag.GetValue()
+	}
+
+	ips := make([]string, len(allocReq.IPs))
+	for i, ipAddress := range allocReq.IPs {
+		ips[i] = ipAddress.GetValue()
+	}
+
+	networks := make([]v1.MachineAllocationNetwork, len(allocReq.Networks))
+	//for i, nw := range allocReq.Networks { //TODO
+	//	networks[i] = service.FromNetwork(nw)
+	//}
+
+	spec := machine.AllocationSpec{
+		UUID:        allocReq.Common.Meta.GetId(),
+		Name:        allocReq.Common.Name.GetValue(),
+		Description: allocReq.Common.Description.GetValue(),
 		Hostname:    hostname,
-		ProjectID:   requestPayload.ProjectID,
-		PartitionID: requestPayload.PartitionID,
-		SizeID:      requestPayload.SizeID,
+		ProjectID:   allocReq.ProjectID,
+		PartitionID: allocReq.PartitionID,
+		SizeID:      allocReq.SizeID,
 		Image:       image,
-		SSHPubKeys:  requestPayload.SSHPubKeys,
-		UserData:    userdata,
-		Tags:        requestPayload.Tags,
-		Networks:    requestPayload.Networks,
-		IPs:         requestPayload.IPs,
+		SSHPubKeys:  sshPubKeys,
+		UserData:    allocReq.UserData.GetValue(),
+		Tags:        tags,
+		Networks:    networks,
+		IPs:         ips,
 		HA:          ha,
 		IsFirewall:  true,
 	}
 
-	m, err := helper.AllocateMachine(r.ds, r.ipamer, &spec, r.mdc)
-	if helper.CheckError(request, response, helper.CurrentFuncName(), err) {
+	m, err := machine.Allocate(r.ds, r.ipamer, &spec, r.mdc)
+	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, helper.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, machine.MakeMachineResponse(m, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

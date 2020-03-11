@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/pkg/helper"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/security"
 	"net/http"
@@ -25,13 +25,13 @@ func Admin(rf restful.RouteFunction) restful.RouteFunction {
 
 func oneOf(rf restful.RouteFunction, acc ...security.ResourceAccess) restful.RouteFunction {
 	return func(request *restful.Request, response *restful.Response) {
-		log := helper.Logger(request)
+		log := util.Logger(request)
 		lg := log.Sugar()
 		usr := security.GetUser(request.Request)
 		if !usr.HasGroup(acc...) {
 			err := fmt.Errorf("you are not member in one of %+v", acc)
 			lg.Infow("missing group", "user", usr, "required-group", acc)
-			SendError(log, response, helper.CurrentFuncName(), httperrors.NewHTTPError(http.StatusForbidden, err))
+			SendError(log, response, util.CurrentFuncName(), httperrors.NewHTTPError(http.StatusForbidden, err))
 			return
 		}
 		rf(request, response)
@@ -76,7 +76,7 @@ func (e *TenantEnsurer) EnsureAllowedTenantFilter(req *restful.Request, resp *re
 	tenantID := tenant(req)
 	if !e.Allowed(tenantID) {
 		err := fmt.Errorf("tenant %s not allowed", tenantID)
-		SendError(helper.Logger(req), resp, helper.CurrentFuncName(), httperrors.NewHTTPError(http.StatusForbidden, err))
+		SendError(util.Logger(req), resp, util.CurrentFuncName(), httperrors.NewHTTPError(http.StatusForbidden, err))
 		return
 	}
 	chain.ProcessFilter(req, resp)

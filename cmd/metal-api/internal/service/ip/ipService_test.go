@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/testdata"
 
 	"github.com/metal-stack/metal-lib/httperrors"
@@ -47,12 +47,12 @@ func TestGetIPs(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Len(t, result, 3)
-	require.Equal(t, testdata.IP1.IPAddress, result[0].IPAddress)
-	require.Equal(t, testdata.IP1.Name, *result[0].Name)
-	require.Equal(t, testdata.IP2.IPAddress, result[1].IPAddress)
-	require.Equal(t, testdata.IP2.Name, *result[1].Name)
-	require.Equal(t, testdata.IP3.IPAddress, result[2].IPAddress)
-	require.Equal(t, testdata.IP3.Name, *result[2].Name)
+	require.Equal(t, testdata.IP1.IPAddress, result[0].Identifiable.IPAddress)
+	require.Equal(t, testdata.IP1.Name, result[0].IP.Common.Name.GetValue())
+	require.Equal(t, testdata.IP2.IPAddress, result[1].Identifiable.IPAddress)
+	require.Equal(t, testdata.IP2.Name, result[1].IP.Common.Name.GetValue())
+	require.Equal(t, testdata.IP3.IPAddress, result[2].Identifiable.IPAddress)
+	require.Equal(t, testdata.IP3.Name, result[2].IP.Common.Name.GetValue())
 }
 
 func TestGetIP(t *testing.T) {
@@ -72,8 +72,8 @@ func TestGetIP(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.IP1.IPAddress, result.IPAddress)
-	require.Equal(t, testdata.IP1.Name, *result.Name)
+	require.Equal(t, testdata.IP1.IPAddress, result.Identifiable.IPAddress)
+	require.Equal(t, testdata.IP1.Name, result.IP.Common.Name.GetValue())
 }
 
 func TestGetIPNotFound(t *testing.T) {
@@ -169,33 +169,47 @@ func TestAllocateIP(t *testing.T) {
 		name            string
 		allocateRequest v1.IPAllocateRequest
 		wantedStatus    int
-		wantedType      metal.IPType
+		wantedType      v1.IP_Type
 		wantedIP        string
 	}{
 		{
 			name: "allocate an ephemeral ip",
 			allocateRequest: v1.IPAllocateRequest{
-				Describable: service.Describable{},
-				IPBase:      v1.IPBase{ProjectID: "123", NetworkID: testdata.NwIPAM.ID, Type: metal.Ephemeral},
+				IP: &v1.IP{
+					Common: &v1.Common{
+						Name:        util.ToStringValue(""),
+						Description: util.ToStringValue(""),
+					},
+					ProjectID: "123",
+					NetworkID: testdata.NwIPAM.ID,
+					Type:      v1.IP_EPHEMERAL,
+				},
 			},
 			wantedStatus: http.StatusCreated,
-			wantedType:   metal.Ephemeral,
+			wantedType:   v1.IP_EPHEMERAL,
 			wantedIP:     "10.0.0.1",
 		},
 		{
 			name: "allocate a static ip",
 			allocateRequest: v1.IPAllocateRequest{
-				Describable: service.Describable{},
-				IPBase:      v1.IPBase{ProjectID: "123", NetworkID: testdata.NwIPAM.ID, Type: metal.Static},
+				IP: &v1.IP{
+					Common: &v1.Common{
+						Name:        util.ToStringValue(""),
+						Description: util.ToStringValue(""),
+					},
+					ProjectID: "123",
+					NetworkID: testdata.NwIPAM.ID,
+					Type:      v1.IP_STATIC,
+				},
 			},
 			wantedStatus: http.StatusCreated,
-			wantedType:   metal.Static,
+			wantedType:   v1.IP_STATIC,
 			wantedIP:     "10.0.0.2",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.allocateRequest.Describable.Name = &tt.name
+			tt.allocateRequest.IP.Common.Name = util.ToStringValue(tt.name)
 			js, _ := json.Marshal(tt.allocateRequest)
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", "/v1/ip/allocate", body)
@@ -210,9 +224,9 @@ func TestAllocateIP(t *testing.T) {
 			err = json.NewDecoder(resp.Body).Decode(&result)
 
 			require.Nil(t, err)
-			require.Equal(t, tt.wantedType, result.Type)
-			require.Equal(t, tt.wantedIP, result.IPAddress)
-			require.Equal(t, tt.name, *result.Name)
+			require.Equal(t, tt.wantedType, result.IP.Type)
+			require.Equal(t, tt.wantedIP, result.Identifiable.IPAddress)
+			require.Equal(t, tt.name, result.IP.Common.Name.GetValue())
 		})
 	}
 }
@@ -223,65 +237,66 @@ func TestUpdateIP(t *testing.T) {
 
 	ipservice := NewIP(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipservice)
-	machineIDTag1 := metal.TagIPMachineID + "=" + "1"
+	machineIDTag1 := tag.MachineID + "=" + "1"
 	tests := []struct {
 		name                 string
 		updateRequest        v1.IPUpdateRequest
 		wantedStatus         int
 		wantedIPIdentifiable *v1.IPIdentifiable
-		wantedIPBase         *v1.IPBase
-		wantedDescribable    *service.Describable
 	}{
 		{
 			name: "update ip name",
 			updateRequest: v1.IPUpdateRequest{
-				Describable: service.Describable{
-					Name:        &testdata.IP2.Name,
-					Description: &testdata.IP2.Description,
+				Common: &v1.Common{
+					Name:        util.ToStringValue(testdata.IP2.Name),
+					Description: util.ToStringValue(testdata.IP2.Description),
 				},
-				IPIdentifiable: v1.IPIdentifiable{
+				Identifiable: &v1.IPIdentifiable{
 					IPAddress: testdata.IP1.IPAddress,
 				},
 			},
 			wantedStatus: http.StatusOK,
-			wantedDescribable: &service.Describable{
-				Name:        &testdata.IP2.Name,
-				Description: &testdata.IP2.Description,
-			},
 		},
 		{
 			name: "moving from ephemeral to static",
 			updateRequest: v1.IPUpdateRequest{
-				IPIdentifiable: v1.IPIdentifiable{
+				Common: &v1.Common{
+					Name:        util.ToStringValue(""),
+					Description: util.ToStringValue(""),
+				},
+				Identifiable: &v1.IPIdentifiable{
 					IPAddress: testdata.IP1.IPAddress,
 				},
-				Type: "static",
+				Type: v1.IP_STATIC,
 			},
 			wantedStatus: http.StatusOK,
-			wantedIPBase: &v1.IPBase{
-				ProjectID: testdata.IP1.ProjectID,
-				Type:      "static",
-				Tags:      nil,
-			},
 		},
 		{
 			name: "moving from static to ephemeral must not be allowed",
 			updateRequest: v1.IPUpdateRequest{
-				IPIdentifiable: v1.IPIdentifiable{
+				Common: &v1.Common{
+					Name:        util.ToStringValue(""),
+					Description: util.ToStringValue(""),
+				},
+				Identifiable: &v1.IPIdentifiable{
 					IPAddress: testdata.IP2.IPAddress,
 				},
-				Type: "ephemeral",
+				Type: v1.IP_EPHEMERAL,
 			},
 			wantedStatus: http.StatusUnprocessableEntity,
 		},
 		{
 			name: "internal tag machine is allowed",
 			updateRequest: v1.IPUpdateRequest{
-				IPIdentifiable: v1.IPIdentifiable{
+				Common: &v1.Common{
+					Name:        util.ToStringValue(""),
+					Description: util.ToStringValue(""),
+				},
+				Identifiable: &v1.IPIdentifiable{
 					IPAddress: testdata.IP3.IPAddress,
 				},
-				Type: "static",
-				Tags: []string{machineIDTag1},
+				Type: v1.IP_STATIC,
+				Tags: util.ToStringValueSlice(machineIDTag1),
 			},
 			wantedStatus: http.StatusOK,
 		},
@@ -303,13 +318,7 @@ func TestUpdateIP(t *testing.T) {
 
 			require.Nil(t, err)
 			if tt.wantedIPIdentifiable != nil {
-				require.Equal(t, *tt.wantedIPIdentifiable, result.IPIdentifiable)
-			}
-			if tt.wantedIPBase != nil {
-				require.Equal(t, *tt.wantedIPBase, result.IPBase)
-			}
-			if tt.wantedDescribable != nil {
-				require.Equal(t, *tt.wantedDescribable, result.Describable)
+				require.Equal(t, *tt.wantedIPIdentifiable, result.Identifiable)
 			}
 		})
 	}
