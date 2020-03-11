@@ -20,7 +20,9 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 		return
 	}
 
-	if requestPayload.ID == "" {
+	sw := requestPayload.Switch
+
+	if sw.Common.Meta.Id == "" {
 		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
 			return
 		}
@@ -31,7 +33,7 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 		return
 	}
 
-	s, err := r.ds.FindSwitch(requestPayload.ID)
+	s, err := r.ds.FindSwitch(sw.Common.Meta.Id)
 	if err != nil && !metal.IsNotFound(err) {
 		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
@@ -41,9 +43,9 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	returnCode := http.StatusOK
 
 	if s == nil {
-		s = service.ToSwitch(requestPayload)
+		s = service.FromSwitch(sw)
 
-		if len(requestPayload.Nics) != len(s.Nics.ByMac()) {
+		if len(sw.Nics) != len(s.Nics.ByMac()) {
 			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
 				return
 			}
@@ -62,25 +64,21 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	} else {
 		old := *s
 
-		spec := service.ToSwitch(requestPayload)
+		spec := service.FromSwitch(sw)
 
-		if len(requestPayload.Nics) != len(spec.Nics.ByMac()) {
+		if len(sw.Nics) != len(spec.Nics.ByMac()) {
 			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
 				return
 			}
 		}
 
-		nics, err := helper.UpdateSwitchNics(old.Nics.ByMac(), spec.Nics.ByMac(), old.MachineConnections)
+		nics, err := UpdateSwitchNics(old.Nics.ByMac(), spec.Nics.ByMac(), old.MachineConnections)
 		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 
-		if requestPayload.Name != nil {
-			s.Name = *requestPayload.Name
-		}
-		if requestPayload.Description != nil {
-			s.Description = *requestPayload.Description
-		}
+		s.Name = sw.Common.Name.GetValue()
+		s.Description = sw.Common.Description.GetValue()
 		s.RackID = spec.RackID
 		s.PartitionID = spec.PartitionID
 
@@ -93,7 +91,7 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 			return
 		}
 	}
-	err = response.WriteHeaderAndEntity(returnCode, helper.MakeSwitchResponse(s, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(returnCode, MakeSwitchResponse(s, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

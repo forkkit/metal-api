@@ -21,7 +21,7 @@ func (r *switchResource) deleteSwitch(request *restful.Request, response *restfu
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeSwitchResponse(s, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, MakeSwitchResponse(s, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

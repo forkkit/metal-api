@@ -1,12 +1,10 @@
 package service
 
 import (
-	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"sort"
-
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 )
 
 func NewBGPFilter(vnis, cidrs []string) v1.BGPFilter {
@@ -44,22 +42,40 @@ func NewSwitchResponse(s *metal.Switch, p *metal.Partition, nics SwitchNics, con
 	}
 }
 
+func FromSwitch(s *v1.Switch) *metal.Switch {
+	return &metal.Switch{
+		Base:               metal.Base{
+			ID:         s.Common.Meta.Id,
+			Name: s.Common.Name.GetValue(),
+			Description: s.Common.Description.GetValue(),
+			Created:     util.FromTimestamp(s.Common.Meta.CreatedTime),
+			Changed:     util.FromTimestamp(s.Common.Meta.UpdatedTime),
+		},
+		Nics:               nil,
+		RackID:             s.RackID,
+	}
+}
+
 func ToSwitch(s *metal.Switch) *v1.Switch {
 	return &v1.Switch{
 		Common: &v1.Common{
-			Meta: &mdv1.Meta{
-				Id:          s.GetID(),
-				Apiversion:  "v1",
-				Version:     1,
-				CreatedTime: util.ToTimestamp(s.Created),
-				UpdatedTime: util.ToTimestamp(s.Changed),
-			},
-			Name:        util.ToStringValue(s.Name),
-			Description: util.ToStringValue(s.Description),
 		},
 		RackID: s.RackID,
 		Nics:   ToNICs(s.Nics),
 	}
+}
+
+func FromNICs(nics SwitchNics) metal.Nics {
+	nn := make(metal.Nics, len(nics))
+	for i, n := range nics {
+		nn[i] = metal.Nic{
+			MacAddress: metal.MacAddress(n.MacAddress),
+			Name:       n.Name,
+			Vrf:        n.Vrf.GetValue(),
+			Neighbors:  nil, //TODO
+		}
+	}
+	return nn
 }
 
 func ToNICs(nics metal.Nics) SwitchNics {

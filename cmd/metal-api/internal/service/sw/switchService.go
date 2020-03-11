@@ -3,7 +3,7 @@ package sw
 import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/pkg"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"net/http"
 )

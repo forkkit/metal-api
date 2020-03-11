@@ -32,7 +32,7 @@ message SwitchNic {
 }
 
 message SwitchConnection {
-	string nic = 1;                            // a network interface on the switch
+	SwitchNic nic = 1;                            // a network interface on the switch
 	google.protobuf.StringValue machineID = 2; // the machine id of the machine connected to the nic
 }
 

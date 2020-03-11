@@ -7,6 +7,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"go.uber.org/zap"
 )
 
@@ -228,10 +229,10 @@ func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, mach
 			f := makeBGPFilter(*m, n.Vrf, ips, iMap)
 			filter = &f
 		}
-		nic := v1.SwitchNic{
+		nic := &v1.SwitchNic{
 			MacAddress: string(n.MacAddress),
 			Name:       n.Name,
-			Vrf:        n.Vrf,
+			Vrf:        util.ToStringValue(n.Vrf),
 			BGPFilter:  filter,
 		}
 		nics = append(nics, nic)
@@ -239,18 +240,18 @@ func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, mach
 	return nics
 }
 
-func makeSwitchCons(s *metal.Switch) []v1.SwitchConnection {
-	var cons []v1.SwitchConnection
+func makeSwitchCons(s *metal.Switch) []*v1.SwitchConnection {
+	var cons []*v1.SwitchConnection
 	for _, metalConnections := range s.MachineConnections {
 		for _, mc := range metalConnections {
-			nic := v1.SwitchNic{
+			nic := &v1.SwitchNic{
 				MacAddress: string(mc.Nic.MacAddress),
 				Name:       mc.Nic.Name,
-				Vrf:        mc.Nic.Vrf,
+				Vrf:        util.ToStringValue(mc.Nic.Vrf),
 			}
-			con := v1.SwitchConnection{
+			con := &v1.SwitchConnection{
 				Nic:       nic,
-				MachineID: mc.MachineID,
+				MachineID: util.ToStringValue(mc.MachineID),
 			}
 			cons = append(cons, con)
 		}
@@ -269,7 +270,7 @@ func findSwitchReferencedEntites(s *metal.Switch, ds *datastore.RethinkStore, lo
 			logger.Errorw("switch references partition, but partition cannot be found in database", "switchID", s.ID, "partitionID", s.PartitionID, "error", err)
 		}
 
-		err = ds.SearchMachines(&datastore.MachineSearchQuery{PartitionID: &s.PartitionID}, &m)
+		err = ds.SearchMachines(&v1.MachineSearchQuery{PartitionID: util.ToStringValue(s.PartitionID)}, &m)
 		if err != nil {
 			logger.Errorw("could not search machines of partition", "switchID", s.ID, "partitionID", s.PartitionID, "error", err)
 		}
