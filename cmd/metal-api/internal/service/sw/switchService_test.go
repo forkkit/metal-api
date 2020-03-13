@@ -3,9 +3,10 @@ package sw
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -24,23 +25,24 @@ func TestRegisterSwitch(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	switchService := NewSwitch(ds)
+	switchService := NewSwitchService(ds)
 	container := restful.NewContainer().Add(switchService)
 
 	name := "switch999"
 	createRequest := v1.SwitchRegisterRequest{
 		Switch: &v1.Switch{
 			Common: &v1.Common{
-				Identifiable: service.Identifiable{
-					ID: "switch999",
+				Meta: &mdmv1.Meta{
+					Id: "switch999",
 				},
-				Describable: service.Describable{
-					Name: &name,
-				},
+				Name: util.StringProto(name),
 			},
-			PartitionID: "1",
-			SwitchBase: v1.SwitchBase{
-				RackID: "1",
+			RackID: "1",
+			Nics: SwitchNics{
+				{
+					MacAddress: "bb:aa:aa:aa:aa:aa",
+					Name:       "swp1",
+				},
 			},
 		},
 	}
@@ -58,10 +60,10 @@ func TestRegisterSwitch(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, "switch999", result.ID)
-	require.Equal(t, "switch999", *result.Name)
-	require.Equal(t, "1", result.RackID)
-	require.Equal(t, "1", result.Partition.ID)
+	require.Equal(t, "switch999", result.Switch.Common.Meta.Id)
+	require.Equal(t, "switch999", result.Switch.Common.Name.GetValue())
+	require.Equal(t, "1", result.Switch.RackID)
+	require.Equal(t, "1", result.PartitionResponse.Partition.Common.Meta.Id)
 	require.Len(t, result.Connections, 0)
 }
 
@@ -69,17 +71,16 @@ func TestRegisterExistingSwitch(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	switchService := NewSwitch(ds)
+	switchService := NewSwitchService(ds)
 	container := restful.NewContainer().Add(switchService)
 
 	createRequest := v1.SwitchRegisterRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: testdata.Switch2.ID,
+		Switch: &v1.Switch{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: testdata.Switch2.ID,
+				},
 			},
-		},
-		PartitionID: testdata.Switch2.PartitionID,
-		SwitchBase: v1.SwitchBase{
 			RackID: testdata.Switch2.RackID,
 		},
 	}
@@ -97,10 +98,10 @@ func TestRegisterExistingSwitch(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Switch2.ID, result.ID)
-	require.Equal(t, testdata.Switch2.Name, *result.Name)
-	require.Equal(t, testdata.Switch2.RackID, result.RackID)
-	require.Equal(t, testdata.Switch2.PartitionID, result.Partition.ID)
+	require.Equal(t, testdata.Switch2.ID, result.Switch.Common.Meta.Id)
+	require.Equal(t, testdata.Switch2.Name, result.Switch.Common.Name.GetValue())
+	require.Equal(t, testdata.Switch2.RackID, result.Switch.RackID)
+	require.Equal(t, testdata.Switch2.PartitionID, result.PartitionResponse.Partition.Common.Meta.Id)
 	require.Len(t, result.Connections, 0)
 	// con := result.Connections[0]
 	// require.Equal(t, testdata.Switch2.MachineConnections["1"][0].Nic.MacAddress, con.Nic.MacAddress)
@@ -110,19 +111,18 @@ func TestRegisterExistingSwitchErrorModifyingNics(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	switchService := NewSwitch(ds)
+	switchService := NewSwitchService(ds)
 	container := restful.NewContainer().Add(switchService)
 
 	createRequest := v1.SwitchRegisterRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: testdata.Switch1.ID,
+		Switch: &v1.Switch{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: testdata.Switch1.ID,
+				},
 			},
-		},
-		Nics:        SwitchNics{},
-		PartitionID: testdata.Switch1.PartitionID,
-		SwitchBase: v1.SwitchBase{
 			RackID: testdata.Switch1.RackID,
+			Nics:   SwitchNics{},
 		},
 	}
 	js, _ := json.Marshal(createRequest)
@@ -171,7 +171,7 @@ func TestConnectMachineWithSwitches(t *testing.T) {
 		mock.On(r.DB("mockdb").Table("switch").Get(r.MockAnything()).Replace(r.MockAnything())).Return(testdata.EmptyResult, nil)
 
 		t.Run(tt.name, func(t *testing.T) {
-			if err := helper.ConnectMachineWithSwitches(ds, tt.machine); (err != nil) != tt.wantErr {
+			if err := ConnectMachineWithSwitches(ds, tt.machine); (err != nil) != tt.wantErr {
 				t.Errorf("RethinkStore.connectMachineWithSwitches() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -210,7 +210,7 @@ func TestSetVrfAtSwitch(t *testing.T) {
 		Base:        metal.Base{ID: "1"},
 		PartitionID: "1",
 	}
-	switches, err := helper.SetVrfAtSwitches(ds, m, vrf)
+	switches, err := SetVrfAtSwitches(ds, m, vrf)
 	require.NoError(t, err, "no error was expected: got %v", err)
 	require.Len(t, switches, 1)
 	for _, s := range switches {
@@ -234,16 +234,16 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 				machine: metal.Machine{
 					Allocation: &metal.MachineAllocation{
 						MachineNetworks: []*metal.MachineNetwork{
-							&metal.MachineNetwork{
+							{
 								IPs: nil,
 								Vrf: 104010,
 							},
-							&metal.MachineNetwork{
+							{
 								IPs:      []string{"10.0.0.2", "10.0.0.1"},
 								Vrf:      0,
 								Underlay: true,
 							},
-							&metal.MachineNetwork{
+							{
 								IPs: []string{"212.89.42.1", "212.89.42.2"},
 								Vrf: 104009,
 							},
@@ -259,7 +259,7 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 				machine: metal.Machine{
 					Allocation: &metal.MachineAllocation{
 						MachineNetworks: []*metal.MachineNetwork{
-							&metal.MachineNetwork{
+							{
 								IPs:      []string{"10.0.0.1"},
 								Vrf:      104010,
 								Underlay: false,
@@ -269,8 +269,7 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 				},
 			},
 			want: v1.BGPFilter{
-				VNIs:  []string{"104010"},
-				CIDRs: nil,
+				VNIs: util.StringSliceProto("104010"),
 			},
 		},
 		{
@@ -290,7 +289,7 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := helper.MakeBGPFilterFirewall(tt.args.machine)
+			got := MakeBGPFilterFirewall(tt.args.machine)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("makeBGPFilterFirewall() = %v, want %v", got, tt.want)
 			}
@@ -329,18 +328,18 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 					Allocation: &metal.MachineAllocation{
 						ProjectID: "project",
 						MachineNetworks: []*metal.MachineNetwork{
-							&metal.MachineNetwork{
+							{
 								IPs:      []string{"10.1.0.1"},
 								Prefixes: []string{"10.2.0.0/22", "10.1.0.0/22"},
 								Vrf:      1234,
 								Private:  true,
 							},
-							&metal.MachineNetwork{
+							{
 								IPs:      []string{"10.0.0.2", "10.0.0.1"},
 								Vrf:      0,
 								Underlay: true,
 							},
-							&metal.MachineNetwork{
+							{
 								IPs: []string{"212.89.42.2", "212.89.42.1"},
 								Vrf: 104009,
 							},
@@ -362,7 +361,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 					Allocation: &metal.MachineAllocation{
 						ProjectID: "project",
 						MachineNetworks: []*metal.MachineNetwork{
-							&metal.MachineNetwork{
+							{
 								IPs: []string{"212.89.42.2", "212.89.42.1"},
 								Vrf: 104009,
 							},
@@ -375,7 +374,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := helper.MakeBGPFilterMachine(tt.args.machine, tt.args.ipsMap)
+			got := MakeBGPFilterMachine(tt.args.machine, tt.args.ipsMap)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("makeBGPFilterMachine() = %v, want %v", got, tt.want)
 			}
@@ -453,28 +452,28 @@ func TestMakeSwitchNics(t *testing.T) {
 							ProjectID: "p",
 							ImageID:   "fwimg",
 							MachineNetworks: []*metal.MachineNetwork{
-								&metal.MachineNetwork{Vrf: 1},
-								&metal.MachineNetwork{Vrf: 2},
+								{Vrf: 1},
+								{Vrf: 2},
 							},
 						},
 					},
 				},
 			},
 			want: SwitchNics{
-				v1.SwitchNic{
+				&v1.SwitchNic{
 					Name: "swp1",
-					Vrf:  "vrf1",
+					Vrf:  util.StringProto("vrf1"),
 					BGPFilter: &v1.BGPFilter{
 						CIDRs: []string{"212.89.1.1/32"},
 						VNIs:  nil,
 					},
 				},
-				v1.SwitchNic{
+				&v1.SwitchNic{
 					Name: "swp2",
-					Vrf:  "default",
+					Vrf:  util.StringProto("default"),
 					BGPFilter: &v1.BGPFilter{
 						CIDRs: nil,
-						VNIs:  []string{"1", "2"},
+						VNIs:  util.StringSliceProto("1", "2"),
 					},
 				},
 			},
@@ -482,7 +481,7 @@ func TestMakeSwitchNics(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := helper.MakeSwitchNics(tt.args.s, tt.args.ips, tt.args.images, tt.args.machines)
+			got := MakeSwitchNics(tt.args.s, tt.args.ips, tt.args.images, tt.args.machines)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("makeSwitchNics() = %v, want %v", got, tt.want)
 			}
@@ -633,7 +632,7 @@ func Test_updateSwitchNics(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := helper.UpdateSwitchNics(tt.args.oldNics, tt.args.newNics, tt.args.currentConnections)
+			got, err := UpdateSwitchNics(tt.args.oldNics, tt.args.newNics, tt.args.currentConnections)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("updateSwitchNics() error = %v, wantErr %v", err, tt.wantErr)
 				return

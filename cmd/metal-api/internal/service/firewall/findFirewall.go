@@ -41,7 +41,7 @@ func (r *firewallResource) findFirewall(request *restful.Request, response *rest
 }
 
 func makeFirewallResponse(fw *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.FirewallResponse {
-	return &v1.FirewallResponse{MachineResponse: machine.MakeMachineResponse(fw, ds, logger)}
+	return &v1.FirewallResponse{MachineResponse: machine.MakeResponse(fw, ds, logger)}
 }
 
 func makeFirewallResponseList(fws metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.FirewallResponse {

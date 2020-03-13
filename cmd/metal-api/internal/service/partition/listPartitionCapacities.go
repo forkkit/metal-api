@@ -13,19 +13,6 @@ import (
 	"net/http"
 )
 
-type ServerCapacity struct {
-	Size      string `json:"size" description:"the size of the server"`
-	Total     int    `json:"total" description:"total amount of servers with this size"`
-	Free      int    `json:"free" description:"free servers with this size"`
-	Allocated int    `json:"allocated" description:"allocated servers with this size"`
-	Faulty    int    `json:"faulty" description:"servers with issues with this size"`
-}
-
-type PartitionCapacity struct {
-	*v1.Common
-	ServerCapacities []ServerCapacity `json:"servers" description:"servers available in this partition"`
-}
-
 func (r *partitionResource) listPartitionCapacities(request *restful.Request, response *restful.Response) {
 	partitionCapacities, err := r.calcPartitionCapacities()
 
@@ -39,7 +26,7 @@ func (r *partitionResource) listPartitionCapacities(request *restful.Request, re
 	}
 }
 
-func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, error) {
+func (r *partitionResource) calcPartitionCapacities() ([]v1.PartitionCapacity, error) {
 	// FIXME bad workaround to be able to run make spec
 	if r.ds == nil {
 		return nil, nil
@@ -54,9 +41,9 @@ func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, erro
 	}
 	machines := machine.MakeMachineResponseList(ms, r.ds, zapup.MustRootLogger().Sugar())
 
-	var partitionCapacities []PartitionCapacity
+	var partitionCapacities []v1.PartitionCapacity
 	for _, p := range ps {
-		capacities := make(map[string]ServerCapacity)
+		capacities := make(map[string]*v1.ServerCapacity)
 		for _, machineResponse := range machines {
 			m := machineResponse.Machine
 			if m.PartitionResponse == nil {
@@ -77,10 +64,10 @@ func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, erro
 				}
 			}
 			oldCap, ok := capacities[size]
-			total := 1
-			free := 0
-			allocated := 0
-			faulty := 0
+			total := uint64(1)
+			free := uint64(0)
+			allocated := uint64(0)
+			faulty := uint64(0)
 			if ok {
 				total = oldCap.Total + 1
 			}
@@ -88,14 +75,14 @@ func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, erro
 			if m.Allocation != nil {
 				allocated = 1
 			}
-			if machine.MachineHasIssues(machineResponse) {
+			if machine.HasIssues(machineResponse) {
 				faulty = 1
 			}
 			if available && allocated != 1 && faulty != 1 {
 				free = 1
 			}
 
-			capacities[size] = ServerCapacity{
+			capacities[size] = &v1.ServerCapacity{
 				Size:      size,
 				Total:     total,
 				Free:      oldCap.Free + free,
@@ -103,12 +90,12 @@ func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, erro
 				Faulty:    oldCap.Faulty + faulty,
 			}
 		}
-		var sc []ServerCapacity
+		var sc []*v1.ServerCapacity
 		for _, c := range capacities {
 			sc = append(sc, c)
 		}
 
-		pc := PartitionCapacity{
+		pc := v1.PartitionCapacity{
 			Common: &v1.Common{
 				Meta: &mdmv1.Meta{
 					Id: p.ID,

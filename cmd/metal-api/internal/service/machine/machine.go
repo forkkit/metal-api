@@ -115,7 +115,7 @@ func ResurrectMachines(ds *datastore.RethinkStore, publisher bus.Publisher, logg
 	return nil
 }
 
-func MachineHasIssues(mr *v1.MachineResponse) bool {
+func HasIssues(mr *v1.MachineResponse) bool {
 	if mr.Machine == nil || mr.Machine.PartitionResponse == nil || mr.Machine.PartitionResponse.Partition == nil {
 		return true
 	}
@@ -137,13 +137,13 @@ func MachineHasIssues(mr *v1.MachineResponse) bool {
 	return false
 }
 
-func MakeMachineResponse(m *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.MachineResponse {
+func MakeResponse(m *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.MachineResponse {
 	s, p, i, ec := FindMachineReferencedEntities(m, ds, logger)
-	return NewMachineResponse(m, s, p, i, ec)
+	return newMachineResponse(m, s, p, i, ec)
 }
 
 func MakeMachineResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.MachineResponse {
-	sMap, pMap, iMap, ecMap := GetMachineReferencedEntityMaps(ds, logger)
+	sMap, pMap, iMap, ecMap := getReferencedEntityMaps(ds, logger)
 
 	var result []*v1.MachineResponse
 
@@ -166,7 +166,7 @@ func MakeMachineResponseList(ms metal.Machines, ds *datastore.RethinkStore, logg
 			}
 		}
 		ec := ecMap[ms[index].ID]
-		result = append(result, NewMachineResponse(&ms[index], s, p, i, &ec))
+		result = append(result, newMachineResponse(&ms[index], s, p, i, &ec))
 	}
 
 	return result
@@ -216,7 +216,7 @@ func FindMachineReferencedEntities(m *metal.Machine, ds *datastore.RethinkStore,
 	return s, p, i, ec
 }
 
-func GetMachineReferencedEntityMaps(ds *datastore.RethinkStore, logger *zap.SugaredLogger) (metal.SizeMap, metal.PartitionMap, metal.ImageMap, metal.ProvisioningEventContainerMap) {
+func getReferencedEntityMaps(ds *datastore.RethinkStore, logger *zap.SugaredLogger) (metal.SizeMap, metal.PartitionMap, metal.ImageMap, metal.ProvisioningEventContainerMap) {
 	s, err := ds.ListSizes()
 	if err != nil {
 		logger.Errorw("sizes could not be listed", "error", err)
@@ -312,7 +312,7 @@ func NewMetalIPMI(ipmi *v1.MachineIPMI) metal.IPMI {
 }
 
 func NewMachineIPMIResponse(m *metal.Machine, s *metal.Size, p *metal.Partition, i *metal.Image, ec *metal.ProvisioningEventContainer) *v1.MachineIPMIResponse {
-	machineResponse := NewMachineResponse(m, s, p, i, ec)
+	machineResponse := newMachineResponse(m, s, p, i, ec)
 	return &v1.MachineIPMIResponse{
 		Common:  machineResponse.Common,
 		Machine: machineResponse.Machine,
@@ -345,7 +345,7 @@ func ToMachineFRU(fru metal.Fru) *v1.MachineFru {
 	}
 }
 
-func NewMachineResponse(m *metal.Machine, s *metal.Size, p *metal.Partition, img *metal.Image, ec *metal.ProvisioningEventContainer) *v1.MachineResponse {
+func newMachineResponse(m *metal.Machine, s *metal.Size, p *metal.Partition, img *metal.Image, ec *metal.ProvisioningEventContainer) *v1.MachineResponse {
 	return &v1.MachineResponse{
 		Common: &v1.Common{
 			Meta: &v12.Meta{

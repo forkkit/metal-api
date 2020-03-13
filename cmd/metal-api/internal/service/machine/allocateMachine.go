@@ -92,7 +92,7 @@ func (r *machineResource) allocateMachine(request *restful.Request, response *re
 		util.Logger(request).Sugar().Errorf("machine allocation went wrong, triggered network garbage collection", "error", err)
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, MakeMachineResponse(m, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, MakeResponse(m, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

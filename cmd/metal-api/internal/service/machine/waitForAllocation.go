@@ -51,7 +51,7 @@ func (r *machineResource) waitForAllocation(request *restful.Request, response *
 			}
 
 			s, p, i, ec := FindMachineReferencedEntities(a.Machine, r.ds, log.Sugar())
-			err := response.WriteHeaderAndEntity(http.StatusOK, NewMachineResponse(a.Machine, s, p, i, ec))
+			err := response.WriteHeaderAndEntity(http.StatusOK, newMachineResponse(a.Machine, s, p, i, ec))
 			if err != nil {
 				zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 				return nil

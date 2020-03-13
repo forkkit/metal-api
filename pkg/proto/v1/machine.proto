@@ -320,7 +320,7 @@ message MachineGetRequest {
 }
 
 message MachineFindRequest {
-    MachineSearchQuery query = 1;
+    MachineSearchQuery machineSearchQuery = 1;
 }
 
 message MachineResponse {

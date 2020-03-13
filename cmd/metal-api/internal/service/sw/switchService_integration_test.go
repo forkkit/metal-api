@@ -3,7 +3,7 @@ package sw
 import (
 	"context"
 	"encoding/json"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/image"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/ip"
@@ -12,6 +12,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/partition"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/size"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -88,96 +89,96 @@ func createTestEnvironment(t *testing.T) testEnv {
 	imageID := "test-image"
 	imageName := "testimage"
 	imageDesc := "Test Image"
-	image := v1.ImageCreateRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: imageID,
+	img := v1.ImageCreateRequest{
+		Image: &v1.Image{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: imageID,
+				},
+				Name:        util.StringProto(imageName),
+				Description: util.StringProto(imageDesc),
 			},
-			Describable: service.Describable{
-				Name:        &imageName,
-				Description: &imageDesc,
-			},
+			URL:      util.StringProto("https://blobstore/image"),
+			Features: util.StringSliceProto(string(metal.ImageFeatureMachine)),
 		},
-		URL:      "https://blobstore/image",
-		Features: []string{string(metal.ImageFeatureMachine)},
 	}
 	var createdImage v1.ImageResponse
 
-	status := te.imageCreate(t, image, &createdImage)
+	status := te.imageCreate(t, img, &createdImage)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdImage)
-	require.Equal(image.ID, createdImage.ID)
+	require.Equal(img.Image.Common.Meta.Id, createdImage.Image.Common.Meta.Id)
 
 	sizeName := "testsize"
 	sizeDesc := "Test Size"
-	size := v1.SizeCreateRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: "test-size",
+	s := v1.SizeCreateRequest{
+		Size: &v1.Size{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: "test-size",
+				},
+				Name:        util.StringProto(sizeName),
+				Description: util.StringProto(sizeDesc),
 			},
-			Describable: service.Describable{
-				Name:        &sizeName,
-				Description: &sizeDesc,
-			},
-		},
-		SizeConstraints: []v1.SizeConstraint{
-			v1.SizeConstraint{
-				Type: metal.CoreConstraint,
-				Min:  8,
-				Max:  8,
-			},
-			v1.SizeConstraint{
-				Type: metal.MemoryConstraint,
-				Min:  1000,
-				Max:  2000,
-			},
-			v1.SizeConstraint{
-				Type: metal.StorageConstraint,
-				Min:  2000,
-				Max:  3000,
+			Constraints: []*v1.SizeConstraint{
+				{
+					Type: v1.SizeConstraint_CORES,
+					Min:  8,
+					Max:  8,
+				},
+				{
+					Type: v1.SizeConstraint_MEMORY,
+					Min:  1000,
+					Max:  2000,
+				},
+				{
+					Type: v1.SizeConstraint_STORAGE,
+					Min:  2000,
+					Max:  3000,
+				},
 			},
 		},
 	}
 	var createdSize v1.SizeResponse
-	status = te.sizeCreate(t, size, &createdSize)
+	status = te.sizeCreate(t, s, &createdSize)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdSize)
-	require.Equal(size.ID, createdSize.ID)
+	require.Equal(s.Size.Common.Meta.Id, createdSize.Size.Common.Meta.Id)
 
-	partitionName := "test-partition"
-	partitionDesc := "Test Partition"
-	partition := v1.PartitionCreateRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: "test-partition",
-			},
-			Describable: service.Describable{
-				Name:        &partitionName,
-				Description: &partitionDesc,
+	partName := "test-partition"
+	partDesc := "Test Partition"
+	part := v1.PartitionCreateRequest{
+		Partition: &v1.Partition{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: "test-partition",
+				},
+				Name:        util.StringProto(partName),
+				Description: util.StringProto(partDesc),
 			},
 		},
 	}
 	var createdPartition v1.PartitionResponse
-	status = te.partitionCreate(t, partition, &createdPartition)
+	status = te.partitionCreate(t, part, &createdPartition)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdPartition)
-	require.Equal(partition.Name, createdPartition.Name)
-	require.NotEmpty(createdPartition.ID)
+	require.Equal(part.Partition.Common.Name.GetValue(), createdPartition.Partition.Common.Name.GetValue())
+	require.NotEmpty(createdPartition.Partition.Common.Meta.Id)
 
 	switchID := "test-switch01"
 	sw := v1.SwitchRegisterRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: switchID,
+		Switch: &v1.Switch{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: switchID,
+				},
 			},
-		},
-		SwitchBase: v1.SwitchBase{
 			RackID: "test-rack",
-		},
-		Nics: SwitchNics{
-			{
-				MacAddress: "bb:aa:aa:aa:aa:aa",
-				Name:       "swp1",
+			Nics: SwitchNics{
+				{
+					MacAddress: "bb:aa:aa:aa:aa:aa",
+					Name:       "swp1",
+				},
 			},
 		},
 		PartitionID: "test-partition",
@@ -187,10 +188,10 @@ func createTestEnvironment(t *testing.T) testEnv {
 	status = te.switchRegister(t, sw, &createdSwitch)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdSwitch)
-	require.Equal(sw.ID, createdSwitch.ID)
-	require.Len(sw.Nics, 1)
-	require.Equal(sw.Nics[0].Name, createdSwitch.Nics[0].Name)
-	require.Equal(sw.Nics[0].MacAddress, createdSwitch.Nics[0].MacAddress)
+	require.Equal(sw.Switch.Common.Meta.Id, createdSwitch.Switch.Common.Meta.Id)
+	require.Len(sw.Switch.Nics, 1)
+	require.Equal(sw.Switch.Nics[0].Name, createdSwitch.Switch.Nics[0].Name)
+	require.Equal(sw.Switch.Nics[0].MacAddress, createdSwitch.Switch.Nics[0].MacAddress)
 
 	var createdNetwork v1.NetworkResponse
 	networkID := "test-private-super"
@@ -198,15 +199,17 @@ func createTestEnvironment(t *testing.T) testEnv {
 	networkDesc := "Test Private Super Network"
 	testPrivateSuperCidr := "10.0.0.0/16"
 	ncr := v1.NetworkCreateRequest{
-		ID: &networkID,
-		Describable: service.Describable{
-			Name:        &networkName,
-			Description: &networkDesc,
+		Network: &v1.Network{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: networkID,
+				},
+				Name:        util.StringProto(networkName),
+				Description: util.StringProto(networkDesc),
+			},
+			PartitionID: util.StringProto(part.Partition.Common.Meta.Id),
 		},
-		NetworkBase: v1.NetworkBase{
-			PartitionID: &partition.ID,
-		},
-		NetworkImmutable: v1.NetworkImmutable{
+		NetworkImmutable: &v1.NetworkImmutable{
 			Prefixes:     []string{testPrivateSuperCidr},
 			PrivateSuper: true,
 		},
@@ -214,7 +217,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 	status = te.networkCreate(t, ncr, &createdNetwork)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdNetwork)
-	require.Equal(*ncr.ID, createdNetwork.ID)
+	require.Equal(ncr.Network.Common.Meta.Id, createdNetwork.Network.Common.Meta.Id)
 
 	te.privateSuperNetwork = &createdNetwork
 
@@ -223,22 +226,22 @@ func createTestEnvironment(t *testing.T) testEnv {
 	privateNetworkDesc := "Test Private Network"
 	projectID := "test-project-1"
 	nar := v1.NetworkAllocateRequest{
-		Describable: service.Describable{
-			Name:        &privateNetworkName,
-			Description: &privateNetworkDesc,
-		},
-		NetworkBase: v1.NetworkBase{
-			ProjectID:   &projectID,
-			PartitionID: &partition.ID,
+		Network: &v1.Network{
+			Common: &v1.Common{
+				Name:        util.StringProto(privateNetworkName),
+				Description: util.StringProto(privateNetworkDesc),
+			},
+			ProjectID:   util.StringProto(projectID),
+			PartitionID: util.StringProto(part.Partition.Common.Meta.Id),
 		},
 	}
 	status = te.networkAcquire(t, nar, &acquiredPrivateNetwork)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(acquiredPrivateNetwork)
-	require.Equal(ncr.ID, acquiredPrivateNetwork.ParentNetworkID)
-	require.Len(acquiredPrivateNetwork.Prefixes, 1)
+	require.Equal(ncr.Network.Common.Meta.Id, acquiredPrivateNetwork.NetworkImmutable.ParentNetworkID)
+	require.Len(acquiredPrivateNetwork.NetworkImmutable.Prefixes, 1)
 	_, ipnet, _ := net.ParseCIDR(testPrivateSuperCidr)
-	_, privateNet, _ := net.ParseCIDR(acquiredPrivateNetwork.Prefixes[0])
+	_, privateNet, _ := net.ParseCIDR(acquiredPrivateNetwork.NetworkImmutable.Prefixes[0])
 	require.True(ipnet.Contains(privateNet.IP), "%s must be within %s", privateNet, ipnet)
 	te.privateNetwork = &acquiredPrivateNetwork
 
@@ -256,15 +259,19 @@ func (te *testEnv) partitionCreate(t *testing.T, icr v1.PartitionCreateRequest, 
 func (te *testEnv) switchRegister(t *testing.T, srr v1.SwitchRegisterRequest, response interface{}) int {
 	return webRequestPost(t, te.switchService, srr, "/v1/switch/register", response)
 }
+
 func (te *testEnv) switchGet(t *testing.T, swid string, response interface{}) int {
 	return webRequestGet(t, te.switchService, emptyBody{}, "/v1/switch/"+swid, response)
 }
+
 func (te *testEnv) imageCreate(t *testing.T, icr v1.ImageCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.imageService, icr, "/v1/image/", response)
 }
+
 func (te *testEnv) networkCreate(t *testing.T, icr v1.NetworkCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.networkService, icr, "/v1/network/", response)
 }
+
 func (te *testEnv) networkAcquire(t *testing.T, nar v1.NetworkAllocateRequest, response interface{}) int {
 	return webRequestPost(t, te.networkService, nar, "/v1/network/allocate", response)
 }
@@ -276,6 +283,7 @@ func (te *testEnv) machineAllocate(t *testing.T, mar v1.MachineAllocateRequest, 
 func (te *testEnv) machineFree(t *testing.T, uuid string, response interface{}) int {
 	return webRequestDelete(t, te.machineService, &emptyBody{}, "/v1/machine/"+uuid+"/free", response)
 }
+
 func (te *testEnv) machineRegister(t *testing.T, mrr v1.MachineRegisterRequest, response interface{}) int {
 	return webRequestPost(t, te.machineService, mrr, "/v1/machine/register", response)
 }

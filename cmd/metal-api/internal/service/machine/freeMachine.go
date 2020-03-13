@@ -73,6 +73,29 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 
 	log := util.Logger(request).Sugar()
 
+	// do the next steps in any case, so a client can call this function multiple times to
+	// fire of the needed events
+
+	ss, err := sw.SetVrfAtSwitches(r.ds, m, "")
+	log.Infow("set VRF at switch", "machineID", id, "error", err)
+	if err != nil {
+		return err
+	}
+
+	switchEvent := metal.SwitchEvent{Type: metal.UPDATE, Machine: *m, Switches: ss}
+	err = r.Publish(metal.TopicSwitch.GetFQN(m.PartitionID), switchEvent)
+	log.Infow("published switch update event", "machineID", id, "error", err)
+	if err != nil {
+		log.Errorw("failed to publish switch update event", "machineID", id, "error", err)
+	}
+
+	deleteEvent := metal.MachineEvent{Type: metal.DELETE, Old: m}
+	err = r.Publish(metal.TopicMachine.GetFQN(m.PartitionID), deleteEvent)
+	log.Infow("published machine delete event", "machineID", id, "error", err)
+	if err != nil {
+		return err
+	}
+
 	if m.Allocation != nil {
 		old := *m
 
@@ -111,30 +134,7 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 		}
 	}
 
-	// do the next steps in any case, so a client can call this function multiple times to
-	// fire of the needed events
-
-	sw, err := sw.SetVrfAtSwitches(r.ds, m, "")
-	log.Infow("set VRF at switch", "machineID", id, "error", err)
-	if err != nil {
-		return err
-	}
-
-	deleteEvent := metal.MachineEvent{Type: metal.DELETE, Old: m}
-	err = r.Publish(metal.TopicMachine.GetFQN(m.PartitionID), deleteEvent)
-	log.Infow("published machine delete event", "machineID", id, "error", err)
-	if err != nil {
-		return err
-	}
-
-	switchEvent := metal.SwitchEvent{Type: metal.UPDATE, Machine: *m, Switches: sw}
-	err = r.Publish(metal.TopicSwitch.GetFQN(m.PartitionID), switchEvent)
-	log.Infow("published switch update event", "machineID", id, "error", err)
-	if err != nil {
-		return err
-	}
-
-	err = response.WriteHeaderAndEntity(http.StatusOK, MakeMachineResponse(m, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, MakeResponse(m, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		log.Error("Failed to send response", zap.Error(err))
 	}

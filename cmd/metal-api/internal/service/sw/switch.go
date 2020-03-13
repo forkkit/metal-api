@@ -117,8 +117,8 @@ func setVrf(s *metal.Switch, mid, vrf string) {
 	s.Nics = metal.Nics{}
 	for mac, old := range currentByMac {
 		e := old
-		if new, has := changedByMac[mac]; has {
-			e = new
+		if nic, has := changedByMac[mac]; has {
+			e = nic
 		}
 		s.Nics = append(s.Nics, *e)
 	}
@@ -141,7 +141,7 @@ func ConnectMachineWithSwitches(ds *datastore.RethinkStore, m *metal.Machine) er
 }
 
 func MakeSwitchResponse(s *metal.Switch, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.SwitchResponse {
-	p, ips, iMap, machines := findSwitchReferencedEntites(s, ds, logger)
+	p, ips, iMap, machines := findSwitchReferencedEntities(s, ds, logger)
 	nics := MakeSwitchNics(s, ips, iMap, machines)
 	cons := makeSwitchCons(s)
 	return NewSwitchResponse(s, p, nics, cons)
@@ -260,7 +260,7 @@ func makeSwitchCons(s *metal.Switch) []*v1.SwitchConnection {
 	return cons
 }
 
-func findSwitchReferencedEntites(s *metal.Switch, ds *datastore.RethinkStore, logger *zap.SugaredLogger) (*metal.Partition, metal.IPsMap, metal.ImageMap, metal.Machines) {
+func findSwitchReferencedEntities(s *metal.Switch, ds *datastore.RethinkStore, logger *zap.SugaredLogger) (*metal.Partition, metal.IPsMap, metal.ImageMap, metal.Machines) {
 	var err error
 
 	var p *metal.Partition
@@ -360,9 +360,9 @@ func NewSwitchResponse(s *metal.Switch, p *metal.Partition, nics SwitchNics, con
 	}
 
 	return &v1.SwitchResponse{
-		Switch:      ToSwitch(s),
-		Partition:   partition.NewPartitionResponse(p),
-		Connections: cons,
+		Switch:            ToSwitch(s),
+		PartitionResponse: partition.NewPartitionResponse(p),
+		Connections:       cons,
 	}
 }
 

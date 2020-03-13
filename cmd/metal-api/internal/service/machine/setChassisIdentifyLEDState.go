@@ -49,7 +49,7 @@ func (r *machineResource) setChassisIdentifyLEDState(request *restful.Request, r
 		return
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, MakeMachineResponse(&newMachine, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, MakeResponse(&newMachine, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

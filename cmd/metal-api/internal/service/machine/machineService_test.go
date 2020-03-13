@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/emicklei/go-restful"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -526,8 +528,16 @@ func TestSearchMachine(t *testing.T) {
 
 	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
-	requestJSON := fmt.Sprintf("{%q:[%q]}", "nics_mac_addresses", "1")
-	req := httptest.NewRequest("POST", "/v1/machine/find", bytes.NewBufferString(requestJSON))
+	findReq := &v1.MachineFindRequest{
+		MachineSearchQuery: &v1.MachineSearchQuery{
+			NicsMacAddresses: []*wrappers.StringValue{
+				util.StringProto("1"),
+			},
+		},
+	}
+	requestJSON, err := json.Marshal(findReq)
+	require.Nil(t, err)
+	req := httptest.NewRequest("POST", "/v1/machine/find", bytes.NewBuffer(requestJSON))
 	req.Header.Add("Content-Type", "application/json")
 	container = helper.InjectViewer(container, req)
 	w := httptest.NewRecorder()
@@ -536,7 +546,7 @@ func TestSearchMachine(t *testing.T) {
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
 	var results []v1.MachineResponse
-	err := json.NewDecoder(resp.Body).Decode(&results)
+	err = json.NewDecoder(resp.Body).Decode(&results)
 
 	require.Nil(t, err)
 	require.Len(t, results, 1)

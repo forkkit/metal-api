@@ -25,9 +25,9 @@ func (r *networkResource) findNetworks(request *restful.Request, response *restf
 	}
 
 	var result []*v1.NetworkResponse
-	for i := range nws {
-		usage := GetNetworkUsage(&nws[i], r.ipamer)
-		result = append(result, NewNetworkResponse(&nws[i], usage))
+	for _, nw := range nws {
+		usage := GetNetworkUsage(&nw, r.ipamer)
+		result = append(result, NewNetworkResponse(&nw, usage))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

@@ -68,7 +68,7 @@ func (r *partitionResource) webService() *restful.WebService {
 				Method:  http.MethodGet,
 				SubPath: "/capacity",
 				Doc:     "get partition capacities",
-				Writes:  []PartitionCapacity{},
+				Writes:  []v1.PartitionCapacity{},
 				Handler: r.listPartitionCapacities,
 			},
 		},

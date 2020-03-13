@@ -71,7 +71,7 @@ message SwitchFindRequest {
 message SwitchResponse {
     Switch switch = 1;
     repeated SwitchConnection connections = 2; // a connection between a switch port and a machine
-    v1.PartitionResponse partition = 3;           // the partition in which this switch is located
+    v1.PartitionResponse partitionResponse = 3;           // the partition in which this switch is located
 }
 
 message SwitchListRequest {}

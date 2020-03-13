@@ -3,7 +3,6 @@ package network
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
@@ -20,7 +19,6 @@ import (
 
 	restful "github.com/emicklei/go-restful"
 	goipam "github.com/metal-stack/go-ipam"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/testdata"
 	"github.com/stretchr/testify/require"
 )
@@ -224,12 +222,12 @@ func TestUpdateNetwork(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result metal.Partition
+	var result v1.NetworkResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Nw1.ID, result.ID)
-	require.Equal(t, newName, result.Name)
+	require.Equal(t, testdata.Nw1.ID, result.Network.Common.Meta.Id)
+	require.Equal(t, newName, result.Network.Common.Name.GetValue())
 }
 
 func TestSearchNetwork(t *testing.T) {
@@ -239,8 +237,14 @@ func TestSearchNetwork(t *testing.T) {
 
 	networkService := NewNetworkService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(networkService)
-	requestJSON := fmt.Sprintf("{%q:%q}", "partitionid", "1")
-	req := httptest.NewRequest("POST", "/v1/network/find", bytes.NewBufferString(requestJSON))
+	findReq := &v1.NetworkFindRequest{
+		NetworkSearchQuery: &v1.NetworkSearchQuery{
+			PartitionID: util.StringProto("1"),
+		},
+	}
+	requestJSON, err := json.Marshal(findReq)
+	require.Nil(t, err)
+	req := httptest.NewRequest("POST", "/v1/network/find", bytes.NewBuffer(requestJSON))
 	req.Header.Add("Content-Type", "application/json")
 	container = helper.InjectViewer(container, req)
 	w := httptest.NewRecorder()
@@ -248,11 +252,11 @@ func TestSearchNetwork(t *testing.T) {
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var results []v1.NetworkResponse
-	err := json.NewDecoder(resp.Body).Decode(&results)
+	var results []*v1.NetworkResponse
+	err = json.NewDecoder(resp.Body).Decode(&results)
 
 	require.Nil(t, err)
-	require.Len(t, results, 1)
+	require.Len(t, results, len(testdata.TestNetworks))
 	result := results[0]
 	require.Equal(t, testdata.Nw1.ID, result.Network.Common.Meta.Id)
 	require.Equal(t, testdata.Nw1.Name, result.Network.Common.Name.GetValue())

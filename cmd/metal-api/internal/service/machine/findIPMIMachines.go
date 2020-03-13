@@ -32,7 +32,7 @@ func (r *machineResource) findIPMIMachines(request *restful.Request, response *r
 }
 
 func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.MachineIPMIResponse {
-	sMap, pMap, iMap, ecMap := GetMachineReferencedEntityMaps(ds, logger)
+	sMap, pMap, iMap, ecMap := getReferencedEntityMaps(ds, logger)
 
 	var result []*v1.MachineIPMIResponse
 

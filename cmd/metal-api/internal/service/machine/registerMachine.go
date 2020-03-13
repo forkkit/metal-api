@@ -126,7 +126,7 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(returnCode, MakeMachineResponse(m, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(returnCode, MakeResponse(m, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return
