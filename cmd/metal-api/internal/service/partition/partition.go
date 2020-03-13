@@ -12,20 +12,20 @@ import (
 	"go.uber.org/zap"
 )
 
-type TopicCreater interface {
+type TopicCreator interface {
 	CreateTopic(partitionID, topicFQN string) error
 }
 
 type partitionResource struct {
 	ds           *datastore.RethinkStore
-	topicCreater TopicCreater
+	topicCreator TopicCreator
 }
 
 // NewPartitionService returns a webservice for partition specific endpoints.
-func NewPartitionService(ds *datastore.RethinkStore, tc TopicCreater) *restful.WebService {
+func NewPartitionService(ds *datastore.RethinkStore, tc TopicCreator) *restful.WebService {
 	r := partitionResource{
 		ds:           ds,
-		topicCreater: tc,
+		topicCreator: tc,
 	}
 	pcc := partitionCapacityCollector{r: &r}
 	err := prometheus.Register(pcc)

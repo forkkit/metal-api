@@ -3,7 +3,6 @@
 package machine
 
 import (
-	"github.com/metal-stack/metal-api/pkg"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"net"
 	"net/http"
@@ -32,7 +31,7 @@ func TestMachineAllocationIntegration(t *testing.T) {
 		PartitionID: "test-partition",
 		RackID:      "test-rack",
 		Hardware: v1.MachineHardwareExtended{
-			v1.MachineHardwareBase{
+			Base: v1.MachineHardwareBase{
 				CPUCores: 8,
 				Memory:   1500,
 				Disks: []v1.MachineBlockDevice{

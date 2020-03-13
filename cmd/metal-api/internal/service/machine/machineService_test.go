@@ -36,7 +36,7 @@ func (p *emptyPublisher) Publish(topic string, data interface{}) error {
 	return nil
 }
 
-func (p *emptyPublisher) CreateTopic(topic string) error {
+func (p *emptyPublisher) CreateTopic(string) error {
 	return nil
 }
 
