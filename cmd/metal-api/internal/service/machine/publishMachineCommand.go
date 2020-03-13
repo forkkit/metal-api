@@ -4,7 +4,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -17,7 +17,7 @@ func (r *machineResource) publishMachineCmd(op string, cmd metal.MachineCommand,
 	id := request.PathParameter("id")
 
 	m, err := r.ds.FindMachineByID(id)
-	if helper.CheckError(request, response, op, err) {
+	if service.CheckError(request, response, op, err) {
 		return
 	}
 
@@ -25,13 +25,13 @@ func (r *machineResource) publishMachineCmd(op string, cmd metal.MachineCommand,
 	case "powerResetMachine", "powerMachineOff":
 		event := string(metal.ProvisioningEventPlannedReboot)
 		_, err = r.provisioningEventForMachine(id, v1.MachineProvisioningEvent{Time: ptypes.TimestampNow(), Event: event, Message: util.StringProto(op)})
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
 
 	err = PublishMachineCmd(logger, m, r, cmd, params...)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 

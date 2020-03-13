@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -38,7 +39,7 @@ func TestRegisterSwitch(t *testing.T) {
 				Name: util.StringProto(name),
 			},
 			RackID: "1",
-			Nics: SwitchNics{
+			Nics: helper.SwitchNics{
 				{
 					MacAddress: "bb:aa:aa:aa:aa:aa",
 					Name:       "swp1",
@@ -50,7 +51,7 @@ func TestRegisterSwitch(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/switch/register", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = helper.InjectEditor(container, req)
+	container = machine.InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -88,7 +89,7 @@ func TestRegisterExistingSwitch(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/switch/register", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = helper.InjectEditor(container, req)
+	container = machine.InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -122,13 +123,13 @@ func TestRegisterExistingSwitchErrorModifyingNics(t *testing.T) {
 				},
 			},
 			RackID: testdata.Switch1.RackID,
-			Nics:   SwitchNics{},
+			Nics:   helper.SwitchNics{},
 		},
 	}
 	js, _ := json.Marshal(createRequest)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/switch/register", body)
-	container = helper.InjectAdmin(container, req)
+	container = machine.InjectAdmin(container, req)
 	req.Header.Add("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -392,7 +393,7 @@ func TestMakeSwitchNics(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want SwitchNics
+		want helper.SwitchNics
 	}{
 		{
 			name: "machine and firewall bgp filter",
@@ -459,7 +460,7 @@ func TestMakeSwitchNics(t *testing.T) {
 					},
 				},
 			},
-			want: SwitchNics{
+			want: helper.SwitchNics{
 				&v1.SwitchNic{
 					Name: "swp1",
 					Vrf:  util.StringProto("vrf1"),

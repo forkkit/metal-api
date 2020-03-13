@@ -4,8 +4,8 @@ import (
 	"github.com/emicklei/go-restful"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -16,7 +16,7 @@ import (
 func (r *partitionResource) listPartitionCapacities(request *restful.Request, response *restful.Response) {
 	partitionCapacities, err := r.calcPartitionCapacities()
 
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, partitionCapacities)
@@ -39,7 +39,7 @@ func (r *partitionResource) calcPartitionCapacities() ([]v1.PartitionCapacity, e
 	if err != nil {
 		return nil, err
 	}
-	machines := machine.MakeMachineResponseList(ms, r.ds, zapup.MustRootLogger().Sugar())
+	machines := helper.MakeMachineResponseList(ms, r.ds, zapup.MustRootLogger().Sugar())
 
 	var partitionCapacities []v1.PartitionCapacity
 	for _, p := range ps {
@@ -75,7 +75,7 @@ func (r *partitionResource) calcPartitionCapacities() ([]v1.PartitionCapacity, e
 			if m.Allocation != nil {
 				allocated = 1
 			}
-			if machine.HasIssues(machineResponse) {
+			if helper.HasMachineIssues(machineResponse) {
 				faulty = 1
 			}
 			if available && allocated != 1 && faulty != 1 {

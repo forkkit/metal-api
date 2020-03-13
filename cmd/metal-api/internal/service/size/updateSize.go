@@ -3,6 +3,7 @@ package size
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -14,14 +15,14 @@ import (
 func (r *sizeResource) updateSize(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.SizeUpdateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	size := requestPayload.Size
 
 	oldSize, err := r.ds.FindSize(size.Common.Meta.Id)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -42,10 +43,10 @@ func (r *sizeResource) updateSize(request *restful.Request, response *restful.Re
 	}
 
 	err = r.ds.UpdateSize(oldSize, &newSize)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, NewSizeResponse(&newSize))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.NewSizeResponse(&newSize))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

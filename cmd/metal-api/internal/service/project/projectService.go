@@ -4,6 +4,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"net/http"
 )
 
@@ -17,7 +18,7 @@ func (r *projectResource) webService() *restful.WebService {
 				SubPath: "/",
 				Doc:     "get all projects",
 				Access:  metal.ViewAccess,
-				Writes:  []ProjectResponse{},
+				Writes:  []helper.ProjectResponse{},
 				Handler: r.listProjects,
 			},
 			{
@@ -26,7 +27,7 @@ func (r *projectResource) webService() *restful.WebService {
 				PathParameter: service.NewPathParameter("id", "identifier of the project"),
 				Doc:           "get project by id",
 				Access:        metal.ViewAccess,
-				Writes:        ProjectResponse{},
+				Writes:        helper.ProjectResponse{},
 				Handler:       r.findProject,
 			},
 			{
@@ -34,8 +35,8 @@ func (r *projectResource) webService() *restful.WebService {
 				SubPath: "/find",
 				Doc:     "get all projects that match given properties",
 				Access:  metal.ViewAccess,
-				Reads:   ProjectFindRequest{},
-				Writes:  []ProjectResponse{},
+				Reads:   helper.ProjectFindRequest{},
+				Writes:  []helper.ProjectResponse{},
 				Handler: r.findProjects,
 			},
 		},

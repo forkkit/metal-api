@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestTenantEnsurer(t *testing.T) {
-	e := NewTenantEnsurer([]string{"pvdr", "Pv", "pv-DR"}, nil)
+	e := service.NewTenantEnsurer([]string{"pvdr", "Pv", "pv-DR"}, nil)
 	require.True(t, e.Allowed("pvdr"))
 	require.True(t, e.Allowed("Pv"))
 	require.True(t, e.Allowed("pv"))
@@ -27,7 +28,7 @@ func foo(req *restful.Request, resp *restful.Response) {
 }
 
 func TestAllowedPathSuffixes(t *testing.T) {
-	e := NewTenantEnsurer([]string{"a", "b", "c"}, []string{"/health", "/liveliness"})
+	e := service.NewTenantEnsurer([]string{"a", "b", "c"}, []string{"/health", "/liveliness"})
 	ws := new(restful.WebService).Path("")
 	ws.Filter(e.EnsureAllowedTenantFilter)
 	health := ws.GET("/health").To(foo)

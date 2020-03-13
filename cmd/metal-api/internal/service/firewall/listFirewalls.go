@@ -3,7 +3,7 @@ package firewall
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -12,13 +12,13 @@ import (
 
 func (r *firewallResource) listFirewalls(request *restful.Request, response *restful.Response) {
 	possibleFws, err := r.ds.ListMachines()
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	// potentially a little unefficient because images are also retrieved for creating the machine list response later
 	imgs, err := r.ds.ListImages()
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 

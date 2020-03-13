@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -16,18 +16,18 @@ import (
 func (r *machineResource) finalizeAllocation(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineFinalizeAllocationRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	id := request.PathParameter("id")
 	m, err := r.ds.FindMachineByID(id)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	if m.Allocation == nil {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("the machine %q is not allocated", id)) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("the machine %q is not allocated", id)) {
 			return
 		}
 	}
@@ -35,23 +35,25 @@ func (r *machineResource) finalizeAllocation(request *restful.Request, response 
 	old := *m
 
 	m.Allocation.ConsolePassword = requestPayload.ConsolePassword
-	m.Allocation.PrimaryDisk = requestPayload.Setup.PrimaryDisk
-	m.Allocation.OSPartition = requestPayload.Setup.OsPartition
-	m.Allocation.Initrd = requestPayload.Setup.Initrd
-	m.Allocation.Cmdline = requestPayload.Setup.Cmdline
-	m.Allocation.Kernel = requestPayload.Setup.Kernel
-	m.Allocation.BootloaderID = requestPayload.Setup.BootloaderID
+	if requestPayload.Setup != nil {
+		m.Allocation.PrimaryDisk = requestPayload.Setup.PrimaryDisk
+		m.Allocation.OSPartition = requestPayload.Setup.OsPartition
+		m.Allocation.Initrd = requestPayload.Setup.Initrd
+		m.Allocation.Cmdline = requestPayload.Setup.Cmdline
+		m.Allocation.Kernel = requestPayload.Setup.Kernel
+		m.Allocation.BootloaderID = requestPayload.Setup.BootloaderID
+	}
 	m.Allocation.Reinstall = false // just for safety
 
 	err = r.ds.UpdateMachine(&old, m)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	var sws []metal.Switch
 	var vrf = ""
 	imgs, err := r.ds.ListImages()
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -69,7 +71,7 @@ func (r *machineResource) finalizeAllocation(request *restful.Request, response 
 
 	sws, err = sw.SetVrfAtSwitches(r.ds, m, vrf)
 	if err != nil {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("the machine %q could not be enslaved into the vrf %s", id, vrf)) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("the machine %q could not be enslaved into the vrf %s", id, vrf)) {
 			return
 		}
 	}

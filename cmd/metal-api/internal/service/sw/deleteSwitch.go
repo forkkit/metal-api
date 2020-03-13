@@ -2,7 +2,7 @@ package sw
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -13,12 +13,12 @@ func (r *switchResource) deleteSwitch(request *restful.Request, response *restfu
 	id := request.PathParameter("id")
 
 	s, err := r.ds.FindSwitch(id)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	err = r.ds.DeleteSwitch(s)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, MakeSwitchResponse(s, r.ds, util.Logger(request).Sugar()))

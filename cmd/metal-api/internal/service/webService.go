@@ -5,7 +5,6 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"net/http"
@@ -80,11 +79,11 @@ func (s *WebService) addRoute(route *Route, ws *restful.WebService) {
 	if route.Access == nil {
 		rb.To(route.Handler)
 	} else if metal.IsAdmin(route.Access) {
-		rb.To(helper.Admin(route.Handler))
+		rb.To(Admin(route.Handler))
 	} else if metal.IsEdit(route.Access) {
-		rb.To(helper.Editor(route.Handler))
+		rb.To(Editor(route.Handler))
 	} else {
-		rb.To(helper.Viewer(route.Handler))
+		rb.To(Viewer(route.Handler))
 	}
 
 	tags := make([]string, len(s.Tags))

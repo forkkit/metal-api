@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -15,12 +16,12 @@ import (
 func (r *ipResource) updateIP(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.IPUpdateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	oldIP, err := r.ds.FindIPByID(requestPayload.Identifiable.IPAddress)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -40,10 +41,10 @@ func (r *ipResource) updateIP(request *restful.Request, response *restful.Respon
 	}
 
 	err = r.validateAndUpateIP(oldIP, &newIP)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, NewIPResponse(&newIP))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.NewIPResponse(&newIP))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

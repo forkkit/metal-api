@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -115,7 +115,7 @@ func TestDeletePartition(t *testing.T) {
 	service := NewPartitionService(ds, &nopTopicCreator{})
 	container := restful.NewContainer().Add(service)
 	req := httptest.NewRequest("DELETE", "/v1/partition/1", nil)
-	container = helper.InjectAdmin(container, req)
+	container = machine.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -156,7 +156,7 @@ func TestCreatePartition(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("PUT", "/v1/partition", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = helper.InjectAdmin(container, req)
+	container = machine.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -201,7 +201,7 @@ func TestUpdatePartition(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/partition", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = helper.InjectAdmin(container, req)
+	container = machine.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -229,7 +229,7 @@ func TestPartitionCapacity(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/v1/partition/capacity", nil)
 	req.Header.Add("Content-Type", "application/json")
-	container = helper.InjectAdmin(container, req)
+	container = machine.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 

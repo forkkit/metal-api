@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -31,7 +31,7 @@ func NewSizeMatchingLog(m *metal.SizeMatchingLog) *SizeMatchingLog {
 	for i := range m.Constraints {
 		constraint := SizeConstraintMatchingLog{
 			Constraint: v1.SizeConstraint{
-				Type: ToConstraintType(m.Constraints[i].Constraint.Type),
+				Type: helper.ToConstraintType(m.Constraints[i].Constraint.Type),
 				Min:  m.Constraints[i].Constraint.Min,
 				Max:  m.Constraints[i].Constraint.Max,
 			},
@@ -51,18 +51,18 @@ func NewSizeMatchingLog(m *metal.SizeMatchingLog) *SizeMatchingLog {
 func (r *sizeResource) fromHardware(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineHardwareExtended
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
-	hw := machine.NewMetalMachineHardware(&requestPayload)
+	hw := helper.NewMetalMachineHardware(&requestPayload)
 	_, lg, err := r.ds.FromHardware(hw)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	if len(lg) < 1 {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("size matching log is empty")) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("size matching log is empty")) {
 			return
 		}
 	}

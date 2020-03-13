@@ -3,6 +3,7 @@ package image
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -14,14 +15,14 @@ import (
 func (r *imageResource) updateImage(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.ImageUpdateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	img := requestPayload.Image
 
 	oldImage, err := r.ds.FindImage(img.Common.Meta.Id)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -35,7 +36,7 @@ func (r *imageResource) updateImage(request *restful.Request, response *restful.
 	features := make(map[metal.ImageFeatureType]bool)
 	for _, f := range img.Features {
 		ft, err := metal.ImageFeatureTypeFrom(f.GetValue())
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 		features[ft] = true
@@ -45,10 +46,10 @@ func (r *imageResource) updateImage(request *restful.Request, response *restful.
 	}
 
 	err = r.ds.UpdateImage(oldImage, &newImage)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, NewImageResponse(&newImage))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.NewImageResponse(&newImage))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

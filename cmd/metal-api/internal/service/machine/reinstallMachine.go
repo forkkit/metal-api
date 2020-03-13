@@ -3,7 +3,7 @@ package machine
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/httperrors"
@@ -14,13 +14,13 @@ func (r *machineResource) reinstallMachine(request *restful.Request, response *r
 	log := util.Logger(request).Sugar()
 	var requestPayload v1.MachineReinstallRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	err = r.reinstallOrDeleteMachine(request, response, &requestPayload.ImageID)
 	if err != nil {
-		helper.SendError(log.Desugar(), response, util.CurrentFuncName(), httperrors.InternalServerError(err))
+		service.SendError(log.Desugar(), response, util.CurrentFuncName(), httperrors.InternalServerError(err))
 	}
 }
 

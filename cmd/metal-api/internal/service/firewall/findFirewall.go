@@ -5,6 +5,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
@@ -19,17 +20,17 @@ func (r *firewallResource) findFirewall(request *restful.Request, response *rest
 	id := request.PathParameter("id")
 
 	fw, err := r.ds.FindMachineByID(id)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	imgs, err := r.ds.ListImages()
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	if !fw.IsFirewall(imgs.ByID()) {
-		helper.SendError(util.Logger(request), response, util.CurrentFuncName(), httperrors.NotFound(fmt.Errorf("machine is not a firewall")))
+		service.SendError(util.Logger(request), response, util.CurrentFuncName(), httperrors.NotFound(fmt.Errorf("machine is not a firewall")))
 		return
 	}
 
@@ -45,7 +46,7 @@ func makeFirewallResponse(fw *metal.Machine, ds *datastore.RethinkStore, logger 
 }
 
 func makeFirewallResponseList(fws metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.FirewallResponse {
-	machineResponseList := machine.MakeMachineResponseList(fws, ds, logger)
+	machineResponseList := helper.MakeMachineResponseList(fws, ds, logger)
 
 	firewallResponseList := []*v1.FirewallResponse{}
 	for i := range machineResponseList {

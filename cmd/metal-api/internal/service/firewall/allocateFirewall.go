@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -16,7 +16,7 @@ import (
 func (r *firewallResource) allocateFirewall(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.FirewallCreateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	allocReq := requestPayload.MachineAllocateRequest
@@ -27,7 +27,7 @@ func (r *firewallResource) allocateFirewall(request *restful.Request, response *
 	}
 
 	if allocReq.Networks != nil && len(allocReq.Networks) <= 0 {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("network ids cannot be empty")) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("network ids cannot be empty")) {
 			return
 		}
 	}
@@ -36,18 +36,18 @@ func (r *firewallResource) allocateFirewall(request *restful.Request, response *
 		ha = requestPayload.HA.GetValue()
 	}
 	if ha {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("highly-available firewall not supported for the time being")) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("highly-available firewall not supported for the time being")) {
 			return
 		}
 	}
 
 	image, err := r.ds.FindImage(allocReq.ImageID)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	if !image.HasFeature(metal.ImageFeatureFirewall) {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("given image is not usable for a firewall, features: %s", image.ImageFeatureString())) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("given image is not usable for a firewall, features: %s", image.ImageFeatureString())) {
 			return
 		}
 	}
@@ -91,7 +91,7 @@ func (r *firewallResource) allocateFirewall(request *restful.Request, response *
 	}
 
 	m, err := machine.Allocate(r.ds, r.ipamer, &spec, r.mdc)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, machine.MakeResponse(m, r.ds, util.Logger(request).Sugar()))

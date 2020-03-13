@@ -2,6 +2,7 @@ package partition
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -13,14 +14,14 @@ import (
 func (r *partitionResource) updatePartition(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.PartitionUpdateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	partition := requestPayload.Partition
 
 	oldPartition, err := r.ds.FindPartition(partition.Common.Meta.Id)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -34,10 +35,10 @@ func (r *partitionResource) updatePartition(request *restful.Request, response *
 	newPartition.BootConfiguration.CommandLine = partition.CommandLine.GetValue()
 
 	err = r.ds.UpdatePartition(oldPartition, &newPartition)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, NewPartitionResponse(&newPartition))
+	err = response.WriteHeaderAndEntity(http.StatusOK, helper.NewPartitionResponse(&newPartition))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

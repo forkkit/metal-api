@@ -2,7 +2,6 @@ package project
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/masterdata-api/api/v1"
 	mdm "github.com/metal-stack/masterdata-api/pkg/client"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 )
@@ -19,12 +18,4 @@ func NewProjectService(ds *datastore.RethinkStore, mdc mdm.Client) *restful.WebS
 		mdc: mdc,
 	}
 	return r.webService()
-}
-
-type ProjectResponse struct {
-	v1.Project
-}
-
-type ProjectFindRequest struct {
-	v1.ProjectFindRequest
 }

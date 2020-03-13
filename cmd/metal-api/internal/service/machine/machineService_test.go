@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/golang/protobuf/ptypes/wrappers"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -47,21 +46,23 @@ func TestGetMachines(t *testing.T) {
 	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine", nil)
-	container = helper.InjectViewer(container, req)
+	container = InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode, w.Body.String())
-	var result []v1.MachineResponse
+	var result []*v1.MachineResponse
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
 	require.Len(t, result, len(testdata.TestMachines))
+	require.Equal(t, testdata.M1.ID, result[0].Common.Meta.Id)
 	require.Equal(t, testdata.M1.ID, result[0].Machine.Common.Meta.Id)
 	require.Equal(t, testdata.M1.Allocation.Name, result[0].Machine.Allocation.Name)
 	require.Equal(t, testdata.Sz1.Name, result[0].Machine.SizeResponse.Size.Common.Name.GetValue())
 	require.Equal(t, testdata.Partition1.Name, result[0].Machine.PartitionResponse.Partition.Common.Name.GetValue())
+	require.Equal(t, testdata.M2.ID, result[1].Common.Meta.Id)
 	require.Equal(t, testdata.M2.ID, result[1].Machine.Common.Meta.Id)
 }
 
@@ -186,7 +187,7 @@ func TestRegisterMachine(t *testing.T) {
 			container := restful.NewContainer().Add(machineService)
 			req := httptest.NewRequest("POST", "/v1/machine/register", body)
 			req.Header.Add("Content-Type", "application/json")
-			container = helper.InjectEditor(container, req)
+			container = InjectEditor(container, req)
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
 
@@ -235,7 +236,6 @@ func TestMachineIPMIReport(t *testing.T) {
 			},
 			output: v1.MachineIpmiReportResponse{
 				UpdatedLeases: map[string]string{testdata.M1.ID: "192.167.0.1"},
-				CreatedLeases: map[string]string{},
 			},
 			wantStatusCode: http.StatusOK,
 		},
@@ -246,7 +246,6 @@ func TestMachineIPMIReport(t *testing.T) {
 				ActiveLeases: map[string]string{"xyz": "192.167.0.1"},
 			},
 			output: v1.MachineIpmiReportResponse{
-				UpdatedLeases: map[string]string{},
 				CreatedLeases: map[string]string{"xyz": "192.167.0.1"},
 			},
 			wantStatusCode: http.StatusOK,
@@ -261,7 +260,7 @@ func TestMachineIPMIReport(t *testing.T) {
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", fmt.Sprintf("/v1/machine/ipmi"), body)
 			req.Header.Add("Content-Type", "application/json")
-			container = helper.InjectEditor(container, req)
+			container = InjectEditor(container, req)
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
 
@@ -310,7 +309,7 @@ func TestMachineFindIPMI(t *testing.T) {
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", "/v1/machine/ipmi/find", body)
 			req.Header.Add("Content-Type", "application/json")
-			container = helper.InjectViewer(container, req)
+			container = InjectViewer(container, req)
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
 
@@ -331,14 +330,14 @@ func TestMachineFindIPMI(t *testing.T) {
 			require.Equal(t, test.machine.IPMI.Password, result.IPMI.Password)
 			require.Equal(t, test.machine.IPMI.MacAddress, result.IPMI.MacAddress)
 
-			require.Equal(t, test.machine.IPMI.Fru.ChassisPartNumber, *result.IPMI.Fru.ChassisPartNumber)
-			require.Equal(t, test.machine.IPMI.Fru.ChassisPartSerial, *result.IPMI.Fru.ChassisPartSerial)
-			require.Equal(t, test.machine.IPMI.Fru.BoardMfg, *result.IPMI.Fru.BoardMfg)
-			require.Equal(t, test.machine.IPMI.Fru.BoardMfgSerial, *result.IPMI.Fru.BoardMfgSerial)
-			require.Equal(t, test.machine.IPMI.Fru.BoardPartNumber, *result.IPMI.Fru.BoardPartNumber)
-			require.Equal(t, test.machine.IPMI.Fru.ProductManufacturer, *result.IPMI.Fru.ProductManufacturer)
-			require.Equal(t, test.machine.IPMI.Fru.ProductPartNumber, *result.IPMI.Fru.ProductPartNumber)
-			require.Equal(t, test.machine.IPMI.Fru.ProductSerial, *result.IPMI.Fru.ProductSerial)
+			require.Equal(t, test.machine.IPMI.Fru.ChassisPartNumber, result.IPMI.Fru.ChassisPartNumber.GetValue())
+			require.Equal(t, test.machine.IPMI.Fru.ChassisPartSerial, result.IPMI.Fru.ChassisPartSerial.GetValue())
+			require.Equal(t, test.machine.IPMI.Fru.BoardMfg, result.IPMI.Fru.BoardMfg.GetValue())
+			require.Equal(t, test.machine.IPMI.Fru.BoardMfgSerial, result.IPMI.Fru.BoardMfgSerial.GetValue())
+			require.Equal(t, test.machine.IPMI.Fru.BoardPartNumber, result.IPMI.Fru.BoardPartNumber.GetValue())
+			require.Equal(t, test.machine.IPMI.Fru.ProductManufacturer, result.IPMI.Fru.ProductManufacturer.GetValue())
+			require.Equal(t, test.machine.IPMI.Fru.ProductPartNumber, result.IPMI.Fru.ProductPartNumber.GetValue())
+			require.Equal(t, test.machine.IPMI.Fru.ProductSerial, result.IPMI.Fru.ProductSerial.GetValue())
 		})
 	}
 }
@@ -388,7 +387,7 @@ func TestFinalizeMachineAllocation(t *testing.T) {
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", fmt.Sprintf("/v1/machine/%s/finalize-allocation", test.machineID), body)
 			req.Header.Add("Content-Type", "application/json")
-			container = helper.InjectEditor(container, req)
+			container = InjectEditor(container, req)
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
 
@@ -430,7 +429,7 @@ func TestSetMachineState(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/machine/1/state", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = helper.InjectEditor(container, req)
+	container = InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -452,7 +451,7 @@ func TestGetMachine(t *testing.T) {
 	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine/1", nil)
-	container = helper.InjectViewer(container, req)
+	container = InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -476,7 +475,7 @@ func TestGetMachineNotFound(t *testing.T) {
 	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine/999", nil)
-	container = helper.InjectEditor(container, req)
+	container = InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -491,7 +490,7 @@ func TestFreeMachine(t *testing.T) {
 	testdata.InitMockDBData(mock)
 
 	pub := &emptyPublisher{}
-	events := []string{"1-machine", "1-switch"}
+	events := []string{"1-switch", "1-machine"}
 	eventidx := 0
 	pub.doPublish = func(topic string, data interface{}) error {
 		require.Equal(t, events[eventidx], topic)
@@ -506,7 +505,7 @@ func TestFreeMachine(t *testing.T) {
 	machineService := NewMachineService(ds, pub, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("DELETE", "/v1/machine/1/free", nil)
-	container = helper.InjectEditor(container, req)
+	container = InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -539,7 +538,7 @@ func TestSearchMachine(t *testing.T) {
 	require.Nil(t, err)
 	req := httptest.NewRequest("POST", "/v1/machine/find", bytes.NewBuffer(requestJSON))
 	req.Header.Add("Content-Type", "application/json")
-	container = helper.InjectViewer(container, req)
+	container = InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -549,7 +548,7 @@ func TestSearchMachine(t *testing.T) {
 	err = json.NewDecoder(resp.Body).Decode(&results)
 
 	require.Nil(t, err)
-	require.Len(t, results, 1)
+	require.Len(t, results, len(testdata.TestMachines))
 	result := results[0]
 	require.Equal(t, testdata.M1.ID, result.Machine.Common.Meta.Id)
 	require.Equal(t, testdata.M1.Allocation.Name, result.Machine.Allocation.Name)
@@ -564,14 +563,14 @@ func TestAddProvisioningEvent(t *testing.T) {
 
 	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
-	event := &metal.ProvisioningEvent{
-		Event:   metal.ProvisioningEventPreparing,
-		Message: "starting metal-hammer",
+	event := &v1.MachineProvisioningEvent{
+		Event:   string(metal.ProvisioningEventPreparing),
+		Message: util.StringProto("starting metal-hammer"),
 	}
 	js, _ := json.Marshal(event)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/machine/1/event", body)
-	container = helper.InjectEditor(container, req)
+	container = InjectEditor(container, req)
 	req.Header.Add("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -585,13 +584,12 @@ func TestAddProvisioningEvent(t *testing.T) {
 	require.Equal(t, "0", result.IncompleteProvisioningCycles)
 	require.Len(t, result.Events, 1)
 	if len(result.Events) > 0 {
-		require.Equal(t, "starting metal-hammer", result.Events[0].Message)
+		require.Equal(t, "starting metal-hammer", result.Events[0].Message.GetValue())
 		require.Equal(t, string(metal.ProvisioningEventPreparing), result.Events[0].Event)
 	}
 }
 
 func TestOnMachine(t *testing.T) {
-
 	data := []struct {
 		cmd      metal.MachineCommand
 		endpoint string
@@ -647,7 +645,7 @@ func TestOnMachine(t *testing.T) {
 			body := bytes.NewBuffer(js)
 			container := restful.NewContainer().Add(machineService)
 			req := httptest.NewRequest("POST", "/v1/machine/1/power/"+d.endpoint, body)
-			container = helper.InjectEditor(container, req)
+			container = InjectEditor(container, req)
 			req.Header.Add("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)

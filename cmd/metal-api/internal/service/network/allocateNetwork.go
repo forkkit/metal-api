@@ -8,6 +8,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -19,30 +20,30 @@ import (
 func (r *networkResource) allocateNetwork(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.NetworkAllocateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	nw := requestPayload.Network
 
 	if nw.ProjectID.GetValue() == "" {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("projectid should not be empty")) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("projectid should not be empty")) {
 			return
 		}
 	}
 	if nw.PartitionID.GetValue() == "" {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("partitionid should not be empty")) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("partitionid should not be empty")) {
 			return
 		}
 	}
 
 	project, err := r.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: nw.ProjectID.GetValue()})
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	partition, err := r.ds.FindPartition(nw.PartitionID.GetValue())
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -51,7 +52,7 @@ func (r *networkResource) allocateNetwork(request *restful.Request, response *re
 		PartitionID:  util.StringProto(partition.ID),
 		PrivateSuper: util.BoolProto(true),
 	}, &superNetwork)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -66,12 +67,12 @@ func (r *networkResource) allocateNetwork(request *restful.Request, response *re
 	}
 
 	network, err := createChildNetwork(r.ds, r.ipamer, nwSpec, &superNetwork, int(partition.PrivateNetworkPrefixLength))
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	usage := GetNetworkUsage(network, r.ipamer)
-	err = response.WriteHeaderAndEntity(http.StatusCreated, NewNetworkResponse(network, usage))
+	err = response.WriteHeaderAndEntity(http.StatusCreated, helper.NewNetworkResponse(network, usage))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

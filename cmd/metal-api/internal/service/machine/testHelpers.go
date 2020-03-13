@@ -1,18 +1,31 @@
-package sw
+package machine
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
+	"github.com/emicklei/go-restful"
+	v12 "github.com/metal-stack/masterdata-api/api/v1"
+	"github.com/metal-stack/masterdata-api/pkg/client"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/eventbus"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/image"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/ip"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/network"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/partition"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/size"
-	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
+	"github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
+	"github.com/metal-stack/metal-lib/jwt/sec"
+	"github.com/metal-stack/metal-lib/rest"
+	"github.com/metal-stack/security"
+	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -20,20 +33,87 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	mdm "github.com/metal-stack/masterdata-api/pkg/client"
-	"go.uber.org/zap"
-
-	restful "github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/eventbus"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/stretchr/testify/require"
-	"github.com/testcontainers/testcontainers-go"
 )
 
-//nolint:golint,unused
+type UserDirectory struct {
+	viewer security.User
+	edit   security.User
+	admin  security.User
+
+	metalUsers map[string]security.User
+}
+
+func NewUserDirectory(providerTenant string) *UserDirectory {
+	ud := &UserDirectory{}
+
+	// User.Name is used as AuthType for HMAC
+	ud.viewer = security.User{
+		EMail:  "metal-view@metal-stack.io",
+		Name:   "Metal-View",
+		Groups: sec.MergeResourceAccess(metal.ViewGroups),
+		Tenant: providerTenant,
+	}
+	ud.edit = security.User{
+		EMail:  "metal-edit@metal-stack.io",
+		Name:   "Metal-Edit",
+		Groups: sec.MergeResourceAccess(metal.EditGroups),
+		Tenant: providerTenant,
+	}
+	ud.admin = security.User{
+		EMail:  "metal-admin@metal-stack.io",
+		Name:   "Metal-Admin",
+		Groups: sec.MergeResourceAccess(metal.AdminGroups),
+		Tenant: providerTenant,
+	}
+	ud.metalUsers = map[string]security.User{
+		"view":  ud.viewer,
+		"edit":  ud.edit,
+		"admin": ud.admin,
+	}
+
+	return ud
+}
+
+func (ud *UserDirectory) UserNames() []string {
+	keys := make([]string, len(ud.metalUsers))
+	for k := range ud.metalUsers {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func (ud *UserDirectory) Get(user string) security.User {
+	return ud.metalUsers[user]
+}
+
+var testUserDirectory = NewUserDirectory("")
+
+func InjectViewer(container *restful.Container, rq *http.Request) *restful.Container {
+	return injectUser(testUserDirectory.viewer, container, rq)
+}
+
+func InjectEditor(container *restful.Container, rq *http.Request) *restful.Container {
+	return injectUser(testUserDirectory.edit, container, rq)
+}
+func InjectAdmin(container *restful.Container, rq *http.Request) *restful.Container {
+	return injectUser(testUserDirectory.admin, container, rq)
+}
+
+func injectUser(u security.User, container *restful.Container, rq *http.Request) *restful.Container {
+	hma := security.NewHMACAuth(u.Name, []byte{1, 2, 3}, security.WithUser(u))
+	usergetter := security.NewCreds(security.WithHMAC(hma))
+	container.Filter(rest.UserAuth(usergetter))
+	var body []byte
+	if rq.Body != nil {
+		data, _ := ioutil.ReadAll(rq.Body)
+		body = data
+		rq.Body.Close()
+		rq.Body = ioutil.NopCloser(bytes.NewReader(data))
+	}
+	hma.AddAuth(rq, time.Now(), body)
+	return container
+}
+
 type testEnv struct {
 	imageService        *restful.WebService
 	switchService       *restful.WebService
@@ -42,18 +122,17 @@ type testEnv struct {
 	partitionService    *restful.WebService
 	machineService      *restful.WebService
 	ipService           *restful.WebService
-	privateSuperNetwork *v1.NetworkResponse
-	privateNetwork      *v1.NetworkResponse
+	PrivateSuperNetwork *v1.NetworkResponse
+	PrivateNetwork      *v1.NetworkResponse
 	rethinkContainer    testcontainers.Container
 	ctx                 context.Context
 }
 
-func (te *testEnv) teardown() {
+func (te *testEnv) Teardown() {
 	_ = te.rethinkContainer.Terminate(te.ctx)
 }
 
-//nolint:golint,unused,deadcode
-func createTestEnvironment(t *testing.T) testEnv {
+func CreateTestEnvironment(t *testing.T) testEnv {
 	require := require.New(t)
 	log, err := zap.NewDevelopment()
 	require.NoError(err)
@@ -63,12 +142,12 @@ func createTestEnvironment(t *testing.T) testEnv {
 	ds, rc, ctx := datastore.InitTestDB(t)
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	mdc, err := mdm.NewClient(timeoutCtx, "localhost", 50051, "certs/client.pem", "certs/client-key.pem", "certs/ca.pem", "hmac", log)
+	mdc, err := client.NewClient(timeoutCtx, "localhost", 50051, "certs/client.pem", "certs/client-key.pem", "certs/ca.pem", "hmac", log)
 	require.NoError(err)
 
-	machineService := machine.NewMachineService(ds, nsq.Publisher, ipamer, mdc)
+	machineService := NewMachineService(ds, nsq.Publisher, ipamer, mdc)
 	imageService := image.NewImageService(ds)
-	switchService := NewSwitchService(ds)
+	switchService := sw.NewSwitchService(ds)
 	sizeService := size.NewSizeService(ds)
 	networkService := network.NewNetworkService(ds, ipamer, mdc)
 	partitionService := partition.NewPartitionService(ds, nsq)
@@ -92,7 +171,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 	img := v1.ImageCreateRequest{
 		Image: &v1.Image{
 			Common: &v1.Common{
-				Meta: &mdmv1.Meta{
+				Meta: &v12.Meta{
 					Id: imageID,
 				},
 				Name:        util.StringProto(imageName),
@@ -104,7 +183,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 	}
 	var createdImage v1.ImageResponse
 
-	status := te.imageCreate(t, img, &createdImage)
+	status := te.ImageCreate(t, img, &createdImage)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdImage)
 	require.Equal(img.Image.Common.Meta.Id, createdImage.Image.Common.Meta.Id)
@@ -114,7 +193,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 	s := v1.SizeCreateRequest{
 		Size: &v1.Size{
 			Common: &v1.Common{
-				Meta: &mdmv1.Meta{
+				Meta: &v12.Meta{
 					Id: "test-size",
 				},
 				Name:        util.StringProto(sizeName),
@@ -140,7 +219,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 		},
 	}
 	var createdSize v1.SizeResponse
-	status = te.sizeCreate(t, s, &createdSize)
+	status = te.SizeCreate(t, s, &createdSize)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdSize)
 	require.Equal(s.Size.Common.Meta.Id, createdSize.Size.Common.Meta.Id)
@@ -150,7 +229,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 	part := v1.PartitionCreateRequest{
 		Partition: &v1.Partition{
 			Common: &v1.Common{
-				Meta: &mdmv1.Meta{
+				Meta: &v12.Meta{
 					Id: "test-partition",
 				},
 				Name:        util.StringProto(partName),
@@ -159,7 +238,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 		},
 	}
 	var createdPartition v1.PartitionResponse
-	status = te.partitionCreate(t, part, &createdPartition)
+	status = te.PartitionCreate(t, part, &createdPartition)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdPartition)
 	require.Equal(part.Partition.Common.Name.GetValue(), createdPartition.Partition.Common.Name.GetValue())
@@ -169,12 +248,12 @@ func createTestEnvironment(t *testing.T) testEnv {
 	sw := v1.SwitchRegisterRequest{
 		Switch: &v1.Switch{
 			Common: &v1.Common{
-				Meta: &mdmv1.Meta{
+				Meta: &v12.Meta{
 					Id: switchID,
 				},
 			},
 			RackID: "test-rack",
-			Nics: SwitchNics{
+			Nics: helper.SwitchNics{
 				{
 					MacAddress: "bb:aa:aa:aa:aa:aa",
 					Name:       "swp1",
@@ -185,7 +264,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 	}
 	var createdSwitch v1.SwitchResponse
 
-	status = te.switchRegister(t, sw, &createdSwitch)
+	status = te.SwitchRegister(t, sw, &createdSwitch)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdSwitch)
 	require.Equal(sw.Switch.Common.Meta.Id, createdSwitch.Switch.Common.Meta.Id)
@@ -201,7 +280,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 	ncr := v1.NetworkCreateRequest{
 		Network: &v1.Network{
 			Common: &v1.Common{
-				Meta: &mdmv1.Meta{
+				Meta: &v12.Meta{
 					Id: networkID,
 				},
 				Name:        util.StringProto(networkName),
@@ -214,12 +293,12 @@ func createTestEnvironment(t *testing.T) testEnv {
 			PrivateSuper: true,
 		},
 	}
-	status = te.networkCreate(t, ncr, &createdNetwork)
+	status = te.NetworkCreate(t, ncr, &createdNetwork)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(createdNetwork)
 	require.Equal(ncr.Network.Common.Meta.Id, createdNetwork.Network.Common.Meta.Id)
 
-	te.privateSuperNetwork = &createdNetwork
+	te.PrivateSuperNetwork = &createdNetwork
 
 	var acquiredPrivateNetwork v1.NetworkResponse
 	privateNetworkName := "test-private-network"
@@ -235,7 +314,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 			PartitionID: util.StringProto(part.Partition.Common.Meta.Id),
 		},
 	}
-	status = te.networkAcquire(t, nar, &acquiredPrivateNetwork)
+	status = te.NetworkAcquire(t, nar, &acquiredPrivateNetwork)
 	require.Equal(http.StatusCreated, status)
 	require.NotNil(acquiredPrivateNetwork)
 	require.Equal(ncr.Network.Common.Meta.Id, acquiredPrivateNetwork.NetworkImmutable.ParentNetworkID)
@@ -243,55 +322,55 @@ func createTestEnvironment(t *testing.T) testEnv {
 	_, ipnet, _ := net.ParseCIDR(testPrivateSuperCidr)
 	_, privateNet, _ := net.ParseCIDR(acquiredPrivateNetwork.NetworkImmutable.Prefixes[0])
 	require.True(ipnet.Contains(privateNet.IP), "%s must be within %s", privateNet, ipnet)
-	te.privateNetwork = &acquiredPrivateNetwork
+	te.PrivateNetwork = &acquiredPrivateNetwork
 
 	return te
 }
 
-func (te *testEnv) sizeCreate(t *testing.T, icr v1.SizeCreateRequest, response interface{}) int {
+func (te *testEnv) SizeCreate(t *testing.T, icr v1.SizeCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.sizeService, icr, "/v1/size/", response)
 }
 
-func (te *testEnv) partitionCreate(t *testing.T, icr v1.PartitionCreateRequest, response interface{}) int {
+func (te *testEnv) PartitionCreate(t *testing.T, icr v1.PartitionCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.partitionService, icr, "/v1/partition/", response)
 }
 
-func (te *testEnv) switchRegister(t *testing.T, srr v1.SwitchRegisterRequest, response interface{}) int {
+func (te *testEnv) SwitchRegister(t *testing.T, srr v1.SwitchRegisterRequest, response interface{}) int {
 	return webRequestPost(t, te.switchService, srr, "/v1/switch/register", response)
 }
 
-func (te *testEnv) switchGet(t *testing.T, swid string, response interface{}) int {
+func (te *testEnv) SwitchGet(t *testing.T, swid string, response interface{}) int {
 	return webRequestGet(t, te.switchService, emptyBody{}, "/v1/switch/"+swid, response)
 }
 
-func (te *testEnv) imageCreate(t *testing.T, icr v1.ImageCreateRequest, response interface{}) int {
+func (te *testEnv) ImageCreate(t *testing.T, icr v1.ImageCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.imageService, icr, "/v1/image/", response)
 }
 
-func (te *testEnv) networkCreate(t *testing.T, icr v1.NetworkCreateRequest, response interface{}) int {
+func (te *testEnv) NetworkCreate(t *testing.T, icr v1.NetworkCreateRequest, response interface{}) int {
 	return webRequestPut(t, te.networkService, icr, "/v1/network/", response)
 }
 
-func (te *testEnv) networkAcquire(t *testing.T, nar v1.NetworkAllocateRequest, response interface{}) int {
+func (te *testEnv) NetworkAcquire(t *testing.T, nar v1.NetworkAllocateRequest, response interface{}) int {
 	return webRequestPost(t, te.networkService, nar, "/v1/network/allocate", response)
 }
 
-func (te *testEnv) machineAllocate(t *testing.T, mar v1.MachineAllocateRequest, response interface{}) int {
+func (te *testEnv) MachineAllocate(t *testing.T, mar v1.MachineAllocateRequest, response interface{}) int {
 	return webRequestPost(t, te.machineService, mar, "/v1/machine/allocate", response)
 }
 
-func (te *testEnv) machineFree(t *testing.T, uuid string, response interface{}) int {
+func (te *testEnv) MachineFree(t *testing.T, uuid string, response interface{}) int {
 	return webRequestDelete(t, te.machineService, &emptyBody{}, "/v1/machine/"+uuid+"/free", response)
 }
 
-func (te *testEnv) machineRegister(t *testing.T, mrr v1.MachineRegisterRequest, response interface{}) int {
+func (te *testEnv) MachineRegister(t *testing.T, mrr v1.MachineRegisterRequest, response interface{}) int {
 	return webRequestPost(t, te.machineService, mrr, "/v1/machine/register", response)
 }
 
-func (te *testEnv) machineWait(uuid string) {
+func (te *testEnv) MachineWait(uuid string) {
 	container := restful.NewContainer().Add(te.machineService)
 	createReq := httptest.NewRequest(http.MethodGet, "/v1/machine/"+uuid+"/wait", nil)
-	container = helper.InjectAdmin(container, createReq)
+	container = InjectAdmin(container, createReq)
 	w := httptest.NewRecorder()
 	for {
 		container.ServeHTTP(w, createReq)
@@ -343,7 +422,7 @@ func webRequest(t *testing.T, method string, service *restful.WebService, reques
 	createReq := httptest.NewRequest(method, path, body)
 	createReq.Header.Set("Content-Type", "application/json")
 
-	container = helper.InjectAdmin(container, createReq)
+	container = InjectAdmin(container, createReq)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, createReq)
 

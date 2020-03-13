@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"go.uber.org/zap"
@@ -13,7 +13,7 @@ import (
 
 func (r *machineResource) freeMachine(request *restful.Request, response *restful.Response) {
 	err := r.reinstallOrDeleteMachine(request, response, nil)
-	helper.CheckError(request, response, util.CurrentFuncName(), err)
+	service.CheckError(request, response, util.CurrentFuncName(), err)
 }
 
 func (r *machineResource) releaseMachineNetworks(machine *metal.Machine, machineNetworks []*metal.MachineNetwork) error {
@@ -122,7 +122,7 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 		}
 
 		err = r.ds.UpdateMachine(&old, m)
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return err
 		}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/ip"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -28,7 +28,7 @@ import (
 func (r *machineResource) allocateMachine(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineAllocateRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
@@ -38,12 +38,12 @@ func (r *machineResource) allocateMachine(request *restful.Request, response *re
 	}
 
 	image, err := r.ds.FindImage(requestPayload.ImageID)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	if !image.HasFeature(metal.ImageFeatureMachine) {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("given image is not usable for a machine, features: %s", image.ImageFeatureString())) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("given image is not usable for a machine, features: %s", image.ImageFeatureString())) {
 			return
 		}
 	}
@@ -87,7 +87,7 @@ func (r *machineResource) allocateMachine(request *restful.Request, response *re
 	}
 
 	m, err := Allocate(r.ds, r.ipamer, &spec, r.mdc)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		// TODO: Trigger network garbage collection
 		util.Logger(request).Sugar().Errorf("machine allocation went wrong, triggered network garbage collection", "error", err)
 		return

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -18,18 +18,18 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 	log := util.Logger(request)
 	logger := log.Sugar()
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	if requestPayload.PartitionID == "" {
 		err := fmt.Errorf("given partition id was not found")
-		helper.CheckError(request, response, util.CurrentFuncName(), err)
+		service.CheckError(request, response, util.CurrentFuncName(), err)
 		return
 	}
 
 	var ms metal.Machines
 	err = r.ds.SearchMachines(&v1.MachineSearchQuery{}, &ms)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	known := make(map[string]string, len(ms))

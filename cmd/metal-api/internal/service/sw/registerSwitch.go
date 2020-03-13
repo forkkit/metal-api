@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -15,26 +16,26 @@ import (
 func (r *switchResource) registerSwitch(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.SwitchRegisterRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	sw := requestPayload.Switch
 
 	if sw.Common.Meta.Id == "" {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
 			return
 		}
 	}
 
 	_, err = r.ds.FindPartition(requestPayload.PartitionID)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	s, err := r.ds.FindSwitch(sw.Common.Meta.Id)
 	if err != nil && !metal.IsNotFound(err) {
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
@@ -42,16 +43,16 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	returnCode := http.StatusOK
 
 	if s == nil {
-		s = FromSwitch(sw)
+		s = helper.FromSwitch(sw)
 
 		if len(sw.Nics) != len(s.Nics.ByMac()) {
-			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
+			if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
 				return
 			}
 		}
 
 		err = r.ds.CreateSwitch(s)
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 
@@ -63,16 +64,16 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	} else {
 		old := *s
 
-		spec := FromSwitch(sw)
+		spec := helper.FromSwitch(sw)
 
 		if len(sw.Nics) != len(spec.Nics.ByMac()) {
-			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
+			if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
 				return
 			}
 		}
 
 		nics, err := UpdateSwitchNics(old.Nics.ByMac(), spec.Nics.ByMac(), old.MachineConnections)
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 
@@ -86,7 +87,7 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 
 		err = r.ds.UpdateSwitch(&old, s)
 
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}

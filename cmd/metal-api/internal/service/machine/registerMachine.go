@@ -5,6 +5,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
@@ -17,22 +18,22 @@ import (
 func (r *machineResource) registerMachine(request *restful.Request, response *restful.Response) {
 	var requestPayload v1.MachineRegisterRequest
 	err := request.ReadEntity(&requestPayload)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	if requestPayload.UUID == "" {
-		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("uuid cannot be empty")) {
 			return
 		}
 	}
 
 	partition, err := r.ds.FindPartition(requestPayload.PartitionID)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
-	machineHardware := NewMetalMachineHardware(requestPayload.Hardware)
+	machineHardware := helper.NewMetalMachineHardware(requestPayload.Hardware)
 	size, _, err := r.ds.FromHardware(machineHardware)
 	if err != nil {
 		size = metal.UnknownSize
@@ -41,7 +42,7 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 
 	m, err := r.ds.FindMachineByID(requestPayload.UUID)
 	if err != nil && !metal.IsNotFound(err) {
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
@@ -63,11 +64,6 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 			PartitionID: partition.ID,
 			RackID:      requestPayload.RackID,
 			Hardware:    machineHardware,
-			BIOS: metal.BIOS{
-				Version: requestPayload.BIOS.Version,
-				Vendor:  requestPayload.BIOS.Vendor,
-				Date:    requestPayload.BIOS.Date,
-			},
 			State: metal.MachineState{
 				Value: metal.AvailableState,
 			},
@@ -79,8 +75,16 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 			IPMI: NewMetalIPMI(requestPayload.IPMI),
 		}
 
+		if requestPayload.BIOS != nil {
+			m.BIOS = metal.BIOS{
+				Version: requestPayload.BIOS.Version,
+				Vendor:  requestPayload.BIOS.Vendor,
+				Date:    requestPayload.BIOS.Date,
+			}
+		}
+
 		err = r.ds.CreateMachine(m)
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 
@@ -93,20 +97,22 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 		m.PartitionID = partition.ID
 		m.RackID = requestPayload.RackID
 		m.Hardware = machineHardware
-		m.BIOS.Version = requestPayload.BIOS.Version
-		m.BIOS.Vendor = requestPayload.BIOS.Vendor
-		m.BIOS.Date = requestPayload.BIOS.Date
+		if requestPayload.BIOS != nil {
+			m.BIOS.Version = requestPayload.BIOS.Version
+			m.BIOS.Vendor = requestPayload.BIOS.Vendor
+			m.BIOS.Date = requestPayload.BIOS.Date
+		}
 		m.IPMI = NewMetalIPMI(requestPayload.IPMI)
 
 		err = r.ds.UpdateMachine(&old, m)
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
 
 	ec, err := r.ds.FindProvisioningEventContainer(m.ID)
 	if err != nil && !metal.IsNotFound(err) {
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
@@ -117,13 +123,13 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 			Liveliness:                   metal.MachineLivelinessAlive,
 			IncompleteProvisioningCycles: "0"},
 		)
-		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+		if service.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
 
 	err = sw.ConnectMachineWithSwitches(r.ds, m)
-	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
+	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 	err = response.WriteHeaderAndEntity(returnCode, MakeResponse(m, r.ds, util.Logger(request).Sugar()))

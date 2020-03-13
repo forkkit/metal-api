@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	mdv1 "github.com/metal-stack/masterdata-api/api/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -91,7 +91,7 @@ func TestDeleteImage(t *testing.T) {
 	imageService := NewImageService(ds)
 	container := restful.NewContainer().Add(imageService)
 	req := httptest.NewRequest("DELETE", "/v1/image/3", nil)
-	container = helper.InjectAdmin(container, req)
+	container = machine.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -124,7 +124,7 @@ func TestCreateImage(t *testing.T) {
 	js, _ := json.Marshal(createRequest)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("PUT", "/v1/image", body)
-	container := helper.InjectAdmin(restful.NewContainer().Add(NewImageService(ds)), req)
+	container := machine.InjectAdmin(restful.NewContainer().Add(NewImageService(ds)), req)
 	req.Header.Add("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -163,7 +163,7 @@ func TestUpdateImage(t *testing.T) {
 	js, _ := json.Marshal(updateRequest)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/image", body)
-	container = helper.InjectAdmin(container, req)
+	container = machine.InjectAdmin(container, req)
 	req.Header.Add("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)

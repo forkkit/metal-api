@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/firewall"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/image"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/ip"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
@@ -401,7 +400,7 @@ func initAuth(lg *zap.SugaredLogger) security.UserGetter {
 		logger.Warnw("dex is not configured")
 	}
 
-	defaultUsers := helper.NewUserDirectory(providerTenant)
+	defaultUsers := machine.NewUserDirectory(providerTenant)
 	for _, u := range defaultUsers.UserNames() {
 		lfkey := fmt.Sprintf("hmac-%s-lifetime", u)
 		mackey := viper.GetString(fmt.Sprintf("hmac-%s-key", u))
@@ -452,7 +451,7 @@ func initRestServices(withauth bool) *restfulspec.Config {
 		restful.DefaultContainer.Filter(rest.UserAuth(initAuth(lg.Sugar())))
 		providerTenant := viper.GetString("provider-tenant")
 		excludedPathSuffixes := []string{"liveliness", "health", "version", "apidocs.json"}
-		ensurer := helper.NewTenantEnsurer([]string{providerTenant}, excludedPathSuffixes)
+		ensurer := service.NewTenantEnsurer([]string{providerTenant}, excludedPathSuffixes)
 		restful.DefaultContainer.Filter(ensurer.EnsureAllowedTenantFilter)
 	}
 
