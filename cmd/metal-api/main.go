@@ -400,7 +400,7 @@ func initAuth(lg *zap.SugaredLogger) security.UserGetter {
 		logger.Warnw("dex is not configured")
 	}
 
-	defaultUsers := machine.NewUserDirectory(providerTenant)
+	defaultUsers := service.NewUserDirectory(providerTenant)
 	for _, u := range defaultUsers.UserNames() {
 		lfkey := fmt.Sprintf("hmac-%s-lifetime", u)
 		mackey := viper.GetString(fmt.Sprintf("hmac-%s-key", u))

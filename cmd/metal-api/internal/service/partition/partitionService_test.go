@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
+	service2 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -115,7 +115,7 @@ func TestDeletePartition(t *testing.T) {
 	service := NewPartitionService(ds, &nopTopicCreator{})
 	container := restful.NewContainer().Add(service)
 	req := httptest.NewRequest("DELETE", "/v1/partition/1", nil)
-	container = machine.InjectAdmin(container, req)
+	container = service2.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -156,7 +156,7 @@ func TestCreatePartition(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("PUT", "/v1/partition", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectAdmin(container, req)
+	container = service2.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -201,7 +201,7 @@ func TestUpdatePartition(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/partition", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectAdmin(container, req)
+	container = service2.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -229,7 +229,7 @@ func TestPartitionCapacity(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/v1/partition/capacity", nil)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectAdmin(container, req)
+	container = service2.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -244,6 +244,6 @@ func TestPartitionCapacity(t *testing.T) {
 	require.Equal(t, 1, len(result[0].ServerCapacities))
 	capacity := result[0].ServerCapacities[0]
 	require.Equal(t, "1", capacity.Size)
-	require.Equal(t, 5, capacity.Total)
-	require.Equal(t, 0, capacity.Free)
+	require.Equal(t, uint64(5), capacity.Total)
+	require.Equal(t, uint64(0), capacity.Free)
 }

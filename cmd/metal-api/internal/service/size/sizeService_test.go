@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -97,7 +97,7 @@ func TestDeleteSize(t *testing.T) {
 	sizeService := NewSizeService(ds)
 	container := restful.NewContainer().Add(sizeService)
 	req := httptest.NewRequest("DELETE", "/v1/size/1", nil)
-	container = machine.InjectAdmin(container, req)
+	container = service.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -134,7 +134,7 @@ func TestCreateSize(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("PUT", "/v1/size", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectAdmin(container, req)
+	container = service.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -180,7 +180,7 @@ func TestUpdateSize(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/size", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectAdmin(container, req)
+	container = service.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 

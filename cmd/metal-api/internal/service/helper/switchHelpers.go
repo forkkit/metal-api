@@ -1,6 +1,7 @@
 package helper
 
 import (
+	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -18,23 +19,19 @@ func NewSwitchResponse(s *metal.Switch, p *metal.Partition, nics SwitchNics, con
 	}
 }
 
-func FromSwitch(s *v1.Switch) *metal.Switch {
-	return &metal.Switch{
-		Base: metal.Base{
-			ID:          s.Common.Meta.Id,
-			Name:        s.Common.Name.GetValue(),
-			Description: s.Common.Description.GetValue(),
-			Created:     util.Time(s.Common.Meta.CreatedTime),
-			Changed:     util.Time(s.Common.Meta.UpdatedTime),
-		},
-		Nics:   nil,
-		RackID: s.RackID,
-	}
-}
-
 func ToSwitch(s *metal.Switch) *v1.Switch {
 	return &v1.Switch{
-		Common: &v1.Common{},
+		Common: &v1.Common{
+			Meta: &mdmv1.Meta{
+				Id:          s.ID,
+				Apiversion:  "v1",
+				Version:     1,
+				CreatedTime: util.TimestampProto(s.Created),
+				UpdatedTime: util.TimestampProto(s.Changed),
+			},
+			Name:        util.StringProto(s.Name),
+			Description: util.StringProto(s.Description),
+		},
 		RackID: s.RackID,
 		Nics:   ToNICs(s.Nics),
 	}
@@ -47,7 +44,7 @@ func FromNICs(nics SwitchNics) metal.Nics {
 			MacAddress: metal.MacAddress(n.MacAddress),
 			Name:       n.Name,
 			Vrf:        n.Vrf.GetValue(),
-			Neighbors:  nil, //TODO
+			//Neighbors:  FromNICs(), //TODO
 		}
 	}
 	return nn
@@ -70,26 +67,19 @@ func ToNIC(nic metal.Nic) *v1.SwitchNic {
 	}
 }
 
-func NewSwitch(r v1.SwitchRegisterRequest) *metal.Switch {
-	nics := make(metal.Nics, len(r.Switch.Nics))
-	for i, nic := range r.Switch.Nics {
-		nics[i] = metal.Nic{
-			MacAddress: metal.MacAddress(nic.MacAddress),
-			Name:       nic.Name,
-			Vrf:        nic.Vrf.GetValue(),
-		}
-	}
-
+func FromSwitch(r v1.SwitchRegisterRequest) *metal.Switch {
 	return &metal.Switch{
 		Base: metal.Base{
 			ID:          r.Switch.Common.Meta.Id,
 			Name:        r.Switch.Common.Name.GetValue(),
 			Description: r.Switch.Common.Description.GetValue(),
+			Created:     util.Time(r.Switch.Common.Meta.CreatedTime),
+			Changed:     util.Time(r.Switch.Common.Meta.UpdatedTime),
 		},
-		PartitionID:        r.GetPartitionID(),
-		RackID:             r.Switch.GetRackID(),
+		PartitionID:        r.PartitionID,
+		RackID:             r.Switch.RackID,
 		MachineConnections: make(metal.ConnectionMap),
-		Nics:               nics,
+		Nics:               FromNICs(r.Switch.Nics),
 	}
 }
 

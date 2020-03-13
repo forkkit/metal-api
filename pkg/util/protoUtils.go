@@ -7,13 +7,16 @@ import (
 )
 
 func Time(t *timestamp.Timestamp) time.Time {
+	if t == nil {
+		return time.Unix(0, int64(0))
+	}
 	return time.Unix(t.Seconds, int64(t.Nanos))
 }
 
 func StringSlice(slice []*wrappers.StringValue) []string {
-	ss := make([]string, len(slice))
-	for i, s := range slice {
-		ss[i] = s.GetValue()
+	var ss []string
+	for _, s := range slice {
+		ss = append(ss, s.GetValue())
 	}
 	return ss
 }
@@ -38,9 +41,9 @@ func Int64Proto(value uint) *wrappers.Int64Value {
 }
 
 func Int64SliceProto(values ...int64) []*wrappers.Int64Value {
-	slice := make([]*wrappers.Int64Value, len(values))
-	for i, value := range values {
-		slice[i] = Int64Proto(uint(value))
+	var slice []*wrappers.Int64Value
+	for _, value := range values {
+		slice = append(slice, Int64Proto(uint(value)))
 	}
 	return slice
 }
@@ -52,9 +55,9 @@ func UInt32Proto(value uint) *wrappers.UInt32Value {
 }
 
 func UInt32SliceProto(values ...uint) []*wrappers.UInt32Value {
-	slice := make([]*wrappers.UInt32Value, len(values))
-	for i, value := range values {
-		slice[i] = UInt32Proto(value)
+	var slice []*wrappers.UInt32Value
+	for _, value := range values {
+		slice = append(slice, UInt32Proto(value))
 	}
 	return slice
 }
@@ -66,9 +69,9 @@ func UInt64Proto(value uint) *wrappers.UInt64Value {
 }
 
 func UInt64SliceProto(values ...uint) []*wrappers.UInt64Value {
-	slice := make([]*wrappers.UInt64Value, len(values))
-	for i, value := range values {
-		slice[i] = UInt64Proto(value)
+	var slice []*wrappers.UInt64Value
+	for _, value := range values {
+		slice = append(slice, UInt64Proto(value))
 	}
 	return slice
 }
@@ -80,9 +83,9 @@ func StringProto(value string) *wrappers.StringValue {
 }
 
 func StringSliceProto(values ...string) []*wrappers.StringValue {
-	slice := make([]*wrappers.StringValue, len(values))
-	for i, value := range values {
-		slice[i] = StringProto(value)
+	var slice []*wrappers.StringValue
+	for _, value := range values {
+		slice = append(slice, StringProto(value))
 	}
 	return slice
 }

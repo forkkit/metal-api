@@ -15,7 +15,7 @@ const RecentProvisioningEventsLimit = 5
 func NewMachineResponse(m *metal.Machine, s *metal.Size, p *metal.Partition, img *metal.Image, ec *metal.ProvisioningEventContainer) *v1.MachineResponse {
 	c := &v1.Common{
 		Meta: &v12.Meta{
-			Id:          m.GetID(),
+			Id:          m.ID,
 			Apiversion:  "v1",
 			Version:     1,
 			CreatedTime: util.TimestampProto(m.Created),
@@ -198,26 +198,26 @@ func MakeMachineResponseList(ms metal.Machines, ds *datastore.RethinkStore, logg
 
 	var result []*v1.MachineResponse
 
-	for index := range ms {
+	for _, m := range ms {
 		var s *metal.Size
-		if ms[index].SizeID != "" {
-			sizeEntity := sMap[ms[index].SizeID]
+		if m.SizeID != "" {
+			sizeEntity := sMap[m.SizeID]
 			s = &sizeEntity
 		}
 		var p *metal.Partition
-		if ms[index].PartitionID != "" {
-			partitionEntity := pMap[ms[index].PartitionID]
+		if m.PartitionID != "" {
+			partitionEntity := pMap[m.PartitionID]
 			p = &partitionEntity
 		}
 		var i *metal.Image
-		if ms[index].Allocation != nil {
-			if ms[index].Allocation.ImageID != "" {
-				imageEntity := iMap[ms[index].Allocation.ImageID]
+		if m.Allocation != nil {
+			if m.Allocation.ImageID != "" {
+				imageEntity := iMap[m.Allocation.ImageID]
 				i = &imageEntity
 			}
 		}
-		ec := ecMap[ms[index].ID]
-		result = append(result, NewMachineResponse(&ms[index], s, p, i, &ec))
+		ec := ecMap[m.ID]
+		result = append(result, NewMachineResponse(&m, s, p, i, &ec))
 	}
 
 	return result

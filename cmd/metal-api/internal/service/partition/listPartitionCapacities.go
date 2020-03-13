@@ -43,7 +43,7 @@ func (r *partitionResource) calcPartitionCapacities() ([]v1.PartitionCapacity, e
 
 	var partitionCapacities []v1.PartitionCapacity
 	for _, p := range ps {
-		capacities := make(map[string]*v1.ServerCapacity)
+		capacities := make(map[string]v1.ServerCapacity)
 		for _, machineResponse := range machines {
 			m := machineResponse.Machine
 			if m.PartitionResponse == nil {
@@ -82,7 +82,7 @@ func (r *partitionResource) calcPartitionCapacities() ([]v1.PartitionCapacity, e
 				free = 1
 			}
 
-			capacities[size] = &v1.ServerCapacity{
+			capacities[size] = v1.ServerCapacity{
 				Size:      size,
 				Total:     total,
 				Free:      oldCap.Free + free,
@@ -92,7 +92,7 @@ func (r *partitionResource) calcPartitionCapacities() ([]v1.PartitionCapacity, e
 		}
 		var sc []*v1.ServerCapacity
 		for _, c := range capacities {
-			sc = append(sc, c)
+			sc = append(sc, &c)
 		}
 
 		pc := v1.PartitionCapacity{

@@ -1,7 +1,7 @@
 package helper
 
 import (
-	v12 "github.com/metal-stack/masterdata-api/api/v1"
+	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -19,7 +19,7 @@ func NewPartitionResponse(p *metal.Partition) *v1.PartitionResponse {
 func ToPartition(p *metal.Partition) *v1.Partition {
 	return &v1.Partition{
 		Common: &v1.Common{
-			Meta: &v12.Meta{
+			Meta: &mdmv1.Meta{
 				Id:          p.GetID(),
 				Apiversion:  "v1",
 				Version:     1,

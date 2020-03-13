@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -46,12 +46,13 @@ func TestRegisterSwitch(t *testing.T) {
 				},
 			},
 		},
+		PartitionID: "1",
 	}
 	js, _ := json.Marshal(createRequest)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/switch/register", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectEditor(container, req)
+	container = service.InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -84,12 +85,13 @@ func TestRegisterExistingSwitch(t *testing.T) {
 			},
 			RackID: testdata.Switch2.RackID,
 		},
+		PartitionID: testdata.Switch2.PartitionID,
 	}
 	js, _ := json.Marshal(createRequest)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/switch/register", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectEditor(container, req)
+	container = service.InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -129,7 +131,7 @@ func TestRegisterExistingSwitchErrorModifyingNics(t *testing.T) {
 	js, _ := json.Marshal(createRequest)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/switch/register", body)
-	container = machine.InjectAdmin(container, req)
+	container = service.InjectAdmin(container, req)
 	req.Header.Add("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)

@@ -42,14 +42,16 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 
 	returnCode := http.StatusOK
 
-	if s == nil {
-		s = helper.FromSwitch(sw)
+	spec := helper.FromSwitch(requestPayload)
 
-		if len(sw.Nics) != len(s.Nics.ByMac()) {
-			if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
-				return
-			}
+	if len(sw.Nics) != len(spec.Nics.ByMac()) {
+		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
+			return
 		}
+	}
+
+	if s == nil {
+		s = spec
 
 		err = r.ds.CreateSwitch(s)
 		if service.CheckError(request, response, util.CurrentFuncName(), err) {
@@ -63,14 +65,6 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 		returnCode = http.StatusCreated
 	} else {
 		old := *s
-
-		spec := helper.FromSwitch(sw)
-
-		if len(sw.Nics) != len(spec.Nics.ByMac()) {
-			if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
-				return
-			}
-		}
 
 		nics, err := UpdateSwitchNics(old.Nics.ByMac(), spec.Nics.ByMac(), old.MachineConnections)
 		if service.CheckError(request, response, util.CurrentFuncName(), err) {
@@ -91,6 +85,7 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 			return
 		}
 	}
+
 	err = response.WriteHeaderAndEntity(returnCode, MakeSwitchResponse(s, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -30,7 +30,7 @@ func TestGetNetworks(t *testing.T) {
 	networkService := NewNetworkService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(networkService)
 	req := httptest.NewRequest("GET", "/v1/network", nil)
-	container = machine.InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -59,7 +59,7 @@ func TestGetNetwork(t *testing.T) {
 	networkService := NewNetworkService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(networkService)
 	req := httptest.NewRequest("GET", "/v1/network/1", nil)
-	container = machine.InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -81,7 +81,7 @@ func TestGetNetworkNotFound(t *testing.T) {
 	networkService := NewNetworkService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(networkService)
 	req := httptest.NewRequest("GET", "/v1/network/999", nil)
-	container = machine.InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -105,7 +105,7 @@ func TestDeleteNetwork(t *testing.T) {
 	networkService := NewNetworkService(ds, ipamer, nil)
 	container := restful.NewContainer().Add(networkService)
 	req := httptest.NewRequest("DELETE", "/v1/network/"+testdata.NwIPAM.ID, nil)
-	container = machine.InjectAdmin(container, req)
+	container = service.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -130,7 +130,7 @@ func TestDeleteNetworkIPInUse(t *testing.T) {
 	networkService := NewNetworkService(ds, ipamer, nil)
 	container := restful.NewContainer().Add(networkService)
 	req := httptest.NewRequest("DELETE", "/v1/network/"+testdata.NwIPAM.ID, nil)
-	container = machine.InjectAdmin(container, req)
+	container = service.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -178,7 +178,7 @@ func TestCreateNetwork(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("PUT", "/v1/network", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectAdmin(container, req)
+	container = service.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -216,7 +216,7 @@ func TestUpdateNetwork(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/network", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectAdmin(container, req)
+	container = service.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -246,7 +246,7 @@ func TestSearchNetwork(t *testing.T) {
 	require.Nil(t, err)
 	req := httptest.NewRequest("POST", "/v1/network/find", bytes.NewBuffer(requestJSON))
 	req.Header.Add("Content-Type", "application/json")
-	container = machine.InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 

@@ -1,7 +1,6 @@
 package machine
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/emicklei/go-restful"
@@ -11,6 +10,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/eventbus"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
+	service2 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/image"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/ip"
@@ -20,9 +20,6 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
 	"github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
-	"github.com/metal-stack/metal-lib/jwt/sec"
-	"github.com/metal-stack/metal-lib/rest"
-	"github.com/metal-stack/security"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"go.uber.org/zap"
@@ -34,85 +31,6 @@ import (
 	"testing"
 	"time"
 )
-
-type UserDirectory struct {
-	viewer security.User
-	edit   security.User
-	admin  security.User
-
-	metalUsers map[string]security.User
-}
-
-func NewUserDirectory(providerTenant string) *UserDirectory {
-	ud := &UserDirectory{}
-
-	// User.Name is used as AuthType for HMAC
-	ud.viewer = security.User{
-		EMail:  "metal-view@metal-stack.io",
-		Name:   "Metal-View",
-		Groups: sec.MergeResourceAccess(metal.ViewGroups),
-		Tenant: providerTenant,
-	}
-	ud.edit = security.User{
-		EMail:  "metal-edit@metal-stack.io",
-		Name:   "Metal-Edit",
-		Groups: sec.MergeResourceAccess(metal.EditGroups),
-		Tenant: providerTenant,
-	}
-	ud.admin = security.User{
-		EMail:  "metal-admin@metal-stack.io",
-		Name:   "Metal-Admin",
-		Groups: sec.MergeResourceAccess(metal.AdminGroups),
-		Tenant: providerTenant,
-	}
-	ud.metalUsers = map[string]security.User{
-		"view":  ud.viewer,
-		"edit":  ud.edit,
-		"admin": ud.admin,
-	}
-
-	return ud
-}
-
-func (ud *UserDirectory) UserNames() []string {
-	keys := make([]string, len(ud.metalUsers))
-	for k := range ud.metalUsers {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
-func (ud *UserDirectory) Get(user string) security.User {
-	return ud.metalUsers[user]
-}
-
-var testUserDirectory = NewUserDirectory("")
-
-func InjectViewer(container *restful.Container, rq *http.Request) *restful.Container {
-	return injectUser(testUserDirectory.viewer, container, rq)
-}
-
-func InjectEditor(container *restful.Container, rq *http.Request) *restful.Container {
-	return injectUser(testUserDirectory.edit, container, rq)
-}
-func InjectAdmin(container *restful.Container, rq *http.Request) *restful.Container {
-	return injectUser(testUserDirectory.admin, container, rq)
-}
-
-func injectUser(u security.User, container *restful.Container, rq *http.Request) *restful.Container {
-	hma := security.NewHMACAuth(u.Name, []byte{1, 2, 3}, security.WithUser(u))
-	usergetter := security.NewCreds(security.WithHMAC(hma))
-	container.Filter(rest.UserAuth(usergetter))
-	var body []byte
-	if rq.Body != nil {
-		data, _ := ioutil.ReadAll(rq.Body)
-		body = data
-		rq.Body.Close()
-		rq.Body = ioutil.NopCloser(bytes.NewReader(data))
-	}
-	hma.AddAuth(rq, time.Now(), body)
-	return container
-}
 
 type testEnv struct {
 	imageService        *restful.WebService
@@ -370,7 +288,7 @@ func (te *testEnv) MachineRegister(t *testing.T, mrr v1.MachineRegisterRequest, 
 func (te *testEnv) MachineWait(uuid string) {
 	container := restful.NewContainer().Add(te.machineService)
 	createReq := httptest.NewRequest(http.MethodGet, "/v1/machine/"+uuid+"/wait", nil)
-	container = InjectAdmin(container, createReq)
+	container = service2.InjectAdmin(container, createReq)
 	w := httptest.NewRecorder()
 	for {
 		container.ServeHTTP(w, createReq)
@@ -422,7 +340,7 @@ func webRequest(t *testing.T, method string, service *restful.WebService, reques
 	createReq := httptest.NewRequest(method, path, body)
 	createReq.Header.Set("Content-Type", "application/json")
 
-	container = InjectAdmin(container, createReq)
+	container = service2.InjectAdmin(container, createReq)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, createReq)
 

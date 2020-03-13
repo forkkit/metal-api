@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/pkg/tag"
@@ -37,7 +37,7 @@ func TestGetIPs(t *testing.T) {
 	ipService := NewIPService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipService)
 	req := httptest.NewRequest("GET", "/v1/ip", nil)
-	container = machine.InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -63,7 +63,7 @@ func TestGetIP(t *testing.T) {
 	ipService := NewIPService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipService)
 	req := httptest.NewRequest("GET", "/v1/ip/1.2.3.4", nil)
-	container = machine.InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -84,7 +84,7 @@ func TestGetIPNotFound(t *testing.T) {
 	ipService := NewIPService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipService)
 	req := httptest.NewRequest("GET", "/v1/ip/9.9.9.9", nil)
-	container = machine.InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -131,7 +131,7 @@ func TestDeleteIP(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("POST", "/v1/ip/free/"+testdata.IPAMIP.IPAddress, nil)
-			container = machine.InjectEditor(container, req)
+			container = service.InjectEditor(container, req)
 			req.Header.Add("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
@@ -214,7 +214,7 @@ func TestAllocateIP(t *testing.T) {
 			js, _ := json.Marshal(tt.allocateRequest)
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", "/v1/ip/allocate", body)
-			container = machine.InjectEditor(container, req)
+			container = service.InjectEditor(container, req)
 			req.Header.Add("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
@@ -307,7 +307,7 @@ func TestUpdateIP(t *testing.T) {
 			js, _ := json.Marshal(tt.updateRequest)
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", "/v1/ip", body)
-			container = machine.InjectEditor(container, req)
+			container = service.InjectEditor(container, req)
 			req.Header.Add("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)

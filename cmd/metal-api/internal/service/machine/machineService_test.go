@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
@@ -46,7 +47,7 @@ func TestGetMachines(t *testing.T) {
 	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine", nil)
-	container = InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -187,7 +188,7 @@ func TestRegisterMachine(t *testing.T) {
 			container := restful.NewContainer().Add(machineService)
 			req := httptest.NewRequest("POST", "/v1/machine/register", body)
 			req.Header.Add("Content-Type", "application/json")
-			container = InjectEditor(container, req)
+			container = service.InjectEditor(container, req)
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
 
@@ -260,7 +261,7 @@ func TestMachineIPMIReport(t *testing.T) {
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", fmt.Sprintf("/v1/machine/ipmi"), body)
 			req.Header.Add("Content-Type", "application/json")
-			container = InjectEditor(container, req)
+			container = service.InjectEditor(container, req)
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
 
@@ -309,7 +310,7 @@ func TestMachineFindIPMI(t *testing.T) {
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", "/v1/machine/ipmi/find", body)
 			req.Header.Add("Content-Type", "application/json")
-			container = InjectViewer(container, req)
+			container = service.InjectViewer(container, req)
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
 
@@ -387,7 +388,7 @@ func TestFinalizeMachineAllocation(t *testing.T) {
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", fmt.Sprintf("/v1/machine/%s/finalize-allocation", test.machineID), body)
 			req.Header.Add("Content-Type", "application/json")
-			container = InjectEditor(container, req)
+			container = service.InjectEditor(container, req)
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
 
@@ -429,7 +430,7 @@ func TestSetMachineState(t *testing.T) {
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/machine/1/state", body)
 	req.Header.Add("Content-Type", "application/json")
-	container = InjectEditor(container, req)
+	container = service.InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -451,7 +452,7 @@ func TestGetMachine(t *testing.T) {
 	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine/1", nil)
-	container = InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -475,7 +476,7 @@ func TestGetMachineNotFound(t *testing.T) {
 	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine/999", nil)
-	container = InjectEditor(container, req)
+	container = service.InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -505,7 +506,7 @@ func TestFreeMachine(t *testing.T) {
 	machineService := NewMachineService(ds, pub, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("DELETE", "/v1/machine/1/free", nil)
-	container = InjectEditor(container, req)
+	container = service.InjectEditor(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -538,7 +539,7 @@ func TestSearchMachine(t *testing.T) {
 	require.Nil(t, err)
 	req := httptest.NewRequest("POST", "/v1/machine/find", bytes.NewBuffer(requestJSON))
 	req.Header.Add("Content-Type", "application/json")
-	container = InjectViewer(container, req)
+	container = service.InjectViewer(container, req)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
 
@@ -570,7 +571,7 @@ func TestAddProvisioningEvent(t *testing.T) {
 	js, _ := json.Marshal(event)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("POST", "/v1/machine/1/event", body)
-	container = InjectEditor(container, req)
+	container = service.InjectEditor(container, req)
 	req.Header.Add("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -645,7 +646,7 @@ func TestOnMachine(t *testing.T) {
 			body := bytes.NewBuffer(js)
 			container := restful.NewContainer().Add(machineService)
 			req := httptest.NewRequest("POST", "/v1/machine/1/power/"+d.endpoint, body)
-			container = InjectEditor(container, req)
+			container = service.InjectEditor(container, req)
 			req.Header.Add("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			container.ServeHTTP(w, req)
