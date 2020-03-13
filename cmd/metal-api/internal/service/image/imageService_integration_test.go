@@ -23,8 +23,8 @@ func TestGetImagesIntegration(t *testing.T) {
 	ds, c, ctx := datastore.InitTestDB(t)
 	defer c.Terminate(ctx)
 
-	imageservice := NewImageService(ds)
-	container := restful.NewContainer().Add(imageservice)
+	imageService := NewImageService(ds)
+	container := restful.NewContainer().Add(imageService)
 
 	imageID := "test-image"
 	imageName := "testimage"

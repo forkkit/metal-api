@@ -24,8 +24,8 @@ func TestGetSizes(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSizeService(ds)
-	container := restful.NewContainer().Add(sizeservice)
+	sizeService := NewSizeService(ds)
+	container := restful.NewContainer().Add(sizeService)
 	req := httptest.NewRequest("GET", "/v1/size", nil)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -52,8 +52,8 @@ func TestGetSize(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSizeService(ds)
-	container := restful.NewContainer().Add(sizeservice)
+	sizeService := NewSizeService(ds)
+	container := restful.NewContainer().Add(sizeService)
 	req := httptest.NewRequest("GET", "/v1/size/1", nil)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -74,8 +74,8 @@ func TestGetSizeNotFound(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSizeService(ds)
-	container := restful.NewContainer().Add(sizeservice)
+	sizeService := NewSizeService(ds)
+	container := restful.NewContainer().Add(sizeService)
 	req := httptest.NewRequest("GET", "/v1/size/999", nil)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -94,8 +94,8 @@ func TestDeleteSize(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSizeService(ds)
-	container := restful.NewContainer().Add(sizeservice)
+	sizeService := NewSizeService(ds)
+	container := restful.NewContainer().Add(sizeService)
 	req := httptest.NewRequest("DELETE", "/v1/size/1", nil)
 	container = helper.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
@@ -116,8 +116,8 @@ func TestCreateSize(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSizeService(ds)
-	container := restful.NewContainer().Add(sizeservice)
+	sizeService := NewSizeService(ds)
+	container := restful.NewContainer().Add(sizeService)
 
 	createRequest := v1.SizeCreateRequest{
 		Size: &v1.Size{
@@ -153,8 +153,8 @@ func TestUpdateSize(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSizeService(ds)
-	container := restful.NewContainer().Add(sizeservice)
+	sizeService := NewSizeService(ds)
+	container := restful.NewContainer().Add(sizeService)
 
 	minCores := uint64(1)
 	maxCores := uint64(4)

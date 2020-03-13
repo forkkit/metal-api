@@ -23,8 +23,8 @@ func TestGetImages(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImageService(ds)
-	container := restful.NewContainer().Add(imageservice)
+	imageService := NewImageService(ds)
+	container := restful.NewContainer().Add(imageService)
 	req := httptest.NewRequest("GET", "/v1/image", nil)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -48,8 +48,8 @@ func TestGetImage(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImageService(ds)
-	container := restful.NewContainer().Add(imageservice)
+	imageService := NewImageService(ds)
+	container := restful.NewContainer().Add(imageService)
 	req := httptest.NewRequest("GET", "/v1/image/1", nil)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -68,8 +68,8 @@ func TestGetImageNotFound(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImageService(ds)
-	container := restful.NewContainer().Add(imageservice)
+	imageService := NewImageService(ds)
+	container := restful.NewContainer().Add(imageService)
 	req := httptest.NewRequest("GET", "/v1/image/999", nil)
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -88,8 +88,8 @@ func TestDeleteImage(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImageService(ds)
-	container := restful.NewContainer().Add(imageservice)
+	imageService := NewImageService(ds)
+	container := restful.NewContainer().Add(imageService)
 	req := httptest.NewRequest("DELETE", "/v1/image/3", nil)
 	container = helper.InjectAdmin(container, req)
 	w := httptest.NewRecorder()
@@ -145,8 +145,8 @@ func TestUpdateImage(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImageService(ds)
-	container := restful.NewContainer().Add(imageservice)
+	imageService := NewImageService(ds)
+	container := restful.NewContainer().Add(imageService)
 
 	updateRequest := v1.ImageUpdateRequest{
 		Image: &v1.Image{

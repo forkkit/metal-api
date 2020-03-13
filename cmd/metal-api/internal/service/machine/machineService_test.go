@@ -44,8 +44,8 @@ func TestGetMachines(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-	container := restful.NewContainer().Add(machineservice)
+	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine", nil)
 	container = helper.InjectViewer(container, req)
 	w := httptest.NewRecorder()
@@ -157,24 +157,24 @@ func TestRegisterMachine(t *testing.T) {
 				UUID:        test.uuid,
 				PartitionID: test.partitionid,
 				RackID:      "1",
-				IPMI: v1.MachineIPMI{
+				IPMI: &v1.MachineIPMI{
 					Address:    testdata.IPMI1.Address,
 					Interface:  testdata.IPMI1.Interface,
 					MacAddress: testdata.IPMI1.MacAddress,
-					Fru: v1.MachineFru{
-						ChassisPartNumber:   &testdata.IPMI1.Fru.ChassisPartNumber,
-						ChassisPartSerial:   &testdata.IPMI1.Fru.ChassisPartSerial,
-						BoardMfg:            &testdata.IPMI1.Fru.BoardMfg,
-						BoardMfgSerial:      &testdata.IPMI1.Fru.BoardMfgSerial,
-						BoardPartNumber:     &testdata.IPMI1.Fru.BoardPartNumber,
-						ProductManufacturer: &testdata.IPMI1.Fru.ProductManufacturer,
-						ProductPartNumber:   &testdata.IPMI1.Fru.ProductPartNumber,
-						ProductSerial:       &testdata.IPMI1.Fru.ProductSerial,
+					Fru: &v1.MachineFru{
+						ChassisPartNumber:   util.StringProto(testdata.IPMI1.Fru.ChassisPartNumber),
+						ChassisPartSerial:   util.StringProto(testdata.IPMI1.Fru.ChassisPartSerial),
+						BoardMfg:            util.StringProto(testdata.IPMI1.Fru.BoardMfg),
+						BoardMfgSerial:      util.StringProto(testdata.IPMI1.Fru.BoardMfgSerial),
+						BoardPartNumber:     util.StringProto(testdata.IPMI1.Fru.BoardPartNumber),
+						ProductManufacturer: util.StringProto(testdata.IPMI1.Fru.ProductManufacturer),
+						ProductPartNumber:   util.StringProto(testdata.IPMI1.Fru.ProductPartNumber),
+						ProductSerial:       util.StringProto(testdata.IPMI1.Fru.ProductSerial),
 					},
 				},
-				Hardware: v1.MachineHardwareExtended{
-					MachineHardwareBase: v1.MachineHardwareBase{
-						CPUCores: test.numcores,
+				Hardware: &v1.MachineHardwareExtended{
+					Base: &v1.MachineHardwareBase{
+						CpuCores: uint32(test.numcores),
 						Memory:   uint64(test.memory),
 					},
 				},
@@ -182,8 +182,8 @@ func TestRegisterMachine(t *testing.T) {
 
 			js, _ := json.Marshal(registerRequest)
 			body := bytes.NewBuffer(js)
-			machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-			container := restful.NewContainer().Add(machineservice)
+			machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+			container := restful.NewContainer().Add(machineService)
 			req := httptest.NewRequest("POST", "/v1/machine/register", body)
 			req.Header.Add("Content-Type", "application/json")
 			container = helper.InjectEditor(container, req)
@@ -209,9 +209,9 @@ func TestRegisterMachine(t *testing.T) {
 					expectedid = test.dbmachines[0].ID
 				}
 				require.Equal(t, expectedid, result.Machine.Common.Meta.Id)
-				require.Equal(t, "1", result.RackID)
-				require.Equal(t, test.expectedSizeName, *result.Size.Name)
-				require.Equal(t, testdata.Partition1.Name, *result.Partition.Name)
+				require.Equal(t, "1", result.Machine.RackID)
+				require.Equal(t, test.expectedSizeName, result.Machine.SizeResponse.Size.Common.Name.GetValue())
+				require.Equal(t, testdata.Partition1.Name, result.Machine.PartitionResponse.Partition.Common.Name.GetValue())
 			}
 		})
 	}
@@ -230,24 +230,24 @@ func TestMachineIPMIReport(t *testing.T) {
 		{
 			name: "update machine1 ipmi address",
 			input: v1.MachineIpmiReport{
-				PartitionID: testdata.M1.PartitionID,
-				Leases:      map[string]string{testdata.M1.ID: "192.167.0.1"},
+				PartitionID:  testdata.M1.PartitionID,
+				ActiveLeases: map[string]string{testdata.M1.ID: "192.167.0.1"},
 			},
 			output: v1.MachineIpmiReportResponse{
-				Updated: map[string]string{testdata.M1.ID: "192.167.0.1"},
-				Created: map[string]string{},
+				UpdatedLeases: map[string]string{testdata.M1.ID: "192.167.0.1"},
+				CreatedLeases: map[string]string{},
 			},
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name: "don't update machine with unkown mac",
 			input: v1.MachineIpmiReport{
-				PartitionID: testdata.M1.PartitionID,
-				Leases:      map[string]string{"xyz": "192.167.0.1"},
+				PartitionID:  testdata.M1.PartitionID,
+				ActiveLeases: map[string]string{"xyz": "192.167.0.1"},
 			},
 			output: v1.MachineIpmiReportResponse{
-				Updated: map[string]string{},
-				Created: map[string]string{"xyz": "192.167.0.1"},
+				UpdatedLeases: map[string]string{},
+				CreatedLeases: map[string]string{"xyz": "192.167.0.1"},
 			},
 			wantStatusCode: http.StatusOK,
 		},
@@ -255,8 +255,8 @@ func TestMachineIPMIReport(t *testing.T) {
 
 	for _, test := range data {
 		t.Run(test.name, func(t *testing.T) {
-			machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-			container := restful.NewContainer().Add(machineservice)
+			machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+			container := restful.NewContainer().Add(machineService)
 			js, _ := json.Marshal(test.input)
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", fmt.Sprintf("/v1/machine/ipmi"), body)
@@ -300,11 +300,11 @@ func TestMachineFindIPMI(t *testing.T) {
 			mock.On(r.DB("mockdb").Table("machine").Filter(r.MockAnything())).Return([]interface{}{*test.machine}, nil)
 			testdata.InitMockDBData(mock)
 
-			machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-			container := restful.NewContainer().Add(machineservice)
+			machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+			container := restful.NewContainer().Add(machineService)
 
-			query := datastore.MachineSearchQuery{
-				ID: &test.machine.ID,
+			query := v1.MachineSearchQuery{
+				ID: util.StringProto(test.machine.ID),
 			}
 			js, _ := json.Marshal(query)
 			body := bytes.NewBuffer(js)
@@ -377,8 +377,8 @@ func TestFinalizeMachineAllocation(t *testing.T) {
 	for _, test := range data {
 		t.Run(test.name, func(t *testing.T) {
 
-			machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-			container := restful.NewContainer().Add(machineservice)
+			machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+			container := restful.NewContainer().Add(machineService)
 
 			finalizeRequest := v1.MachineFinalizeAllocationRequest{
 				ConsolePassword: "blubber",
@@ -409,7 +409,7 @@ func TestFinalizeMachineAllocation(t *testing.T) {
 				err := json.NewDecoder(resp.Body).Decode(&result)
 
 				require.Nil(t, err)
-				require.Equal(t, finalizeRequest.ConsolePassword, *result.Allocation.ConsolePassword)
+				require.Equal(t, finalizeRequest.ConsolePassword, result.Machine.Allocation.ConsolePassword.GetValue())
 			}
 		})
 	}
@@ -419,8 +419,8 @@ func TestSetMachineState(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-	container := restful.NewContainer().Add(machineservice)
+	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	container := restful.NewContainer().Add(machineService)
 
 	stateRequest := v1.MachineState{
 		Value:       string(metal.ReservedState),
@@ -441,16 +441,16 @@ func TestSetMachineState(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Equal(t, "1", result.Machine.Common.Meta.Id)
-	require.Equal(t, string(metal.ReservedState), result.State.Value)
-	require.Equal(t, "blubber", result.State.Description)
+	require.Equal(t, string(metal.ReservedState), result.Machine.State.Value)
+	require.Equal(t, "blubber", result.Machine.State.Description)
 }
 
 func TestGetMachine(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-	container := restful.NewContainer().Add(machineservice)
+	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine/1", nil)
 	container = helper.InjectViewer(container, req)
 	w := httptest.NewRecorder()
@@ -463,18 +463,18 @@ func TestGetMachine(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Equal(t, testdata.M1.ID, result.Machine.Common.Meta.Id)
-	require.Equal(t, testdata.M1.Allocation.Name, result.Allocation.Name)
-	require.Equal(t, testdata.Sz1.Name, *result.Size.Name)
-	require.Equal(t, testdata.Img1.Name, *result.Allocation.Image.Name)
-	require.Equal(t, testdata.Partition1.Name, *result.Partition.Name)
+	require.Equal(t, testdata.M1.Allocation.Name, result.Machine.Allocation.Name)
+	require.Equal(t, testdata.Sz1.Name, result.Machine.SizeResponse.Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Img1.Name, result.Machine.Allocation.ImageResponse.Image.Common.Name.GetValue())
+	require.Equal(t, testdata.Partition1.Name, result.Machine.PartitionResponse.Partition.Common.Name.GetValue())
 }
 
 func TestGetMachineNotFound(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-	container := restful.NewContainer().Add(machineservice)
+	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("GET", "/v1/machine/999", nil)
 	container = helper.InjectEditor(container, req)
 	w := httptest.NewRecorder()
@@ -503,8 +503,8 @@ func TestFreeMachine(t *testing.T) {
 		return nil
 	}
 
-	machineservice := NewMachineService(ds, pub, ipam.New(goipam.New()), nil)
-	container := restful.NewContainer().Add(machineservice)
+	machineService := NewMachineService(ds, pub, ipam.New(goipam.New()), nil)
+	container := restful.NewContainer().Add(machineService)
 	req := httptest.NewRequest("DELETE", "/v1/machine/1/free", nil)
 	container = helper.InjectEditor(container, req)
 	w := httptest.NewRecorder()
@@ -517,8 +517,8 @@ func TestFreeMachine(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Equal(t, testdata.M1.ID, result.Machine.Common.Meta.Id)
-	require.Nil(t, result.Allocation)
-	require.Empty(t, result.Tags)
+	require.Nil(t, result.Machine.Allocation)
+	require.Empty(t, result.Machine.Tags)
 }
 
 func TestSearchMachine(t *testing.T) {
@@ -526,8 +526,8 @@ func TestSearchMachine(t *testing.T) {
 	mock.On(r.DB("mockdb").Table("machine").Filter(r.MockAnything())).Return([]interface{}{testdata.M1}, nil)
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-	container := restful.NewContainer().Add(machineservice)
+	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	container := restful.NewContainer().Add(machineService)
 	findReq := &v1.MachineFindRequest{
 		MachineSearchQuery: &v1.MachineSearchQuery{
 			NicsMacAddresses: []*wrappers.StringValue{
@@ -552,18 +552,18 @@ func TestSearchMachine(t *testing.T) {
 	require.Len(t, results, 1)
 	result := results[0]
 	require.Equal(t, testdata.M1.ID, result.Machine.Common.Meta.Id)
-	require.Equal(t, testdata.M1.Allocation.Name, result.Allocation.Name)
-	require.Equal(t, testdata.Sz1.Name, *result.Size.Name)
-	require.Equal(t, testdata.Img1.Name, *result.Allocation.Image.Name)
-	require.Equal(t, testdata.Partition1.Name, *result.Partition.Name)
+	require.Equal(t, testdata.M1.Allocation.Name, result.Machine.Allocation.Name)
+	require.Equal(t, testdata.Sz1.Name, result.Machine.SizeResponse.Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Img1.Name, result.Machine.Allocation.ImageResponse.Image.Common.Name.GetValue())
+	require.Equal(t, testdata.Partition1.Name, result.Machine.PartitionResponse.Partition.Common.Name.GetValue())
 }
 
 func TestAddProvisioningEvent(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
-	container := restful.NewContainer().Add(machineservice)
+	machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	container := restful.NewContainer().Add(machineService)
 	event := &metal.ProvisioningEvent{
 		Event:   metal.ProvisioningEventPreparing,
 		Message: "starting metal-hammer",
@@ -641,11 +641,11 @@ func TestOnMachine(t *testing.T) {
 				return nil
 			}
 
-			machineservice := NewMachineService(ds, pub, ipam.New(goipam.New()), nil)
+			machineService := NewMachineService(ds, pub, ipam.New(goipam.New()), nil)
 
 			js, _ := json.Marshal([]string{d.param})
 			body := bytes.NewBuffer(js)
-			container := restful.NewContainer().Add(machineservice)
+			container := restful.NewContainer().Add(machineService)
 			req := httptest.NewRequest("POST", "/v1/machine/1/power/"+d.endpoint, body)
 			container = helper.InjectEditor(container, req)
 			req.Header.Add("Content-Type", "application/json")
@@ -677,18 +677,16 @@ func TestParsePublicKey(t *testing.T) {
 }
 
 func Test_validateAllocationSpec(t *testing.T) {
-	assert := assert.New(t)
-	trueValue := true
-	falseValue := false
+	ass := assert.New(t)
 
 	tests := []struct {
-		spec     machine.AllocationSpec
+		spec     AllocationSpec
 		isError  bool
 		name     string
 		expected string
 	}{
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
@@ -704,20 +702,21 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "auto acquire network and additional ip",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				UUID:      "gopher-uuid",
 				ProjectID: "123",
 				Networks: []v1.MachineAllocationNetwork{
 					{
 						NetworkID:     "network",
-						AutoAcquireIP: &trueValue},
+						AutoAcquireIP: util.BoolProto(true),
+					},
 				},
 			},
 			isError: false,
 			name:    "good case (explicit network)",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
@@ -727,7 +726,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "good case (no network)",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				PartitionID: "42",
 				ProjectID:   "123",
 				SizeID:      "42",
@@ -736,7 +735,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:    "partition and size id for absent uuid",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				PartitionID: "42",
 				ProjectID:   "123",
 			},
@@ -745,7 +744,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "missing size id",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				SizeID:    "42",
 				ProjectID: "123",
 			},
@@ -754,20 +753,20 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "missing partition id",
 		},
 		{
-			spec:     machine.AllocationSpec{},
+			spec:     AllocationSpec{},
 			isError:  true,
 			expected: "project id must be specified",
 			name:     "absent project id",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
 				Networks: []v1.MachineAllocationNetwork{
 					{
 						NetworkID:     "network",
-						AutoAcquireIP: &falseValue,
+						AutoAcquireIP: util.BoolProto(false),
 					},
 				},
 			},
@@ -776,7 +775,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "missing ip definition for noauto network",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				UUID:      "42",
 				ProjectID: "123",
 				IPs:       []string{"42"},
@@ -786,7 +785,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "illegal ip",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				UUID:       "42",
 				ProjectID:  "123",
 				IsFirewall: true,
@@ -796,7 +795,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "missing network/ ip in case of firewall",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				UUID:       "42",
 				ProjectID:  "123",
 				SSHPubKeys: []string{"42"},
@@ -806,7 +805,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 			name:     "invalid ssh",
 		},
 		{
-			spec: machine.AllocationSpec{
+			spec: AllocationSpec{
 				UUID:       "gopher-uuid",
 				ProjectID:  "123",
 				IsFirewall: false,
@@ -823,12 +822,12 @@ func Test_validateAllocationSpec(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := helper.ValidateAllocationSpec(&test.spec)
+		err := ValidateAllocationSpec(&test.spec)
 		if test.isError {
-			assert.Error(err, "Test: %s", test.name)
-			assert.EqualError(err, test.expected, "Test: %s", test.name)
+			ass.Error(err, "Test: %s", test.name)
+			ass.EqualError(err, test.expected, "Test: %s", test.name)
 		} else {
-			assert.NoError(err, "Test: %s", test.name)
+			ass.NoError(err, "Test: %s", test.name)
 		}
 	}
 
@@ -837,7 +836,7 @@ func Test_validateAllocationSpec(t *testing.T) {
 func Test_makeMachineTags(t *testing.T) {
 	type args struct {
 		m        *metal.Machine
-		networks helper.AllocationNetworkMap
+		networks AllocationNetworkMap
 		userTags []string
 	}
 	tests := []struct {
@@ -851,7 +850,7 @@ func Test_makeMachineTags(t *testing.T) {
 				m: &metal.Machine{
 					Allocation: &metal.MachineAllocation{
 						MachineNetworks: []*metal.MachineNetwork{
-							&metal.MachineNetwork{
+							{
 								Private: true,
 								ASN:     1203874,
 							},
@@ -864,15 +863,15 @@ func Test_makeMachineTags(t *testing.T) {
 						},
 					},
 				},
-				networks: helper.AllocationNetworkMap{
-					"network-uuid-1": &helper.AllocationNetwork{
+				networks: AllocationNetworkMap{
+					"network-uuid-1": &AllocationNetwork{
 						Network: &metal.Network{
 							Labels: map[string]string{
 								"external-network-label": "1",
 							},
 						},
 					},
-					"network-uuid-2": &helper.AllocationNetwork{
+					"network-uuid-2": &AllocationNetwork{
 						Network: &metal.Network{
 							Labels: map[string]string{
 								"private-network-label": "1",
@@ -900,15 +899,15 @@ func Test_makeMachineTags(t *testing.T) {
 						MachineNetworks: []*metal.MachineNetwork{},
 					},
 				},
-				networks: helper.AllocationNetworkMap{
-					"network-uuid-1": &helper.AllocationNetwork{
+				networks: AllocationNetworkMap{
+					"network-uuid-1": &AllocationNetwork{
 						Network: &metal.Network{
 							Labels: map[string]string{
 								"override": "1",
 							},
 						},
 					},
-					"network-uuid-2": &helper.AllocationNetwork{
+					"network-uuid-2": &AllocationNetwork{
 						Network: &metal.Network{
 							Labels: map[string]string{
 								"override": "2",
@@ -930,15 +929,15 @@ func Test_makeMachineTags(t *testing.T) {
 						MachineNetworks: []*metal.MachineNetwork{},
 					},
 				},
-				networks: helper.AllocationNetworkMap{
-					"network-uuid-1": &helper.AllocationNetwork{
+				networks: AllocationNetworkMap{
+					"network-uuid-1": &AllocationNetwork{
 						Network: &metal.Network{
 							Labels: map[string]string{
 								"override": "1",
 							},
 						},
 					},
-					"network-uuid-2": &helper.AllocationNetwork{
+					"network-uuid-2": &AllocationNetwork{
 						Network: &metal.Network{
 							Labels: map[string]string{
 								"override": "2",
@@ -959,14 +958,14 @@ func Test_makeMachineTags(t *testing.T) {
 				m: &metal.Machine{
 					Allocation: &metal.MachineAllocation{
 						MachineNetworks: []*metal.MachineNetwork{
-							&metal.MachineNetwork{
+							{
 								Private: true,
 								ASN:     1203874,
 							},
 						},
 					},
 				},
-				networks: helper.AllocationNetworkMap{},
+				networks: AllocationNetworkMap{},
 				userTags: []string{"machine.metal-stack.io/network.primary.asn=iamdoingsomethingevil"},
 			},
 			want: []string{
@@ -976,7 +975,7 @@ func Test_makeMachineTags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := helper.MakeMachineTags(tt.args.m, tt.args.networks, tt.args.userTags)
+			got := MakeMachineTags(tt.args.m, tt.args.networks, tt.args.userTags)
 
 			for _, wantElement := range tt.want {
 				require.Contains(t, got, wantElement, "tag not contained in result")
@@ -987,8 +986,6 @@ func Test_makeMachineTags(t *testing.T) {
 }
 
 func Test_gatherNetworksFromSpec(t *testing.T) {
-	boolTrue := true
-	boolFalse := false
 	partitionSuperNetworks := metal.Networks{testdata.Partition1PrivateSuperNetwork, testdata.Partition2PrivateSuperNetwork}
 
 	type mock struct {
@@ -998,18 +995,18 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 	}
 	tests := []struct {
 		name                   string
-		allocationSpec         *machine.AllocationSpec
+		allocationSpec         *AllocationSpec
 		partition              *metal.Partition
 		partitionSuperNetworks metal.Networks
 		mocks                  []mock
-		want                   helper.AllocationNetworkMap
+		want                   AllocationNetworkMap
 		wantErr                bool
 		errRegex               string
 	}{
 		{
 			name: "no networks given",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{},
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{},
 			},
 			partition:              &testdata.Partition1,
 			partitionSuperNetworks: partitionSuperNetworks,
@@ -1018,11 +1015,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private network given",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
 				},
 				ProjectID: testdata.Partition1ExistingPrivateNetwork.ProjectID,
@@ -1030,8 +1027,8 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 			partition:              &testdata.Partition1,
 			partitionSuperNetworks: partitionSuperNetworks,
 			wantErr:                false,
-			want: helper.AllocationNetworkMap{
-				testdata.Partition1ExistingPrivateNetwork.ID: &helper.AllocationNetwork{
+			want: AllocationNetworkMap{
+				testdata.Partition1ExistingPrivateNetwork.ID: &AllocationNetwork{
 					Network:        &testdata.Partition1ExistingPrivateNetwork,
 					MachineNetwork: &metal.MachineNetwork{},
 					IPs:            []metal.IP{},
@@ -1042,11 +1039,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private network given, but no auto acquisition and no ip provided",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
-						AutoAcquireIP: &boolFalse,
+						AutoAcquireIP: util.BoolProto(false),
 					},
 				},
 				ProjectID: testdata.Partition1ExistingPrivateNetwork.ProjectID,
@@ -1058,15 +1055,15 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private network and internet network given",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
-					v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1InternetNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
 				},
 				ProjectID: testdata.Partition1ExistingPrivateNetwork.ProjectID,
@@ -1074,15 +1071,15 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 			partition:              &testdata.Partition1,
 			partitionSuperNetworks: partitionSuperNetworks,
 			wantErr:                false,
-			want: helper.AllocationNetworkMap{
-				testdata.Partition1ExistingPrivateNetwork.ID: &helper.AllocationNetwork{
+			want: AllocationNetworkMap{
+				testdata.Partition1ExistingPrivateNetwork.ID: &AllocationNetwork{
 					Network:        &testdata.Partition1ExistingPrivateNetwork,
 					MachineNetwork: &metal.MachineNetwork{},
 					IPs:            []metal.IP{},
 					Auto:           true,
 					IsPrivate:      true,
 				},
-				testdata.Partition1InternetNetwork.ID: &helper.AllocationNetwork{
+				testdata.Partition1InternetNetwork.ID: &AllocationNetwork{
 					Network:        &testdata.Partition1InternetNetwork,
 					MachineNetwork: &metal.MachineNetwork{},
 					IPs:            []metal.IP{},
@@ -1093,11 +1090,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "ip which does not belong to any related network given",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
 				},
 				IPs:       []string{testdata.Partition2InternetIP.IPAddress},
@@ -1110,15 +1107,15 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private network and internet network with no auto acquired internet ip",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
-					v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1InternetNetwork.ID,
-						AutoAcquireIP: &boolFalse,
+						AutoAcquireIP: util.BoolProto(false),
 					},
 				},
 				IPs:       []string{testdata.Partition1InternetIP.IPAddress},
@@ -1127,15 +1124,15 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 			partition:              &testdata.Partition1,
 			partitionSuperNetworks: partitionSuperNetworks,
 			wantErr:                false,
-			want: helper.AllocationNetworkMap{
-				testdata.Partition1ExistingPrivateNetwork.ID: &helper.AllocationNetwork{
+			want: AllocationNetworkMap{
+				testdata.Partition1ExistingPrivateNetwork.ID: &AllocationNetwork{
 					Network:        &testdata.Partition1ExistingPrivateNetwork,
 					MachineNetwork: &metal.MachineNetwork{},
 					IPs:            []metal.IP{},
 					Auto:           true,
 					IsPrivate:      true,
 				},
-				testdata.Partition1InternetNetwork.ID: &helper.AllocationNetwork{
+				testdata.Partition1InternetNetwork.ID: &AllocationNetwork{
 					Network:        &testdata.Partition1InternetNetwork,
 					MachineNetwork: &metal.MachineNetwork{},
 					IPs:            []metal.IP{testdata.Partition1InternetIP},
@@ -1146,11 +1143,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "private of other network given",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1ExistingPrivateNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
 				},
 				ProjectID: "another-project",
@@ -1162,11 +1159,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to assign machine to private network of other partition",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition2ExistingPrivateNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
 				},
 				ProjectID: testdata.Partition2ExistingPrivateNetwork.ProjectID,
@@ -1178,11 +1175,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to assign machine to super network",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1PrivateSuperNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
 				},
 			},
@@ -1193,11 +1190,11 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to assign machine to underlay network",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID:     testdata.Partition1UnderlayNetwork.ID,
-						AutoAcquireIP: &boolTrue,
+						AutoAcquireIP: util.BoolProto(true),
 					},
 				},
 			},
@@ -1208,12 +1205,12 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to add machine to multiple private networks",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID: testdata.Partition1ExistingPrivateNetwork.ID,
 					},
-					v1.MachineAllocationNetwork{
+					{
 						NetworkID: testdata.Partition2ExistingPrivateNetwork.ID,
 					},
 				},
@@ -1225,12 +1222,12 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 		},
 		{
 			name: "try to add the same network a couple of times",
-			allocationSpec: &machine.AllocationSpec{
-				Networks: v1.MachineAllocationNetworks{
-					v1.MachineAllocationNetwork{
+			allocationSpec: &AllocationSpec{
+				Networks: []v1.MachineAllocationNetwork{
+					{
 						NetworkID: testdata.Partition1InternetNetwork.ID,
 					},
-					v1.MachineAllocationNetwork{
+					{
 						NetworkID: testdata.Partition1InternetNetwork.ID,
 					},
 				},

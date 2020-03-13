@@ -113,7 +113,7 @@ func TestMachineAllocationIntegration(t *testing.T) {
 		PartitionID: "test-partition",
 		ProjectID:   te.project.ID,
 		SizeID:      "test-size",
-		Networks: v1.MachineAllocationNetworks{
+		Networks: []v1.MachineAllocationNetwork{
 			{
 				NetworkID: te.privateNetwork.ID,
 			},
