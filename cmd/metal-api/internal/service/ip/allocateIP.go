@@ -9,6 +9,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/utils"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"net/http"
@@ -58,7 +59,7 @@ func (r *ipResource) allocateSpecificIP(request *restful.Request, response *rest
 
 	tags := requestPayload.Tags
 	if requestPayload.MachineID != nil {
-		tags = append(tags, metal.IpTag(metal.TagIPMachineID, *requestPayload.MachineID))
+		tags = append(tags, metal.IpTag(tag.MachineID, *requestPayload.MachineID))
 	}
 
 	tags, err = helper.ProcessTags(tags)

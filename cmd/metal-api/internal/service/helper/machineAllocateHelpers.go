@@ -9,6 +9,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	v1 "github.com/metal-stack/metal-api/cmd/metal-api/internal/service/v1"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"net"
@@ -497,8 +498,8 @@ func MakeMachineTags(m *metal.Machine, networks AllocationNetworkMap, userTags [
 
 	// as user labels are given as an array, we need to figure out if label-like tags were provided.
 	// otherwise the user could provide confusing information like:
-	// - machine.metal-pod.io/chassis=123
-	// - machine.metal-pod.io/chassis=789
+	// - machine.metal-stack.io/chassis=123
+	// - machine.metal-stack.io/chassis=789
 	userLabels := make(map[string]string)
 	var actualUserTags []string
 	for _, tag := range userTags {
@@ -530,16 +531,16 @@ func makeMachineSystemLabels(m *metal.Machine) map[string]string {
 	for _, n := range m.Allocation.MachineNetworks {
 		if n.Private {
 			if n.ASN != 0 {
-				labels[fmt.Sprintf("%s/%s", metal.MachineLabelPrefix, "network.primary.asn")] = strconv.FormatInt(n.ASN, 10)
+				labels[tag.MachineNetworkPrimaryASN] = strconv.FormatInt(n.ASN, 10)
 				break
 			}
 		}
 	}
 	if m.RackID != "" {
-		labels[fmt.Sprintf("%s/%s", metal.MachineLabelPrefix, "rack")] = m.RackID
+		labels[tag.MachineRack] = m.RackID
 	}
 	if m.IPMI.Fru.ChassisPartSerial != "" {
-		labels[fmt.Sprintf("%s/%s", metal.MachineLabelPrefix, "chassis")] = m.IPMI.Fru.ChassisPartSerial
+		labels[tag.MachineChassis] = m.IPMI.Fru.ChassisPartSerial
 	}
 	return labels
 }

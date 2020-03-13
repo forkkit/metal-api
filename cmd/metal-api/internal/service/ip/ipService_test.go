@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -222,7 +223,7 @@ func TestUpdateIP(t *testing.T) {
 
 	ipservice := NewIP(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipservice)
-	machineIDTag1 := metal.TagIPMachineID + "=" + "1"
+	machineIDTag1 := tag.MachineID + "=" + "1"
 	tests := []struct {
 		name                 string
 		updateRequest        v1.IPUpdateRequest
