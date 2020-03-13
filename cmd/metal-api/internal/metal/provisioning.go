@@ -171,7 +171,7 @@ type ProvisioningEventContainer struct {
 	Liveliness                   MachineLiveliness  `rethinkdb:"liveliness" json:"liveliness"`
 	Events                       ProvisioningEvents `rethinkdb:"events" json:"events"`
 	LastEventTime                *time.Time         `rethinkdb:"last_event_time" json:"last_event_time"`
-	IncompleteProvisioningCycles uint32             `rethinkdb:"incomplete_cycles" json:"incomplete_cycles"`
+	IncompleteProvisioningCycles string             `rethinkdb:"incomplete_cycles" json:"incomplete_cycles"`
 }
 
 // ProvisioningEventContainers is a list of machine provisioning event containers.

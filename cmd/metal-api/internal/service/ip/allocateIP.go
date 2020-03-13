@@ -6,7 +6,6 @@ import (
 	"github.com/emicklei/go-restful"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -92,7 +91,7 @@ func (r *ipResource) allocateSpecificIP(request *restful.Request, response *rest
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewIPResponse(metalIP))
+	err = response.WriteHeaderAndEntity(http.StatusCreated, NewIPResponse(metalIP))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

@@ -2,7 +2,6 @@ package network
 
 import (
 	"fmt"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
@@ -54,7 +53,7 @@ func (nuc networkUsageCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	for i := range nws {
-		usage := helper.GetNetworkUsage(&nws[i], nuc.r.ipamer)
+		usage := GetNetworkUsage(&nws[i], nuc.r.ipamer)
 
 		privateSuper := fmt.Sprintf("%t", nws[i].PrivateSuper)
 		nat := fmt.Sprintf("%t", nws[i].Nat)

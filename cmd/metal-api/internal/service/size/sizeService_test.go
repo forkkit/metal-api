@@ -3,9 +3,10 @@ package size
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
+	"github.com/metal-stack/metal-api/pkg/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,7 +24,7 @@ func TestGetSizes(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSize(ds)
+	sizeservice := NewSizeService(ds)
 	container := restful.NewContainer().Add(sizeservice)
 	req := httptest.NewRequest("GET", "/v1/size", nil)
 	w := httptest.NewRecorder()
@@ -36,22 +37,22 @@ func TestGetSizes(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Len(t, result, 3)
-	require.Equal(t, testdata.Sz1.ID, result[0].ID)
-	require.Equal(t, testdata.Sz1.Name, *result[0].Name)
-	require.Equal(t, testdata.Sz1.Description, *result[0].Description)
-	require.Equal(t, testdata.Sz2.ID, result[1].ID)
-	require.Equal(t, testdata.Sz2.Name, *result[1].Name)
-	require.Equal(t, testdata.Sz2.Description, *result[1].Description)
-	require.Equal(t, testdata.Sz3.ID, result[2].ID)
-	require.Equal(t, testdata.Sz3.Name, *result[2].Name)
-	require.Equal(t, testdata.Sz3.Description, *result[2].Description)
+	require.Equal(t, testdata.Sz1.ID, result[0].Size.Common.Meta.Id)
+	require.Equal(t, testdata.Sz1.Name, result[0].Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Sz1.Description, result[0].Size.Common.Description.GetValue())
+	require.Equal(t, testdata.Sz2.ID, result[1].Size.Common.Meta.Id)
+	require.Equal(t, testdata.Sz2.Name, result[1].Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Sz2.Description, result[1].Size.Common.Description.GetValue())
+	require.Equal(t, testdata.Sz3.ID, result[2].Size.Common.Meta.Id)
+	require.Equal(t, testdata.Sz3.Name, result[2].Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Sz3.Description, result[2].Size.Common.Description.GetValue())
 }
 
 func TestGetSize(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSize(ds)
+	sizeservice := NewSizeService(ds)
 	container := restful.NewContainer().Add(sizeservice)
 	req := httptest.NewRequest("GET", "/v1/size/1", nil)
 	w := httptest.NewRecorder()
@@ -63,17 +64,17 @@ func TestGetSize(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Sz1.ID, result.ID)
-	require.Equal(t, testdata.Sz1.Name, *result.Name)
-	require.Equal(t, testdata.Sz1.Description, *result.Description)
-	require.Equal(t, len(testdata.Sz1.Constraints), len(result.SizeConstraints))
+	require.Equal(t, testdata.Sz1.ID, result.Size.Common.Meta.Id)
+	require.Equal(t, testdata.Sz1.Name, result.Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Sz1.Description, result.Size.Common.Description.GetValue())
+	require.Equal(t, len(testdata.Sz1.Constraints), len(result.Size.Constraints))
 }
 
 func TestGetSizeNotFound(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSize(ds)
+	sizeservice := NewSizeService(ds)
 	container := restful.NewContainer().Add(sizeservice)
 	req := httptest.NewRequest("GET", "/v1/size/999", nil)
 	w := httptest.NewRecorder()
@@ -93,7 +94,7 @@ func TestDeleteSize(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSize(ds)
+	sizeservice := NewSizeService(ds)
 	container := restful.NewContainer().Add(sizeservice)
 	req := httptest.NewRequest("DELETE", "/v1/size/1", nil)
 	container = helper.InjectAdmin(container, req)
@@ -106,26 +107,26 @@ func TestDeleteSize(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Sz1.ID, result.ID)
-	require.Equal(t, testdata.Sz1.Name, *result.Name)
-	require.Equal(t, testdata.Sz1.Description, *result.Description)
+	require.Equal(t, testdata.Sz1.ID, result.Size.Common.Meta.Id)
+	require.Equal(t, testdata.Sz1.Name, result.Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Sz1.Description, result.Size.Common.Description.GetValue())
 }
 
 func TestCreateSize(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSize(ds)
+	sizeservice := NewSizeService(ds)
 	container := restful.NewContainer().Add(sizeservice)
 
 	createRequest := v1.SizeCreateRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: testdata.Sz1.ID,
-			},
-			Describable: service.Describable{
-				Name:        &testdata.Sz1.Name,
-				Description: &testdata.Sz1.Description,
+		Size: &v1.Size{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: testdata.Sz1.ID,
+				},
+				Name:        util.StringProto(testdata.Sz1.Name),
+				Description: util.StringProto(testdata.Sz1.Description),
 			},
 		},
 	}
@@ -143,35 +144,35 @@ func TestCreateSize(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Sz1.ID, result.ID)
-	require.Equal(t, testdata.Sz1.Name, *result.Name)
-	require.Equal(t, testdata.Sz1.Description, *result.Description)
+	require.Equal(t, testdata.Sz1.ID, result.Size.Common.Meta.Id)
+	require.Equal(t, testdata.Sz1.Name, result.Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Sz1.Description, result.Size.Common.Description.GetValue())
 }
 
 func TestUpdateSize(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	sizeservice := NewSize(ds)
+	sizeservice := NewSizeService(ds)
 	container := restful.NewContainer().Add(sizeservice)
 
 	minCores := uint64(1)
 	maxCores := uint64(4)
 	updateRequest := v1.SizeUpdateRequest{
-		Common: Common{
-			Describable: service.Describable{
-				Name:        &testdata.Sz2.Name,
-				Description: &testdata.Sz2.Description,
+		Size: &v1.Size{
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: testdata.Sz2.ID,
+				},
+				Name:        util.StringProto(testdata.Sz2.Name),
+				Description: util.StringProto(testdata.Sz2.Description),
 			},
-			Identifiable: service.Identifiable{
-				ID: testdata.Sz1.ID,
-			},
-		},
-		SizeConstraints: &[]v1.SizeConstraint{
-			{
-				Type: metal.CoreConstraint,
-				Min:  minCores,
-				Max:  maxCores,
+			Constraints: []*v1.SizeConstraint{
+				{
+					Type: v1.SizeConstraint_CORES,
+					Min:  minCores,
+					Max:  maxCores,
+				},
 			},
 		},
 	}
@@ -189,10 +190,10 @@ func TestUpdateSize(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.Sz1.ID, result.ID)
-	require.Equal(t, testdata.Sz2.Name, *result.Name)
-	require.Equal(t, testdata.Sz2.Description, *result.Description)
-	require.Equal(t, metal.CoreConstraint, result.SizeConstraints[0].Type)
-	require.Equal(t, minCores, result.SizeConstraints[0].Min)
-	require.Equal(t, maxCores, result.SizeConstraints[0].Max)
+	require.Equal(t, testdata.Sz2.ID, result.Size.Common.Meta.Id)
+	require.Equal(t, testdata.Sz2.Name, result.Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Sz2.Description, result.Size.Common.Description.GetValue())
+	require.Equal(t, metal.CoreConstraint, mapSizeConstraintType(result.Size.Constraints[0].Type))
+	require.Equal(t, minCores, result.Size.Constraints[0].Min)
+	require.Equal(t, maxCores, result.Size.Constraints[0].Max)
 }

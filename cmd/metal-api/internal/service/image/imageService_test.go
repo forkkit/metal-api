@@ -23,7 +23,7 @@ func TestGetImages(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImage(ds)
+	imageservice := NewImageService(ds)
 	container := restful.NewContainer().Add(imageservice)
 	req := httptest.NewRequest("GET", "/v1/image", nil)
 	w := httptest.NewRecorder()
@@ -48,7 +48,7 @@ func TestGetImage(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImage(ds)
+	imageservice := NewImageService(ds)
 	container := restful.NewContainer().Add(imageservice)
 	req := httptest.NewRequest("GET", "/v1/image/1", nil)
 	w := httptest.NewRecorder()
@@ -68,7 +68,7 @@ func TestGetImageNotFound(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImage(ds)
+	imageservice := NewImageService(ds)
 	container := restful.NewContainer().Add(imageservice)
 	req := httptest.NewRequest("GET", "/v1/image/999", nil)
 	w := httptest.NewRecorder()
@@ -88,7 +88,7 @@ func TestDeleteImage(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImage(ds)
+	imageservice := NewImageService(ds)
 	container := restful.NewContainer().Add(imageservice)
 	req := httptest.NewRequest("DELETE", "/v1/image/3", nil)
 	container = helper.InjectAdmin(container, req)
@@ -115,16 +115,16 @@ func TestCreateImage(t *testing.T) {
 				Meta: &mdv1.Meta{
 					Id: testdata.Img1.ID,
 				},
-				Name:        util.ToStringValue(testdata.Img1.Name),
-				Description: util.ToStringValue(testdata.Img1.Description),
+				Name:        util.StringProto(testdata.Img1.Name),
+				Description: util.StringProto(testdata.Img1.Description),
 			},
-			URL: util.ToStringValue(testdata.Img1.URL),
+			URL: util.StringProto(testdata.Img1.URL),
 		},
 	}
 	js, _ := json.Marshal(createRequest)
 	body := bytes.NewBuffer(js)
 	req := httptest.NewRequest("PUT", "/v1/image", body)
-	container := helper.InjectAdmin(restful.NewContainer().Add(NewImage(ds)), req)
+	container := helper.InjectAdmin(restful.NewContainer().Add(NewImageService(ds)), req)
 	req.Header.Add("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	container.ServeHTTP(w, req)
@@ -145,7 +145,7 @@ func TestUpdateImage(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	imageservice := NewImage(ds)
+	imageservice := NewImageService(ds)
 	container := restful.NewContainer().Add(imageservice)
 
 	updateRequest := v1.ImageUpdateRequest{
@@ -154,10 +154,10 @@ func TestUpdateImage(t *testing.T) {
 				Meta: &mdv1.Meta{
 					Id: testdata.Img1.ID,
 				},
-				Name:        util.ToStringValue(testdata.Img2.Name),
-				Description: util.ToStringValue(testdata.Img2.Description),
+				Name:        util.StringProto(testdata.Img2.Name),
+				Description: util.StringProto(testdata.Img2.Description),
 			},
-			URL: util.ToStringValue(testdata.Img2.URL),
+			URL: util.StringProto(testdata.Img2.URL),
 		},
 	}
 	js, _ := json.Marshal(updateRequest)

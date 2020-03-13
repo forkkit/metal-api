@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -31,7 +31,7 @@ func NewSizeMatchingLog(m *metal.SizeMatchingLog) *SizeMatchingLog {
 	for i := range m.Constraints {
 		constraint := SizeConstraintMatchingLog{
 			Constraint: v1.SizeConstraint{
-				Type: service.ToConstraintType(m.Constraints[i].Constraint.Type),
+				Type: ToConstraintType(m.Constraints[i].Constraint.Type),
 				Min:  m.Constraints[i].Constraint.Min,
 				Max:  m.Constraints[i].Constraint.Max,
 			},
@@ -55,7 +55,7 @@ func (r *sizeResource) fromHardware(request *restful.Request, response *restful.
 		return
 	}
 
-	hw := service.NewMetalMachineHardware(&requestPayload)
+	hw := machine.NewMetalMachineHardware(&requestPayload)
 	_, lg, err := r.ds.FromHardware(hw)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return

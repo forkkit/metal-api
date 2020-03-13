@@ -2,7 +2,6 @@ package ip
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -17,7 +16,7 @@ func (r *ipResource) findIP(request *restful.Request, response *restful.Response
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewIPResponse(ip))
+	err = response.WriteHeaderAndEntity(http.StatusOK, NewIPResponse(ip))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

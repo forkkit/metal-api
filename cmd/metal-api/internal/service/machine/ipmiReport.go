@@ -3,7 +3,6 @@ package machine
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
@@ -29,11 +28,11 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 	}
 
 	var ms metal.Machines
-	err = r.ds.SearchMachines(&datastore.MachineSearchQuery{}, &ms)
+	err = r.ds.SearchMachines(&v1.MachineSearchQuery{}, &ms)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	known := v1.Leases{}
+	known := make(map[string]string, len(ms))
 	for _, m := range ms {
 		uuid := m.ID
 		if uuid == "" {
@@ -42,12 +41,12 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 		known[uuid] = m.IPMI.Address
 	}
 	resp := v1.MachineIpmiReportResponse{
-		Updated: v1.Leases{},
-		Created: v1.Leases{},
+		UpdatedLeases: make(map[string]string),
+		CreatedLeases: make(map[string]string),
 	}
 	// create empty machines for uuids that are not yet known to the metal-api
 	const defaultIPMIPort = "623"
-	for uuid, ip := range requestPayload.Leases {
+	for uuid, ip := range requestPayload.ActiveLeases {
 		if uuid == "" {
 			continue
 		}
@@ -68,7 +67,7 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 			logger.Errorf("could not create machine", "id", uuid, "ipmi-ip", ip, "m", m, "err", err)
 			continue
 		}
-		resp.Created[uuid] = ip
+		resp.CreatedLeases[uuid] = ip
 	}
 	// update machine ipmi data if ipmi ip changed
 	for _, oldMachine := range ms {
@@ -77,7 +76,7 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 			continue
 		}
 		// if oldmachine.uuid is not part of this update cycle skip it
-		ip, ok := requestPayload.Leases[uuid]
+		ip, ok := requestPayload.ActiveLeases[uuid]
 		if !ok {
 			continue
 		}
@@ -112,7 +111,7 @@ func (r *machineResource) ipmiReport(request *restful.Request, response *restful
 			logger.Errorf("could not update machine", "id", uuid, "ip", ip, "machine", newMachine, "err", err)
 			continue
 		}
-		resp.Updated[uuid] = ip
+		resp.UpdatedLeases[uuid] = ip
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, resp)
 	if err != nil {

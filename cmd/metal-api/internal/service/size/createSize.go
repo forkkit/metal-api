@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -20,30 +19,24 @@ func (r *sizeResource) createSize(request *restful.Request, response *restful.Re
 		return
 	}
 
-	if requestPayload.ID == "" {
+	size := requestPayload.Size
+
+	if size.Common.Meta.Id == "" {
 		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("id should not be empty")) {
 			return
 		}
 	}
 
-	if requestPayload.ID == metal.UnknownSize.GetID() {
+	if size.Common.Meta.Id == metal.UnknownSize.GetID() {
 		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("id cannot be %q", metal.UnknownSize.GetID())) {
 			return
 		}
 	}
 
-	var name string
-	if requestPayload.Name != nil {
-		name = *requestPayload.Name
-	}
-	var description string
-	if requestPayload.Description != nil {
-		description = *requestPayload.Description
-	}
 	var constraints []metal.Constraint
-	for _, c := range requestPayload.SizeConstraints {
+	for _, c := range size.Constraints {
 		constraint := metal.Constraint{
-			Type: c.Type,
+			Type: mapSizeConstraintType(c.Type),
 			Min:  c.Min,
 			Max:  c.Max,
 		}
@@ -52,9 +45,9 @@ func (r *sizeResource) createSize(request *restful.Request, response *restful.Re
 
 	s := &metal.Size{
 		Base: metal.Base{
-			ID:          requestPayload.ID,
-			Name:        name,
-			Description: description,
+			ID:          size.Common.Meta.Id,
+			Name:        size.Common.Name.GetValue(),
+			Description: size.Common.Description.GetValue(),
 		},
 		Constraints: constraints,
 	}
@@ -63,7 +56,7 @@ func (r *sizeResource) createSize(request *restful.Request, response *restful.Re
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewSizeResponse(s))
+	err = response.WriteHeaderAndEntity(http.StatusCreated, NewSizeResponse(s))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

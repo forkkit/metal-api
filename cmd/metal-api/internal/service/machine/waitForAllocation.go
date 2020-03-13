@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/httperrors"
@@ -51,8 +50,8 @@ func (r *machineResource) waitForAllocation(request *restful.Request, response *
 				return a.Err
 			}
 
-			s, p, i, ec := helper.FindMachineReferencedEntities(a.Machine, r.ds, log.Sugar())
-			err := response.WriteHeaderAndEntity(http.StatusOK, service.NewMachineResponse(a.Machine, s, p, i, ec))
+			s, p, i, ec := FindMachineReferencedEntities(a.Machine, r.ds, log.Sugar())
+			err := response.WriteHeaderAndEntity(http.StatusOK, NewMachineResponse(a.Machine, s, p, i, ec))
 			if err != nil {
 				zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 				return nil

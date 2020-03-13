@@ -2,7 +2,6 @@ package machine
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -23,7 +22,7 @@ func (r *machineResource) getProvisioningEventContainer(request *restful.Request
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewMachineRecentProvisioningEvents(ec))
+	err = response.WriteHeaderAndEntity(http.StatusOK, NewMachineRecentProvisioningEvents(ec))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

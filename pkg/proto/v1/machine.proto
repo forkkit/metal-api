@@ -52,7 +52,7 @@ message MachineAllocation {
     string name = 2; // the name of the machine
     google.protobuf.StringValue description = 3; // a description for this machine
     string projectID = 4; // the project id that this machine is assigned to
-    v1.ImageResponse image = 5; // the image assigned to this machine //TODO readonly
+    v1.ImageResponse imageResponse = 5; // the image assigned to this machine //TODO readonly
     repeated MachineNetwork machineNetworks = 6; // the networks of this machine
     string hostname = 7; // the hostname which will be used when creating the machine
     repeated string sshPubKeys = 8; // the public ssh keys to access the machine with
@@ -98,7 +98,7 @@ message MachineBlockDevice {
 message MachineRecentProvisioningEvents {
     repeated MachineProvisioningEvent events = 1; // the log of recent machine provisioning events
     google.protobuf.Timestamp lastEventTime = 2; // the time where the last event was received
-    uint32 incompleteProvisioningCycles = 3; // the amount of incomplete provisioning cycles in the event container
+    string incompleteProvisioningCycles = 3; // the amount of incomplete provisioning cycles in the event container
 }
 
 message MachineProvisioningEvent {
@@ -290,9 +290,9 @@ message MachineNicExtended {
 // A machine representing a bare metal machine
 message Machine {
     v1.Common common = 1;
-    v1.PartitionResponse partition = 2; // the partition assigned to this machine //TODO readonly
+    v1.PartitionResponse partitionResponse = 2; // the partition assigned to this machine //TODO readonly
     string rackID = 3; // the rack assigned to this machine //TODO readonly
-    v1.SizeResponse size = 4; // the size of this machine //TODO readonly
+    v1.SizeResponse sizeResponse = 4; // the size of this machine //TODO readonly
     MachineHardware hardware = 5; // the hardware of this machine
     MachineBIOS BIOS = 6; // bios information of this machine
     MachineAllocation allocation = 7; // the allocation data of an allocated machine

@@ -51,7 +51,7 @@ func (pcc partitionCapacityCollector) Collect(ch chan<- prometheus.Metric) {
 				capacityTotalDesc,
 				prometheus.CounterValue,
 				float64(sc.Total),
-				pc.ID,
+				pc.Meta.Id,
 				sc.Size,
 			)
 			if err != nil {
@@ -64,7 +64,7 @@ func (pcc partitionCapacityCollector) Collect(ch chan<- prometheus.Metric) {
 				capacityFreeDesc,
 				prometheus.CounterValue,
 				float64(sc.Free),
-				pc.ID,
+				pc.Meta.Id,
 				sc.Size,
 			)
 			if err != nil {
@@ -76,7 +76,7 @@ func (pcc partitionCapacityCollector) Collect(ch chan<- prometheus.Metric) {
 				capacityAllocatedDesc,
 				prometheus.CounterValue,
 				float64(sc.Allocated),
-				pc.ID,
+				pc.Meta.Id,
 				sc.Size,
 			)
 			if err != nil {
@@ -88,7 +88,7 @@ func (pcc partitionCapacityCollector) Collect(ch chan<- prometheus.Metric) {
 				capacityFaultyDesc,
 				prometheus.CounterValue,
 				float64(sc.Faulty),
-				pc.ID,
+				pc.Meta.Id,
 				sc.Size,
 			)
 			if err != nil {

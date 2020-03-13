@@ -33,7 +33,7 @@ func TestGetIPs(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	ipservice := NewIP(ds, ipam.New(goipam.New()), nil)
+	ipservice := NewIPService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipservice)
 	req := httptest.NewRequest("GET", "/v1/ip", nil)
 	container = helper.InjectViewer(container, req)
@@ -59,7 +59,7 @@ func TestGetIP(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	ipservice := NewIP(ds, ipam.New(goipam.New()), nil)
+	ipservice := NewIPService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipservice)
 	req := httptest.NewRequest("GET", "/v1/ip/1.2.3.4", nil)
 	container = helper.InjectViewer(container, req)
@@ -80,7 +80,7 @@ func TestGetIPNotFound(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	ipservice := NewIP(ds, ipam.New(goipam.New()), nil)
+	ipservice := NewIPService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipservice)
 	req := httptest.NewRequest("GET", "/v1/ip/9.9.9.9", nil)
 	container = helper.InjectViewer(container, req)
@@ -103,7 +103,7 @@ func TestDeleteIP(t *testing.T) {
 	require.Nil(t, err)
 	testdata.InitMockDBData(mock)
 
-	ipservice := NewIP(ds, ipamer, nil)
+	ipservice := NewIPService(ds, ipamer, nil)
 	container := restful.NewContainer().Add(ipservice)
 
 	tests := []struct {
@@ -162,7 +162,7 @@ func TestAllocateIP(t *testing.T) {
 
 	mdc := mdm.NewMock(&psc, &tsc)
 
-	ipservice := NewIP(ds, ipamer, mdc)
+	ipservice := NewIPService(ds, ipamer, mdc)
 	container := restful.NewContainer().Add(ipservice)
 
 	tests := []struct {
@@ -177,8 +177,8 @@ func TestAllocateIP(t *testing.T) {
 			allocateRequest: v1.IPAllocateRequest{
 				IP: &v1.IP{
 					Common: &v1.Common{
-						Name:        util.ToStringValue(""),
-						Description: util.ToStringValue(""),
+						Name:        util.StringProto(""),
+						Description: util.StringProto(""),
 					},
 					ProjectID: "123",
 					NetworkID: testdata.NwIPAM.ID,
@@ -194,8 +194,8 @@ func TestAllocateIP(t *testing.T) {
 			allocateRequest: v1.IPAllocateRequest{
 				IP: &v1.IP{
 					Common: &v1.Common{
-						Name:        util.ToStringValue(""),
-						Description: util.ToStringValue(""),
+						Name:        util.StringProto(""),
+						Description: util.StringProto(""),
 					},
 					ProjectID: "123",
 					NetworkID: testdata.NwIPAM.ID,
@@ -209,7 +209,7 @@ func TestAllocateIP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.allocateRequest.IP.Common.Name = util.ToStringValue(tt.name)
+			tt.allocateRequest.IP.Common.Name = util.StringProto(tt.name)
 			js, _ := json.Marshal(tt.allocateRequest)
 			body := bytes.NewBuffer(js)
 			req := httptest.NewRequest("POST", "/v1/ip/allocate", body)
@@ -235,7 +235,7 @@ func TestUpdateIP(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	ipservice := NewIP(ds, ipam.New(goipam.New()), nil)
+	ipservice := NewIPService(ds, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(ipservice)
 	machineIDTag1 := tag.MachineID + "=" + "1"
 	tests := []struct {
@@ -248,8 +248,8 @@ func TestUpdateIP(t *testing.T) {
 			name: "update ip name",
 			updateRequest: v1.IPUpdateRequest{
 				Common: &v1.Common{
-					Name:        util.ToStringValue(testdata.IP2.Name),
-					Description: util.ToStringValue(testdata.IP2.Description),
+					Name:        util.StringProto(testdata.IP2.Name),
+					Description: util.StringProto(testdata.IP2.Description),
 				},
 				Identifiable: &v1.IPIdentifiable{
 					IPAddress: testdata.IP1.IPAddress,
@@ -261,8 +261,8 @@ func TestUpdateIP(t *testing.T) {
 			name: "moving from ephemeral to static",
 			updateRequest: v1.IPUpdateRequest{
 				Common: &v1.Common{
-					Name:        util.ToStringValue(""),
-					Description: util.ToStringValue(""),
+					Name:        util.StringProto(""),
+					Description: util.StringProto(""),
 				},
 				Identifiable: &v1.IPIdentifiable{
 					IPAddress: testdata.IP1.IPAddress,
@@ -275,8 +275,8 @@ func TestUpdateIP(t *testing.T) {
 			name: "moving from static to ephemeral must not be allowed",
 			updateRequest: v1.IPUpdateRequest{
 				Common: &v1.Common{
-					Name:        util.ToStringValue(""),
-					Description: util.ToStringValue(""),
+					Name:        util.StringProto(""),
+					Description: util.StringProto(""),
 				},
 				Identifiable: &v1.IPIdentifiable{
 					IPAddress: testdata.IP2.IPAddress,
@@ -289,14 +289,14 @@ func TestUpdateIP(t *testing.T) {
 			name: "internal tag machine is allowed",
 			updateRequest: v1.IPUpdateRequest{
 				Common: &v1.Common{
-					Name:        util.ToStringValue(""),
-					Description: util.ToStringValue(""),
+					Name:        util.StringProto(""),
+					Description: util.StringProto(""),
 				},
 				Identifiable: &v1.IPIdentifiable{
 					IPAddress: testdata.IP3.IPAddress,
 				},
 				Type: v1.IP_STATIC,
-				Tags: util.ToStringValueSlice(machineIDTag1),
+				Tags: util.StringSliceProto(machineIDTag1),
 			},
 			wantedStatus: http.StatusOK,
 		},

@@ -5,8 +5,8 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -32,7 +32,7 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 		return
 	}
 
-	machineHardware := service.NewMetalMachineHardware(&requestPayload.Hardware)
+	machineHardware := NewMetalMachineHardware(requestPayload.Hardware)
 	size, _, err := r.ds.FromHardware(machineHardware)
 	if err != nil {
 		size = metal.UnknownSize
@@ -75,8 +75,8 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 				Value:       metal.LEDStateOff,
 				Description: "Machine registered",
 			},
-			Tags: requestPayload.Tags,
-			IPMI: service.NewMetalIPMI(&requestPayload.IPMI),
+			Tags: util.StringSlice(requestPayload.Tags),
+			IPMI: NewMetalIPMI(requestPayload.IPMI),
 		}
 
 		err = r.ds.CreateMachine(m)
@@ -96,7 +96,7 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 		m.BIOS.Version = requestPayload.BIOS.Version
 		m.BIOS.Vendor = requestPayload.BIOS.Vendor
 		m.BIOS.Date = requestPayload.BIOS.Date
-		m.IPMI = service.NewMetalIPMI(&requestPayload.IPMI)
+		m.IPMI = NewMetalIPMI(requestPayload.IPMI)
 
 		err = r.ds.UpdateMachine(&old, m)
 		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
@@ -122,11 +122,11 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 		}
 	}
 
-	err = helper.ConnectMachineWithSwitches(r.ds, m)
+	err = sw.ConnectMachineWithSwitches(r.ds, m)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(returnCode, helper.MakeMachineResponse(m, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(returnCode, MakeMachineResponse(m, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

@@ -29,17 +29,19 @@ func TestRegisterSwitch(t *testing.T) {
 
 	name := "switch999"
 	createRequest := v1.SwitchRegisterRequest{
-		Common: Common{
-			Identifiable: service.Identifiable{
-				ID: "switch999",
+		Switch: &v1.Switch{
+			Common: &v1.Common{
+				Identifiable: service.Identifiable{
+					ID: "switch999",
+				},
+				Describable: service.Describable{
+					Name: &name,
+				},
 			},
-			Describable: service.Describable{
-				Name: &name,
+			PartitionID: "1",
+			SwitchBase: v1.SwitchBase{
+				RackID: "1",
 			},
-		},
-		PartitionID: "1",
-		SwitchBase: v1.SwitchBase{
-			RackID: "1",
 		},
 	}
 	js, _ := json.Marshal(createRequest)
@@ -117,7 +119,7 @@ func TestRegisterExistingSwitchErrorModifyingNics(t *testing.T) {
 				ID: testdata.Switch1.ID,
 			},
 		},
-		Nics:        service.SwitchNics{},
+		Nics:        SwitchNics{},
 		PartitionID: testdata.Switch1.PartitionID,
 		SwitchBase: v1.SwitchBase{
 			RackID: testdata.Switch1.RackID,
@@ -249,7 +251,7 @@ func TestMakeBGPFilterFirewall(t *testing.T) {
 					},
 				},
 			},
-			want: service.NewBGPFilter([]string{"104009", "104010"}, []string{"10.0.0.1/32", "10.0.0.2/32"}),
+			want: NewBGPFilter([]string{"104009", "104010"}, []string{"10.0.0.1/32", "10.0.0.2/32"}),
 		},
 		{
 			name: "no underlay firewall networks",
@@ -346,7 +348,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 					},
 				},
 			},
-			want: service.NewBGPFilter(nil, []string{"10.1.0.0/22", "10.2.0.0/22", "100.127.1.1/32", "212.89.42.1/32", "212.89.42.2/32"}),
+			want: NewBGPFilter(nil, []string{"10.1.0.0/22", "10.2.0.0/22", "100.127.1.1/32", "212.89.42.1/32", "212.89.42.2/32"}),
 		},
 		{
 			name: "allow only allocated ips",
@@ -368,7 +370,7 @@ func TestMakeBGPFilterMachine(t *testing.T) {
 					},
 				},
 			},
-			want: service.NewBGPFilter(nil, []string{"212.89.42.1/32"}),
+			want: NewBGPFilter(nil, []string{"212.89.42.1/32"}),
 		},
 	}
 	for _, tt := range tests {
@@ -391,7 +393,7 @@ func TestMakeSwitchNics(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want service.SwitchNics
+		want SwitchNics
 	}{
 		{
 			name: "machine and firewall bgp filter",
@@ -458,7 +460,7 @@ func TestMakeSwitchNics(t *testing.T) {
 					},
 				},
 			},
-			want: service.SwitchNics{
+			want: SwitchNics{
 				v1.SwitchNic{
 					Name: "swp1",
 					Vrf:  "vrf1",

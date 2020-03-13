@@ -13,6 +13,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/ip"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
+	"github.com/metal-stack/metal-lib/pkg/tag"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -133,7 +134,7 @@ func Allocate(ds *datastore.RethinkStore, ipamer ipam.IPAMer, allocationSpec *Al
 		mq := p.GetProject().GetQuotas().GetMachine()
 		maxMachines := mq.GetQuota().GetValue()
 		var actualMachines metal.Machines
-		err := ds.SearchMachines(&v1.MachineSearchQuery{AllocationProject: util.ToStringValue(projectID)}, &actualMachines)
+		err := ds.SearchMachines(&v1.MachineSearchQuery{AllocationProject: util.StringProto(projectID)}, &actualMachines)
 		if err != nil {
 			return nil, err
 		}
@@ -328,7 +329,7 @@ func gatherNetworks(ds *datastore.RethinkStore, allocationSpec *AllocationSpec) 
 	}
 
 	var privateSuperNetworks metal.Networks
-	err = ds.SearchNetworks(&v1.NetworkSearchQuery{PrivateSuper: util.ToBoolValue(true)}, &privateSuperNetworks)
+	err = ds.SearchNetworks(&v1.NetworkSearchQuery{PrivateSuper: util.BoolProto(true)}, &privateSuperNetworks)
 	if err != nil {
 		return nil, errors.Wrap(err, "partition has no private super network")
 	}
@@ -464,8 +465,8 @@ func GatherNetworksFromSpec(ds *datastore.RethinkStore, allocationSpec *Allocati
 func gatherUnderlayNetwork(ds *datastore.RethinkStore, partition *metal.Partition) (*AllocationNetwork, error) {
 	var underlays metal.Networks
 	err := ds.SearchNetworks(&v1.NetworkSearchQuery{
-		PartitionID: util.ToStringValue(partition.ID),
-		Underlay:    util.ToBoolValue(true),
+		PartitionID: util.StringProto(partition.ID),
+		Underlay:    util.BoolProto(true),
 	}, &underlays)
 	if err != nil {
 		return nil, err
@@ -612,16 +613,16 @@ func makeMachineSystemLabels(m *metal.Machine) map[string]string {
 	for _, n := range m.Allocation.MachineNetworks {
 		if n.Private {
 			if n.ASN != 0 {
-				labels[fmt.Sprintf("%s/%s", metal.MachineLabelPrefix, "network.primary.asn")] = strconv.FormatInt(n.ASN, 10)
+				labels[tag.MachineNetworkPrimaryASN] = strconv.FormatInt(n.ASN, 10)
 				break
 			}
 		}
 	}
 	if m.RackID != "" {
-		labels[fmt.Sprintf("%s/%s", metal.MachineLabelPrefix, "rack")] = m.RackID
+		labels[tag.MachineRack] = m.RackID
 	}
 	if m.IPMI.Fru.ChassisPartSerial != "" {
-		labels[fmt.Sprintf("%s/%s", metal.MachineLabelPrefix, "chassis")] = m.IPMI.Fru.ChassisPartSerial
+		labels[tag.MachineChassis] = m.IPMI.Fru.ChassisPartSerial
 	}
 	return labels
 }

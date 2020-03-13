@@ -38,7 +38,7 @@ func (ip *IPFindRequest) GenerateTerm(q r.Term) *r.Term {
 	}
 
 	if ip.MachineID != nil {
-		ip.Tags = append(ip.Tags, util.ToStringValue(IpTag(tag.MachineID, ip.MachineID.GetValue())))
+		ip.Tags = append(ip.Tags, util.StringProto(IpTag(tag.MachineID, ip.MachineID.GetValue())))
 	}
 
 	for _, tag := range ip.Tags {

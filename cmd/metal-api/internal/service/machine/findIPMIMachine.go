@@ -4,7 +4,6 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -28,6 +27,6 @@ func (r *machineResource) findIPMIMachine(request *restful.Request, response *re
 }
 
 func makeMachineIPMIResponse(m *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.MachineIPMIResponse {
-	s, p, i, ec := helper.FindMachineReferencedEntities(m, ds, logger)
-	return service.NewMachineIPMIResponse(m, s, p, i, ec)
+	s, p, i, ec := FindMachineReferencedEntities(m, ds, logger)
+	return NewMachineIPMIResponse(m, s, p, i, ec)
 }

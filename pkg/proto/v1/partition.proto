@@ -24,7 +24,7 @@ message Partition {
     google.protobuf.StringValue KernelURL = 3;   // the url to download the kernel for the boot image
     google.protobuf.StringValue CommandLine = 4; // the cmdline to the kernel for the boot image
     google.protobuf.StringValue mgmtServiceAddress = 5;        // the address to the management service of this partition
-    google.protobuf.Int64Value privateNetworkPrefixLength = 6; // the length of private networks for the machine's child networks in this partition, minimum 16, maximum 30, default 22
+    google.protobuf.UInt32Value privateNetworkPrefixLength = 6; // the length of private networks for the machine's child networks in this partition, minimum 16, maximum 30, default 22
 }
 
 message PartitionCreateRequest {
@@ -55,4 +55,17 @@ message PartitionListRequest {}
 
 message PartitionListResponse {
     repeated Partition partitions = 1;
+}
+
+message ServerCapacity {
+    string size = 1;      // the size of the server
+    uint64 total = 2;     // total amount of servers with this size
+    uint64 free = 3;      // free servers with this size
+    uint64 allocated = 4; // allocated servers with this size
+    uint64 faulty = 5;    // servers with issues with this size
+}
+
+message PartitionCapacity {
+    v1.Common common = 1;
+    repeated ServerCapacity serverCapacities = 2; // servers available in this partition
 }

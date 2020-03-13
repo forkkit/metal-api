@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -20,19 +19,15 @@ func (r *networkResource) updateNetwork(request *restful.Request, response *rest
 		return
 	}
 
-	oldNetwork, err := r.ds.FindNetworkByID(requestPayload.ID)
+	oldNetwork, err := r.ds.FindNetworkByID(requestPayload.Common.Meta.Id)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	newNetwork := *oldNetwork
 
-	if requestPayload.Name != nil {
-		newNetwork.Name = *requestPayload.Name
-	}
-	if requestPayload.Description != nil {
-		newNetwork.Description = *requestPayload.Description
-	}
+	newNetwork.Name = requestPayload.Common.Name.GetValue()
+	newNetwork.Description = requestPayload.Common.Description.GetValue()
 
 	var prefixesToBeRemoved metal.Prefixes
 	var prefixesToBeAdded metal.Prefixes
@@ -57,7 +52,7 @@ func (r *networkResource) updateNetwork(request *restful.Request, response *rest
 		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
-		err = helper.CheckAnyIPOfPrefixesInUse(allIPs, prefixesToBeRemoved)
+		err = CheckAnyIPOfPrefixesInUse(allIPs, prefixesToBeRemoved)
 		if err != nil {
 			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("unable to update Network: %v", err)) {
 				return
@@ -86,8 +81,8 @@ func (r *networkResource) updateNetwork(request *restful.Request, response *rest
 		return
 	}
 
-	usage := helper.GetNetworkUsage(&newNetwork, r.ipamer)
-	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewNetworkResponse(&newNetwork, usage))
+	usage := GetNetworkUsage(&newNetwork, r.ipamer)
+	err = response.WriteHeaderAndEntity(http.StatusOK, NewNetworkResponse(&newNetwork, usage))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -23,43 +21,17 @@ func (r *networkResource) createNetwork(request *restful.Request, response *rest
 		return
 	}
 
-	var id string
-	if requestPayload.ID != nil {
-		id = *requestPayload.ID
-	}
-	var name string
-	if requestPayload.Name != nil {
-		name = *requestPayload.Name
-	}
-	var description string
-	if requestPayload.Description != nil {
-		description = *requestPayload.Description
-	}
-	var projectID string
-	if requestPayload.ProjectID != nil {
-		projectID = *requestPayload.ProjectID
-	}
-	var vrf uint
-	if requestPayload.Vrf != nil {
-		vrf = *requestPayload.Vrf
-	}
-	vrfShared := false
-	if requestPayload.VrfShared != nil {
-		vrfShared = *requestPayload.VrfShared
-	}
+	nw := requestPayload.Network
+	nwi := requestPayload.NetworkImmutable
 
-	privateSuper := requestPayload.PrivateSuper
-	underlay := requestPayload.Underlay
-	nat := requestPayload.Nat
-
-	if projectID != "" {
-		_, err = r.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: projectID})
+	if nw.ProjectID.GetValue() != "" {
+		_, err = r.mdc.Project().Get(context.Background(), &mdmv1.ProjectGetRequest{Id: nw.ProjectID.GetValue()})
 		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
 
-	if len(requestPayload.Prefixes) == 0 {
+	if len(nwi.Prefixes) == 0 {
 		// TODO: Should return a bad request 401
 		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("no prefixes given")) {
 			return
@@ -67,7 +39,7 @@ func (r *networkResource) createNetwork(request *restful.Request, response *rest
 	}
 	prefixes := metal.Prefixes{}
 	// all Prefixes must be valid
-	for _, p := range requestPayload.Prefixes {
+	for _, p := range nwi.Prefixes {
 		prefix, err := metal.NewPrefixFromCIDR(p)
 		// TODO: Should return a bad request 401
 		if err != nil {
@@ -79,7 +51,7 @@ func (r *networkResource) createNetwork(request *restful.Request, response *rest
 	}
 
 	destPrefixes := metal.Prefixes{}
-	for _, p := range requestPayload.DestinationPrefixes {
+	for _, p := range nwi.DestinationPrefixes {
 		prefix, err := metal.NewPrefixFromCIDR(p)
 		if err != nil {
 			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("given prefix %v is not a valid ip with mask: %v", p, err)) {
@@ -111,15 +83,17 @@ func (r *networkResource) createNetwork(request *restful.Request, response *rest
 	}
 
 	var partitionID string
-	if requestPayload.PartitionID != nil {
-		partition, err := r.ds.FindPartition(*requestPayload.PartitionID)
+	if nw.PartitionID != nil {
+		partition, err := r.ds.FindPartition(nw.PartitionID.GetValue())
 		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 
-		if privateSuper {
-			boolTrue := true
-			err := r.ds.FindNetwork(&datastore.NetworkSearchQuery{PartitionID: &partition.ID, PrivateSuper: &boolTrue}, &metal.Network{})
+		if nwi.PrivateSuper {
+			err := r.ds.FindNetwork(&v1.NetworkSearchQuery{
+				PartitionID:  util.StringProto(partition.ID),
+				PrivateSuper: util.BoolProto(true),
+			}, &metal.Network{})
 			if err != nil {
 				if !metal.IsNotFound(err) {
 					if helper.CheckError(request, response, util.CurrentFuncName(), err) {
@@ -132,9 +106,11 @@ func (r *networkResource) createNetwork(request *restful.Request, response *rest
 				}
 			}
 		}
-		if underlay {
-			boolTrue := true
-			err := r.ds.FindNetwork(&datastore.NetworkSearchQuery{PartitionID: &partition.ID, Underlay: &boolTrue}, &metal.Network{})
+		if nwi.Underlay {
+			err := r.ds.FindNetwork(&v1.NetworkSearchQuery{
+				PartitionID:  util.StringProto(partition.ID),
+				PrivateSuper: util.BoolProto(true),
+			}, &metal.Network{})
 			if err != nil {
 				if !metal.IsNotFound(err) {
 					if helper.CheckError(request, response, util.CurrentFuncName(), err) {
@@ -150,20 +126,20 @@ func (r *networkResource) createNetwork(request *restful.Request, response *rest
 		partitionID = partition.ID
 	}
 
-	if (privateSuper || underlay) && nat {
+	if (nwi.PrivateSuper || nwi.Underlay) && nwi.Nat {
 		helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("private super or underlay network is not supposed to NAT"))
 		return
 	}
 
-	if vrf != 0 {
-		_, err := r.ds.AcquireUniqueInteger(vrf)
+	if nwi.Vrf.GetValue() != 0 {
+		_, err := r.ds.AcquireUniqueInteger(uint(nwi.Vrf.GetValue()))
 		if err != nil {
 			if !metal.IsConflict(err) {
 				if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("could not acquire vrf: %v", err)) {
 					return
 				}
 			}
-			if !vrfShared {
+			if !nwi.VrfShared.GetValue() {
 				if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("cannot acquire a unique vrf id twice except vrfShared is set to true: %v", err)) {
 					return
 				}
@@ -171,36 +147,36 @@ func (r *networkResource) createNetwork(request *restful.Request, response *rest
 		}
 	}
 
-	nw := &metal.Network{
+	network := &metal.Network{
 		Base: metal.Base{
-			ID:          id,
-			Name:        name,
-			Description: description,
+			ID:          nw.Common.Meta.Id,
+			Name:        nw.Common.Name.GetValue(),
+			Description: nw.Common.Description.GetValue(),
 		},
 		Prefixes:            prefixes,
 		DestinationPrefixes: destPrefixes,
 		PartitionID:         partitionID,
-		ProjectID:           projectID,
-		Nat:                 nat,
-		PrivateSuper:        privateSuper,
-		Underlay:            underlay,
-		Vrf:                 vrf,
+		ProjectID:           nw.ProjectID.GetValue(),
+		Nat:                 nwi.Nat,
+		PrivateSuper:        nwi.PrivateSuper,
+		Underlay:            nwi.Underlay,
+		Vrf:                 uint(nwi.Vrf.GetValue()),
 	}
 
-	for _, p := range nw.Prefixes {
+	for _, p := range network.Prefixes {
 		err := r.ipamer.CreatePrefix(p)
 		if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 			return
 		}
 	}
 
-	err = r.ds.CreateNetwork(nw)
+	err = r.ds.CreateNetwork(network)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
-	usage := helper.GetNetworkUsage(nw, r.ipamer)
-	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewNetworkResponse(nw, usage))
+	usage := GetNetworkUsage(network, r.ipamer)
+	err = response.WriteHeaderAndEntity(http.StatusCreated, NewNetworkResponse(network, usage))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

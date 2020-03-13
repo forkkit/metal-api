@@ -15,13 +15,6 @@ const (
 	AvailableState MState = ""
 	ReservedState  MState = "RESERVED"
 	LockedState    MState = "LOCKED"
-
-	MachineLabelPrefix = "machine.metal-pod.io"
-)
-
-var (
-	// AllStates contains all possible values of a machine state
-	AllStates = []MState{AvailableState, ReservedState, LockedState}
 )
 
 // A MachineState describes the state of a machine. If the Value is AvailableState,
@@ -174,8 +167,11 @@ const (
 	MachineLivelinessAlive   MachineLiveliness = "Alive"
 	MachineLivelinessDead    MachineLiveliness = "Dead"
 	MachineLivelinessUnknown MachineLiveliness = "Unknown"
-	MachineDeadAfter         time.Duration     = 5 * time.Minute
-	MachineResurrectAfter    time.Duration     = time.Hour
+)
+
+const (
+	MachineDeadAfter      = 5 * time.Minute
+	MachineResurrectAfter = time.Hour
 )
 
 // Is return true if given liveliness is equal to specific Liveliness

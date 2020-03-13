@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -43,7 +42,7 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	returnCode := http.StatusOK
 
 	if s == nil {
-		s = service.FromSwitch(sw)
+		s = FromSwitch(sw)
 
 		if len(sw.Nics) != len(s.Nics.ByMac()) {
 			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {
@@ -64,7 +63,7 @@ func (r *switchResource) registerSwitch(request *restful.Request, response *rest
 	} else {
 		old := *s
 
-		spec := service.FromSwitch(sw)
+		spec := FromSwitch(sw)
 
 		if len(sw.Nics) != len(spec.Nics.ByMac()) {
 			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("duplicate mac addresses found in nics")) {

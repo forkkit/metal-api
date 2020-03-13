@@ -12,6 +12,7 @@ service NetworkService {
     rpc Update(NetworkUpdateRequest) returns (NetworkResponse);
 //    rpc Delete(NetworkDeleteRequest) returns (NetworkResponse);
 //    rpc Get(NetworkGetRequest) returns (NetworkResponse);
+    rpc Allocate(NetworkAllocateRequest) returns (NetworkResponse);
     rpc Find(NetworkFindRequest) returns (NetworkListResponse);
     rpc List(NetworkListRequest) returns (NetworkListResponse);
 }
@@ -65,7 +66,7 @@ message NetworkCreateRequest {
 }
 
 message NetworkUpdateRequest {
-    Network network = 1;
+    v1.Common common = 1;
     repeated string prefixes = 2; // the prefixes of this network
 }
 
@@ -79,6 +80,10 @@ message NetworkUpdateRequest {
 
 message NetworkFindRequest {
     NetworkSearchQuery networkSearchQuery = 1;
+}
+
+message NetworkAllocateRequest {
+    Network network = 1;
 }
 
 message NetworkResponse {

@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
-	image2 "github.com/metal-stack/metal-api/pkg/image"
-	"github.com/metal-stack/metal-api/pkg/ip"
-	"github.com/metal-stack/metal-api/pkg/machine"
-	"github.com/metal-stack/metal-api/pkg/network"
-	partition2 "github.com/metal-stack/metal-api/pkg/partition"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/image"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/ip"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/network"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/partition"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/size"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
-	size2 "github.com/metal-stack/metal-api/pkg/size"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -28,7 +28,6 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/eventbus"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/ipam"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 )
@@ -66,13 +65,13 @@ func createTestEnvironment(t *testing.T) testEnv {
 	mdc, err := mdm.NewClient(timeoutCtx, "localhost", 50051, "certs/client.pem", "certs/client-key.pem", "certs/ca.pem", "hmac", log)
 	require.NoError(err)
 
-	machineService := machine.NewMachine(ds, nsq.Publisher, ipamer, mdc)
-	imageService := image2.NewImage(ds)
-	switchService := NewSwitch(ds)
-	sizeService := size2.NewSize(ds)
-	networkService := network.NewNetwork(ds, ipamer, mdc)
-	partitionService := partition2.NewPartition(ds, nsq)
-	ipService := ip.NewIP(ds, ipamer, mdc)
+	machineService := machine.NewMachineService(ds, nsq.Publisher, ipamer, mdc)
+	imageService := image.NewImageService(ds)
+	switchService := NewSwitchService(ds)
+	sizeService := size.NewSizeService(ds)
+	networkService := network.NewNetworkService(ds, ipamer, mdc)
+	partitionService := partition.NewPartitionService(ds, nsq)
+	ipService := ip.NewIPService(ds, ipamer, mdc)
 
 	te := testEnv{
 		imageService:     imageService,
@@ -175,7 +174,7 @@ func createTestEnvironment(t *testing.T) testEnv {
 		SwitchBase: v1.SwitchBase{
 			RackID: "test-rack",
 		},
-		Nics: service.SwitchNics{
+		Nics: SwitchNics{
 			{
 				MacAddress: "bb:aa:aa:aa:aa:aa",
 				Name:       "swp1",

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -54,7 +53,7 @@ func (r *machineResource) addProvisioningEvent(request *restful.Request, respons
 		return
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewMachineRecentProvisioningEvents(ec))
+	err = response.WriteHeaderAndEntity(http.StatusOK, NewMachineRecentProvisioningEvents(ec))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return
@@ -81,7 +80,7 @@ func (r *machineResource) provisioningEventForMachine(machineID string, e v1.Mac
 	event := metal.ProvisioningEvent{
 		Time:    now,
 		Event:   metal.ProvisioningEventType(e.Event),
-		Message: e.Message,
+		Message: e.Message.GetValue(),
 	}
 	if event.Event == metal.ProvisioningEventAlive {
 		zapup.MustRootLogger().Sugar().Debugw("received provisioning alive event", "id", ec.ID)

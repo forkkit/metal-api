@@ -430,19 +430,19 @@ func initRestServices(withauth bool) *restfulspec.Config {
 	}
 
 	lg := logger.Desugar()
-	restful.DefaultContainer.Add(partition.NewPartition(ds, nsqer))
-	restful.DefaultContainer.Add(image.NewImage(ds))
-	restful.DefaultContainer.Add(size.NewSize(ds))
-	restful.DefaultContainer.Add(network.NewNetwork(ds, ipamer, mdc))
-	restful.DefaultContainer.Add(ip.NewIP(ds, ipamer, mdc))
+	restful.DefaultContainer.Add(partition.NewPartitionService(ds, nsqer))
+	restful.DefaultContainer.Add(image.NewImageService(ds))
+	restful.DefaultContainer.Add(size.NewSizeService(ds))
+	restful.DefaultContainer.Add(network.NewNetworkService(ds, ipamer, mdc))
+	restful.DefaultContainer.Add(ip.NewIPService(ds, ipamer, mdc))
 	var p bus.Publisher
 	if nsqer != nil {
 		p = nsqer.Publisher
 	}
-	restful.DefaultContainer.Add(machine.NewMachine(ds, p, ipamer, mdc))
-	restful.DefaultContainer.Add(project.NewProject(ds, mdc))
-	restful.DefaultContainer.Add(firewall.NewFirewall(ds, ipamer, mdc))
-	restful.DefaultContainer.Add(sw.NewSwitch(ds))
+	restful.DefaultContainer.Add(machine.NewMachineService(ds, p, ipamer, mdc))
+	restful.DefaultContainer.Add(project.NewProjectService(ds, mdc))
+	restful.DefaultContainer.Add(firewall.NewFirewallService(ds, ipamer, mdc))
+	restful.DefaultContainer.Add(sw.NewSwitchService(ds))
 	restful.DefaultContainer.Add(rest.NewHealth(lg, service.BasePath, ds.Health))
 	restful.DefaultContainer.Add(rest.NewVersion(moduleName, service.BasePath))
 	restful.DefaultContainer.Filter(rest.RequestLogger(debug, lg))

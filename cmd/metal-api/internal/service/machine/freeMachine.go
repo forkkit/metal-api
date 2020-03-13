@@ -5,6 +5,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"go.uber.org/zap"
 	"net/http"
@@ -113,7 +114,7 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 	// do the next steps in any case, so a client can call this function multiple times to
 	// fire of the needed events
 
-	sw, err := helper.SetVrfAtSwitches(r.ds, m, "")
+	sw, err := sw.SetVrfAtSwitches(r.ds, m, "")
 	log.Infow("set VRF at switch", "machineID", id, "error", err)
 	if err != nil {
 		return err
@@ -133,7 +134,7 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 		return err
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusOK, helper.MakeMachineResponse(m, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, MakeMachineResponse(m, r.ds, util.Logger(request).Sugar()))
 	if err != nil {
 		log.Error("Failed to send response", zap.Error(err))
 	}

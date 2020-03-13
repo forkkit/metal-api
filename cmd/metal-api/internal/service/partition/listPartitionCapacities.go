@@ -2,9 +2,10 @@ package partition
 
 import (
 	"github.com/emicklei/go-restful"
+	mdmv1 "github.com/metal-stack/masterdata-api/api/v1"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/machine"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -21,7 +22,7 @@ type ServerCapacity struct {
 }
 
 type PartitionCapacity struct {
-	v1.Common
+	*v1.Common
 	ServerCapacities []ServerCapacity `json:"servers" description:"servers available in this partition"`
 }
 
@@ -51,21 +52,22 @@ func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, erro
 	if err != nil {
 		return nil, err
 	}
-	machines := helper.MakeMachineResponseList(ms, r.ds, zapup.MustRootLogger().Sugar())
+	machines := machine.MakeMachineResponseList(ms, r.ds, zapup.MustRootLogger().Sugar())
 
 	var partitionCapacities []PartitionCapacity
 	for _, p := range ps {
 		capacities := make(map[string]ServerCapacity)
-		for _, m := range machines {
-			if m.Partition == nil {
+		for _, machineResponse := range machines {
+			m := machineResponse.Machine
+			if m.PartitionResponse == nil {
 				continue
 			}
-			if m.Partition.ID != p.ID {
+			if m.PartitionResponse.Partition.Common.Meta.Id != p.ID {
 				continue
 			}
 			size := "unknown"
-			if m.Size != nil {
-				size = m.Size.ID
+			if m.SizeResponse != nil {
+				size = m.SizeResponse.Size.Common.Meta.Id
 			}
 			available := false
 			if len(m.RecentProvisioningEvents.Events) > 0 {
@@ -86,21 +88,20 @@ func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, erro
 			if m.Allocation != nil {
 				allocated = 1
 			}
-			if helper.MachineHasIssues(m) {
+			if machine.MachineHasIssues(machineResponse) {
 				faulty = 1
 			}
 			if available && allocated != 1 && faulty != 1 {
 				free = 1
 			}
 
-			cap := ServerCapacity{
+			capacities[size] = ServerCapacity{
 				Size:      size,
 				Total:     total,
 				Free:      oldCap.Free + free,
 				Allocated: oldCap.Allocated + allocated,
 				Faulty:    oldCap.Faulty + faulty,
 			}
-			capacities[size] = cap
 		}
 		var sc []ServerCapacity
 		for _, c := range capacities {
@@ -108,14 +109,12 @@ func (r *partitionResource) calcPartitionCapacities() ([]PartitionCapacity, erro
 		}
 
 		pc := PartitionCapacity{
-			Common: v1.Common{
-				Identifiable: service.Identifiable{
-					ID: p.ID,
+			Common: &v1.Common{
+				Meta: &mdmv1.Meta{
+					Id: p.ID,
 				},
-				Describable: service.Describable{
-					Name:        &p.Name,
-					Description: &p.Description,
-				},
+				Name:        util.StringProto(p.Name),
+				Description: util.StringProto(p.Description),
 			},
 			ServerCapacities: sc,
 		}

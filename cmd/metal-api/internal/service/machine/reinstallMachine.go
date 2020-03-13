@@ -42,7 +42,7 @@ func (r *machineResource) abortReinstall(machineID string) {
 		}
 	}
 
-	err = helper.PublishMachineCmd(log, m, r, metal.MachineAbortReinstall)
+	err = PublishMachineCmd(log, m, r, metal.MachineAbortReinstall)
 	if err != nil {
 		log.Errorw("unable to publish ’Abort Reinstall' command", "machineID", machineID, "error", err)
 	}

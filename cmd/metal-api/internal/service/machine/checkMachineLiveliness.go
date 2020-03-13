@@ -25,9 +25,9 @@ func (r *machineResource) checkMachineLiveliness(request *restful.Request, respo
 
 	liveliness := make(metrics.PartitionLiveliness)
 
-	unknown := 0
-	alive := 0
-	dead := 0
+	unknown := uint32(0)
+	alive := uint32(0)
+	dead := uint32(0)
 	for _, m := range machines {
 		p := liveliness[m.PartitionID]
 		lvlness, err := r.evaluateMachineLiveliness(m)

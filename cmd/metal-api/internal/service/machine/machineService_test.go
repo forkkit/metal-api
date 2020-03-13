@@ -42,7 +42,7 @@ func TestGetMachines(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
 	req := httptest.NewRequest("GET", "/v1/machine", nil)
 	container = helper.InjectViewer(container, req)
@@ -56,11 +56,11 @@ func TestGetMachines(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Len(t, result, len(testdata.TestMachines))
-	require.Equal(t, testdata.M1.ID, result[0].ID)
-	require.Equal(t, testdata.M1.Allocation.Name, result[0].Allocation.Name)
-	require.Equal(t, testdata.Sz1.Name, *result[0].Size.Name)
-	require.Equal(t, testdata.Partition1.Name, *result[0].Partition.Name)
-	require.Equal(t, testdata.M2.ID, result[1].ID)
+	require.Equal(t, testdata.M1.ID, result[0].Machine.Common.Meta.Id)
+	require.Equal(t, testdata.M1.Allocation.Name, result[0].Machine.Allocation.Name)
+	require.Equal(t, testdata.Sz1.Name, result[0].Machine.SizeResponse.Size.Common.Name.GetValue())
+	require.Equal(t, testdata.Partition1.Name, result[0].Machine.PartitionResponse.Partition.Common.Name.GetValue())
+	require.Equal(t, testdata.M2.ID, result[1].Machine.Common.Meta.Id)
 }
 
 func TestRegisterMachine(t *testing.T) {
@@ -180,7 +180,7 @@ func TestRegisterMachine(t *testing.T) {
 
 			js, _ := json.Marshal(registerRequest)
 			body := bytes.NewBuffer(js)
-			machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+			machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 			container := restful.NewContainer().Add(machineservice)
 			req := httptest.NewRequest("POST", "/v1/machine/register", body)
 			req.Header.Add("Content-Type", "application/json")
@@ -206,7 +206,7 @@ func TestRegisterMachine(t *testing.T) {
 				if len(test.dbmachines) > 0 {
 					expectedid = test.dbmachines[0].ID
 				}
-				require.Equal(t, expectedid, result.ID)
+				require.Equal(t, expectedid, result.Machine.Common.Meta.Id)
 				require.Equal(t, "1", result.RackID)
 				require.Equal(t, test.expectedSizeName, *result.Size.Name)
 				require.Equal(t, testdata.Partition1.Name, *result.Partition.Name)
@@ -253,7 +253,7 @@ func TestMachineIPMIReport(t *testing.T) {
 
 	for _, test := range data {
 		t.Run(test.name, func(t *testing.T) {
-			machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+			machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 			container := restful.NewContainer().Add(machineservice)
 			js, _ := json.Marshal(test.input)
 			body := bytes.NewBuffer(js)
@@ -298,7 +298,7 @@ func TestMachineFindIPMI(t *testing.T) {
 			mock.On(r.DB("mockdb").Table("machine").Filter(r.MockAnything())).Return([]interface{}{*test.machine}, nil)
 			testdata.InitMockDBData(mock)
 
-			machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+			machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 			container := restful.NewContainer().Add(machineservice)
 
 			query := datastore.MachineSearchQuery{
@@ -375,7 +375,7 @@ func TestFinalizeMachineAllocation(t *testing.T) {
 	for _, test := range data {
 		t.Run(test.name, func(t *testing.T) {
 
-			machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+			machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 			container := restful.NewContainer().Add(machineservice)
 
 			finalizeRequest := v1.MachineFinalizeAllocationRequest{
@@ -417,7 +417,7 @@ func TestSetMachineState(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
 
 	stateRequest := v1.MachineState{
@@ -438,7 +438,7 @@ func TestSetMachineState(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, "1", result.ID)
+	require.Equal(t, "1", result.Machine.Common.Meta.Id)
 	require.Equal(t, string(metal.ReservedState), result.State.Value)
 	require.Equal(t, "blubber", result.State.Description)
 }
@@ -447,7 +447,7 @@ func TestGetMachine(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
 	req := httptest.NewRequest("GET", "/v1/machine/1", nil)
 	container = helper.InjectViewer(container, req)
@@ -460,7 +460,7 @@ func TestGetMachine(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.M1.ID, result.ID)
+	require.Equal(t, testdata.M1.ID, result.Machine.Common.Meta.Id)
 	require.Equal(t, testdata.M1.Allocation.Name, result.Allocation.Name)
 	require.Equal(t, testdata.Sz1.Name, *result.Size.Name)
 	require.Equal(t, testdata.Img1.Name, *result.Allocation.Image.Name)
@@ -471,7 +471,7 @@ func TestGetMachineNotFound(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
 	req := httptest.NewRequest("GET", "/v1/machine/999", nil)
 	container = helper.InjectEditor(container, req)
@@ -501,7 +501,7 @@ func TestFreeMachine(t *testing.T) {
 		return nil
 	}
 
-	machineservice := NewMachine(ds, pub, ipam.New(goipam.New()), nil)
+	machineservice := NewMachineService(ds, pub, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
 	req := httptest.NewRequest("DELETE", "/v1/machine/1/free", nil)
 	container = helper.InjectEditor(container, req)
@@ -514,7 +514,7 @@ func TestFreeMachine(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&result)
 
 	require.Nil(t, err)
-	require.Equal(t, testdata.M1.ID, result.ID)
+	require.Equal(t, testdata.M1.ID, result.Machine.Common.Meta.Id)
 	require.Nil(t, result.Allocation)
 	require.Empty(t, result.Tags)
 }
@@ -524,7 +524,7 @@ func TestSearchMachine(t *testing.T) {
 	mock.On(r.DB("mockdb").Table("machine").Filter(r.MockAnything())).Return([]interface{}{testdata.M1}, nil)
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
 	requestJSON := fmt.Sprintf("{%q:[%q]}", "nics_mac_addresses", "1")
 	req := httptest.NewRequest("POST", "/v1/machine/find", bytes.NewBufferString(requestJSON))
@@ -541,7 +541,7 @@ func TestSearchMachine(t *testing.T) {
 	require.Nil(t, err)
 	require.Len(t, results, 1)
 	result := results[0]
-	require.Equal(t, testdata.M1.ID, result.ID)
+	require.Equal(t, testdata.M1.ID, result.Machine.Common.Meta.Id)
 	require.Equal(t, testdata.M1.Allocation.Name, result.Allocation.Name)
 	require.Equal(t, testdata.Sz1.Name, *result.Size.Name)
 	require.Equal(t, testdata.Img1.Name, *result.Allocation.Image.Name)
@@ -552,7 +552,7 @@ func TestAddProvisioningEvent(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
-	machineservice := NewMachine(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
+	machineservice := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 	container := restful.NewContainer().Add(machineservice)
 	event := &metal.ProvisioningEvent{
 		Event:   metal.ProvisioningEventPreparing,
@@ -631,7 +631,7 @@ func TestOnMachine(t *testing.T) {
 				return nil
 			}
 
-			machineservice := NewMachine(ds, pub, ipam.New(goipam.New()), nil)
+			machineservice := NewMachineService(ds, pub, ipam.New(goipam.New()), nil)
 
 			js, _ := json.Marshal([]string{d.param})
 			body := bytes.NewBuffer(js)
@@ -877,9 +877,9 @@ func Test_makeMachineTags(t *testing.T) {
 				"external-network-label=1",
 				"private-network-label=1",
 				"usertag=something",
-				"machine.metal-pod.io/network.primary.asn=1203874",
-				"machine.metal-pod.io/rack=rack01",
-				"machine.metal-pod.io/chassis=chassis123",
+				"machine.metal-stack.io/network.primary.asn=1203874",
+				"machine.metal-stack.io/rack=rack01",
+				"machine.metal-stack.io/chassis=chassis123",
 			},
 		},
 		{
@@ -957,10 +957,10 @@ func Test_makeMachineTags(t *testing.T) {
 					},
 				},
 				networks: helper.AllocationNetworkMap{},
-				userTags: []string{"machine.metal-pod.io/network.primary.asn=iamdoingsomethingevil"},
+				userTags: []string{"machine.metal-stack.io/network.primary.asn=iamdoingsomethingevil"},
 			},
 			want: []string{
-				"machine.metal-pod.io/network.primary.asn=1203874",
+				"machine.metal-stack.io/network.primary.asn=1203874",
 			},
 		},
 	}
@@ -1243,7 +1243,7 @@ func Test_gatherNetworksFromSpec(t *testing.T) {
 			testdata.InitMockDBData(mock)
 
 			// run
-			got, err := helper.GatherNetworksFromSpec(ds, tt.allocationSpec, tt.partition, tt.partitionSuperNetworks)
+			got, err := GatherNetworksFromSpec(ds, tt.allocationSpec, tt.partition, tt.partitionSuperNetworks)
 
 			// verify
 			if err != nil {

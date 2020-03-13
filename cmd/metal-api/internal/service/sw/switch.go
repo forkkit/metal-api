@@ -5,18 +5,19 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/partition"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"go.uber.org/zap"
+	"sort"
 )
 
 type switchResource struct {
 	ds *datastore.RethinkStore
 }
 
-// NewSwitch returns a webservice for switch specific endpoints.
-func NewSwitch(ds *datastore.RethinkStore) *restful.WebService {
+// NewSwitchService returns a webservice for switch specific endpoints.
+func NewSwitchService(ds *datastore.RethinkStore) *restful.WebService {
 	r := switchResource{
 		ds: ds,
 	}
@@ -143,7 +144,7 @@ func MakeSwitchResponse(s *metal.Switch, ds *datastore.RethinkStore, logger *zap
 	p, ips, iMap, machines := findSwitchReferencedEntites(s, ds, logger)
 	nics := MakeSwitchNics(s, ips, iMap, machines)
 	cons := makeSwitchCons(s)
-	return service.NewSwitchResponse(s, p, nics, cons)
+	return NewSwitchResponse(s, p, nics, cons)
 }
 
 func MakeBGPFilterFirewall(m metal.Machine) v1.BGPFilter {
@@ -158,7 +159,7 @@ func MakeBGPFilterFirewall(m metal.Machine) v1.BGPFilter {
 			// filter for "project" addresses / cidrs is not possible since EVPN Type-5 routes can not be filtered by prefixes
 		}
 	}
-	return service.NewBGPFilter(vnis, cidrs)
+	return NewBGPFilter(vnis, cidrs)
 }
 
 func MakeBGPFilterMachine(m metal.Machine, ips metal.IPsMap) v1.BGPFilter {
@@ -190,7 +191,7 @@ func MakeBGPFilterMachine(m metal.Machine, ips metal.IPsMap) v1.BGPFilter {
 		// Allow all other ip addresses allocated for the project.
 		cidrs = append(cidrs, fmt.Sprintf("%s/32", i.IPAddress))
 	}
-	return service.NewBGPFilter(vnis, cidrs)
+	return NewBGPFilter(vnis, cidrs)
 }
 
 func makeBGPFilter(m metal.Machine, vrf string, ips metal.IPsMap, iMap metal.ImageMap) v1.BGPFilter {
@@ -207,7 +208,7 @@ func makeBGPFilter(m metal.Machine, vrf string, ips metal.IPsMap, iMap metal.Ima
 	return filter
 }
 
-func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, machines metal.Machines) service.SwitchNics {
+func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, machines metal.Machines) SwitchNics {
 	machinesByID := map[string]*metal.Machine{}
 	for i, m := range machines {
 		machinesByID[m.ID] = &machines[i]
@@ -221,7 +222,7 @@ func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, mach
 			}
 		}
 	}
-	nics := service.SwitchNics{}
+	nics := SwitchNics{}
 	for _, n := range s.Nics {
 		m := machinesBySwp[n.Name]
 		var filter *v1.BGPFilter
@@ -232,7 +233,7 @@ func MakeSwitchNics(s *metal.Switch, ips metal.IPsMap, iMap metal.ImageMap, mach
 		nic := &v1.SwitchNic{
 			MacAddress: string(n.MacAddress),
 			Name:       n.Name,
-			Vrf:        util.ToStringValue(n.Vrf),
+			Vrf:        util.StringProto(n.Vrf),
 			BGPFilter:  filter,
 		}
 		nics = append(nics, nic)
@@ -247,11 +248,11 @@ func makeSwitchCons(s *metal.Switch) []*v1.SwitchConnection {
 			nic := &v1.SwitchNic{
 				MacAddress: string(mc.Nic.MacAddress),
 				Name:       mc.Nic.Name,
-				Vrf:        util.ToStringValue(mc.Nic.Vrf),
+				Vrf:        util.StringProto(mc.Nic.Vrf),
 			}
 			con := &v1.SwitchConnection{
 				Nic:       nic,
-				MachineID: util.ToStringValue(mc.MachineID),
+				MachineID: util.StringProto(mc.MachineID),
 			}
 			cons = append(cons, con)
 		}
@@ -270,7 +271,7 @@ func findSwitchReferencedEntites(s *metal.Switch, ds *datastore.RethinkStore, lo
 			logger.Errorw("switch references partition, but partition cannot be found in database", "switchID", s.ID, "partitionID", s.PartitionID, "error", err)
 		}
 
-		err = ds.SearchMachines(&v1.MachineSearchQuery{PartitionID: util.ToStringValue(s.PartitionID)}, &m)
+		err = ds.SearchMachines(&v1.MachineSearchQuery{PartitionID: util.StringProto(s.PartitionID)}, &m)
 		if err != nil {
 			logger.Errorw("could not search machines of partition", "switchID", s.ID, "partitionID", s.PartitionID, "error", err)
 		}
@@ -305,7 +306,7 @@ func MakeSwitchResponseList(ss []metal.Switch, ds *datastore.RethinkStore, logge
 
 		nics := MakeSwitchNics(&sw, ips, iMap, m)
 		cons := makeSwitchCons(&sw)
-		result = append(result, service.NewSwitchResponse(&sw, p, nics, cons))
+		result = append(result, NewSwitchResponse(&sw, p, nics, cons))
 	}
 
 	return result
@@ -328,4 +329,114 @@ func getSwitchReferencedEntityMaps(ds *datastore.RethinkStore, logger *zap.Sugar
 	}
 
 	return p.ByID(), ips.ByProjectID(), imgs.ByID()
+}
+
+func NewBGPFilter(vnis, cidrs []string) v1.BGPFilter {
+	// Sort VNIs and CIDRs to avoid unnecessary configuration changes on leaf switches
+	sort.Strings(vnis)
+	sort.Strings(cidrs)
+	return v1.BGPFilter{
+		VNIs:  util.StringSliceProto(vnis...),
+		CIDRs: cidrs,
+	}
+}
+
+type SwitchNics []*v1.SwitchNic
+
+func (ss SwitchNics) ByMac() map[string]v1.SwitchNic {
+	res := make(map[string]v1.SwitchNic)
+	for _, s := range ss {
+		if s == nil {
+			continue
+		}
+		res[s.MacAddress] = *s
+	}
+	return res
+}
+
+func NewSwitchResponse(s *metal.Switch, p *metal.Partition, nics SwitchNics, cons []*v1.SwitchConnection) *v1.SwitchResponse { //TODO nics unused
+	if s == nil {
+		return nil
+	}
+
+	return &v1.SwitchResponse{
+		Switch:      ToSwitch(s),
+		Partition:   partition.NewPartitionResponse(p),
+		Connections: cons,
+	}
+}
+
+func FromSwitch(s *v1.Switch) *metal.Switch {
+	return &metal.Switch{
+		Base: metal.Base{
+			ID:          s.Common.Meta.Id,
+			Name:        s.Common.Name.GetValue(),
+			Description: s.Common.Description.GetValue(),
+			Created:     util.Time(s.Common.Meta.CreatedTime),
+			Changed:     util.Time(s.Common.Meta.UpdatedTime),
+		},
+		Nics:   nil,
+		RackID: s.RackID,
+	}
+}
+
+func ToSwitch(s *metal.Switch) *v1.Switch {
+	return &v1.Switch{
+		Common: &v1.Common{},
+		RackID: s.RackID,
+		Nics:   ToNICs(s.Nics),
+	}
+}
+
+func FromNICs(nics SwitchNics) metal.Nics {
+	nn := make(metal.Nics, len(nics))
+	for i, n := range nics {
+		nn[i] = metal.Nic{
+			MacAddress: metal.MacAddress(n.MacAddress),
+			Name:       n.Name,
+			Vrf:        n.Vrf.GetValue(),
+			Neighbors:  nil, //TODO
+		}
+	}
+	return nn
+}
+
+func ToNICs(nics metal.Nics) SwitchNics {
+	nn := make(SwitchNics, len(nics))
+	for i, n := range nics {
+		nn[i] = ToNIC(n)
+	}
+	return nn
+}
+
+func ToNIC(nic metal.Nic) *v1.SwitchNic {
+	return &v1.SwitchNic{
+		MacAddress: string(nic.MacAddress),
+		Name:       nic.Name,
+		Vrf:        util.StringProto(nic.Vrf),
+		//BGPFilter:  NewBGPFilter(), //TODO
+	}
+}
+
+func NewSwitch(r v1.SwitchRegisterRequest) *metal.Switch {
+	nics := make(metal.Nics, len(r.Switch.Nics))
+	for i, nic := range r.Switch.Nics {
+		nics[i] = metal.Nic{
+			MacAddress: metal.MacAddress(nic.MacAddress),
+			Name:       nic.Name,
+			Vrf:        nic.Vrf.GetValue(),
+		}
+	}
+
+	return &metal.Switch{
+		Base: metal.Base{
+			ID:          r.Switch.Common.Meta.Id,
+			Name:        r.Switch.Common.Name.GetValue(),
+			Description: r.Switch.Common.Description.GetValue(),
+		},
+		PartitionID:        r.GetPartitionID(),
+		RackID:             r.Switch.GetRackID(),
+		MachineConnections: make(metal.ConnectionMap),
+		Nics:               nics,
+	}
 }

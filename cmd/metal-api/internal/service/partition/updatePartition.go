@@ -2,7 +2,6 @@ package partition
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -18,37 +17,27 @@ func (r *partitionResource) updatePartition(request *restful.Request, response *
 		return
 	}
 
-	oldPartition, err := r.ds.FindPartition(requestPayload.ID)
+	partition := requestPayload.Partition
+
+	oldPartition, err := r.ds.FindPartition(partition.Common.Meta.Id)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	newPartition := *oldPartition
 
-	if requestPayload.Name != nil {
-		newPartition.Name = *requestPayload.Name
-	}
-	if requestPayload.Description != nil {
-		newPartition.Description = *requestPayload.Description
-	}
-	if requestPayload.MgmtServiceAddress != nil {
-		newPartition.MgmtServiceAddress = *requestPayload.MgmtServiceAddress
-	}
-	if requestPayload.PartitionBootConfiguration.ImageURL != nil {
-		newPartition.BootConfiguration.ImageURL = *requestPayload.PartitionBootConfiguration.ImageURL
-	}
-	if requestPayload.PartitionBootConfiguration.KernelURL != nil {
-		newPartition.BootConfiguration.KernelURL = *requestPayload.PartitionBootConfiguration.KernelURL
-	}
-	if requestPayload.PartitionBootConfiguration.CommandLine != nil {
-		newPartition.BootConfiguration.CommandLine = *requestPayload.PartitionBootConfiguration.CommandLine
-	}
+	newPartition.Name = partition.Common.Name.GetValue()
+	newPartition.Description = partition.Common.Description.GetValue()
+	newPartition.MgmtServiceAddress = partition.MgmtServiceAddress.GetValue()
+	newPartition.BootConfiguration.ImageURL = partition.ImageURL.GetValue()
+	newPartition.BootConfiguration.KernelURL = partition.KernelURL.GetValue()
+	newPartition.BootConfiguration.CommandLine = partition.CommandLine.GetValue()
 
 	err = r.ds.UpdatePartition(oldPartition, &newPartition)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewPartitionResponse(&newPartition))
+	err = response.WriteHeaderAndEntity(http.StatusOK, NewPartitionResponse(&newPartition))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

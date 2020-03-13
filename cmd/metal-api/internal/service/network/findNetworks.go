@@ -2,9 +2,7 @@ package network
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -14,7 +12,7 @@ import (
 )
 
 func (r *networkResource) findNetworks(request *restful.Request, response *restful.Response) {
-	var requestPayload datastore.NetworkSearchQuery
+	var requestPayload v1.NetworkSearchQuery
 	err := request.ReadEntity(&requestPayload)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
@@ -28,8 +26,8 @@ func (r *networkResource) findNetworks(request *restful.Request, response *restf
 
 	var result []*v1.NetworkResponse
 	for i := range nws {
-		usage := helper.GetNetworkUsage(&nws[i], r.ipamer)
-		result = append(result, service.NewNetworkResponse(&nws[i], usage))
+		usage := GetNetworkUsage(&nws[i], r.ipamer)
+		result = append(result, NewNetworkResponse(&nws[i], usage))
 	}
 	err = response.WriteHeaderAndEntity(http.StatusOK, result)
 	if err != nil {

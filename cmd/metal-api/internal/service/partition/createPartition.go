@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -20,58 +19,36 @@ func (r *partitionResource) createPartition(request *restful.Request, response *
 		return
 	}
 
-	if requestPayload.ID == "" {
+	partition := requestPayload.Partition
+
+	if partition.Common.Meta.Id == "" {
 		if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("id should not be empty")) {
 			return
 		}
 	}
 
-	var name string
-	if requestPayload.Name != nil {
-		name = *requestPayload.Name
-	}
-	var description string
-	if requestPayload.Description != nil {
-		description = *requestPayload.Description
-	}
-	var mgmtServiceAddress string
-	if requestPayload.MgmtServiceAddress != nil {
-		mgmtServiceAddress = *requestPayload.MgmtServiceAddress
-	}
-	prefixLength := 22
-	if requestPayload.PrivateNetworkPrefixLength != nil {
-		prefixLength = *requestPayload.PrivateNetworkPrefixLength
+	prefixLength := uint32(22)
+	if partition.PrivateNetworkPrefixLength != nil {
+		prefixLength = partition.PrivateNetworkPrefixLength.GetValue()
 		if prefixLength < 16 || prefixLength > 30 {
 			if helper.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("private network prefix length is out of range")) {
 				return
 			}
 		}
 	}
-	var imageURL string
-	if requestPayload.PartitionBootConfiguration.ImageURL != nil {
-		imageURL = *requestPayload.PartitionBootConfiguration.ImageURL
-	}
-	var kernelURL string
-	if requestPayload.PartitionBootConfiguration.KernelURL != nil {
-		kernelURL = *requestPayload.PartitionBootConfiguration.KernelURL
-	}
-	var commandLine string
-	if requestPayload.PartitionBootConfiguration.CommandLine != nil {
-		commandLine = *requestPayload.PartitionBootConfiguration.CommandLine
-	}
 
 	p := &metal.Partition{
 		Base: metal.Base{
-			ID:          requestPayload.ID,
-			Name:        name,
-			Description: description,
+			ID:          partition.Common.Meta.Id,
+			Name:        partition.Common.Name.GetValue(),
+			Description: partition.Common.Description.GetValue(),
 		},
-		MgmtServiceAddress:         mgmtServiceAddress,
-		PrivateNetworkPrefixLength: prefixLength,
+		MgmtServiceAddress:         partition.MgmtServiceAddress.GetValue(),
+		PrivateNetworkPrefixLength: uint(prefixLength),
 		BootConfiguration: metal.BootConfiguration{
-			ImageURL:    imageURL,
-			KernelURL:   kernelURL,
-			CommandLine: commandLine,
+			ImageURL:    partition.ImageURL.GetValue(),
+			KernelURL:   partition.KernelURL.GetValue(),
+			CommandLine: partition.CommandLine.GetValue(),
 		},
 	}
 
@@ -89,7 +66,7 @@ func (r *partitionResource) createPartition(request *restful.Request, response *
 		return
 	}
 
-	err = response.WriteHeaderAndEntity(http.StatusCreated, service.NewPartitionResponse(p))
+	err = response.WriteHeaderAndEntity(http.StatusCreated, NewPartitionResponse(p))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return

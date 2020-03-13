@@ -3,7 +3,6 @@ package size
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
-	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
 	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
@@ -19,27 +18,23 @@ func (r *sizeResource) updateSize(request *restful.Request, response *restful.Re
 		return
 	}
 
-	oldSize, err := r.ds.FindSize(requestPayload.ID)
+	size := requestPayload.Size
+
+	oldSize, err := r.ds.FindSize(size.Common.Meta.Id)
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
 	newSize := *oldSize
-
-	if requestPayload.Name != nil {
-		newSize.Name = *requestPayload.Name
-	}
-	if requestPayload.Description != nil {
-		newSize.Description = *requestPayload.Description
-	}
+	newSize.Name = size.Common.Name.GetValue()
+	newSize.Description = size.Common.Description.GetValue()
 	var constraints []metal.Constraint
-	if requestPayload.SizeConstraints != nil {
-		sizeConstraints := *requestPayload.SizeConstraints
-		for i := range sizeConstraints {
+	if size.Constraints != nil {
+		for _, c := range size.Constraints {
 			constraint := metal.Constraint{
-				Type: sizeConstraints[i].Type,
-				Min:  sizeConstraints[i].Min,
-				Max:  sizeConstraints[i].Max,
+				Type: mapSizeConstraintType(c.Type),
+				Min:  c.Min,
+				Max:  c.Max,
 			}
 			constraints = append(constraints, constraint)
 		}
@@ -50,7 +45,7 @@ func (r *sizeResource) updateSize(request *restful.Request, response *restful.Re
 	if helper.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, service.NewSizeResponse(&newSize))
+	err = response.WriteHeaderAndEntity(http.StatusOK, NewSizeResponse(&newSize))
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
 		return
