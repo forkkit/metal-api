@@ -34,15 +34,18 @@ func (s *machineService) Get(ctx context.Context, req *v1.MachineGetRequest) (*v
 }
 
 func (s *machineService) Find(ctx context.Context, req *v1.MachineFindRequest) (*v1.MachineListResponse, error) {
-	mm, err := machine.FindMachines(s.ds, req.MachineSearchQuery)
+	return toMachineListResponse(machine.FindMachines(s.ds, req.MachineSearchQuery))
+}
+
+func (s *machineService) List(ctx context.Context, req *v1.MachineListRequest) (*v1.MachineListResponse, error) {
+	return toMachineListResponse(machine.ListMachines(s.ds))
+}
+
+func toMachineListResponse(machines []*v1.MachineResponse, err error) (*v1.MachineListResponse, error) {
 	if err != nil {
 		return nil, err
 	}
 	return &v1.MachineListResponse{
-		Machines: mm,
+		Machines: machines,
 	}, nil
-}
-
-func (s *machineService) List(ctx context.Context, req *v1.MachineListRequest) (*v1.MachineListResponse, error) {
-	return nil, nil
 }
