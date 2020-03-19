@@ -219,34 +219,34 @@ func TestRegisterMachine(t *testing.T) {
 	}
 }
 
-func TestMachineIPMIReport(t *testing.T) {
+func TestMachineIPMIReportRequest(t *testing.T) {
 	ds, mock := datastore.InitMockDB()
 	testdata.InitMockDBData(mock)
 
 	data := []struct {
 		name           string
-		input          v1.MachineIpmiReport
-		output         v1.MachineIpmiReportResponse
+		input          v1.MachineIPMIReportRequest
+		output         v1.MachineIPMIReportResponse
 		wantStatusCode int
 	}{
 		{
 			name: "update machine1 ipmi address",
-			input: v1.MachineIpmiReport{
+			input: v1.MachineIPMIReportRequest{
 				PartitionID:  testdata.M1.PartitionID,
 				ActiveLeases: map[string]string{testdata.M1.ID: "192.167.0.1"},
 			},
-			output: v1.MachineIpmiReportResponse{
+			output: v1.MachineIPMIReportResponse{
 				UpdatedLeases: map[string]string{testdata.M1.ID: "192.167.0.1"},
 			},
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name: "don't update machine with unkown mac",
-			input: v1.MachineIpmiReport{
+			input: v1.MachineIPMIReportRequest{
 				PartitionID:  testdata.M1.PartitionID,
 				ActiveLeases: map[string]string{"xyz": "192.167.0.1"},
 			},
-			output: v1.MachineIpmiReportResponse{
+			output: v1.MachineIPMIReportResponse{
 				CreatedLeases: map[string]string{"xyz": "192.167.0.1"},
 			},
 			wantStatusCode: http.StatusOK,
@@ -268,7 +268,7 @@ func TestMachineIPMIReport(t *testing.T) {
 			resp := w.Result()
 			require.Equal(t, test.wantStatusCode, resp.StatusCode, w.Body.String())
 
-			var result v1.MachineIpmiReportResponse
+			var result v1.MachineIPMIReportResponse
 			err := json.NewDecoder(resp.Body).Decode(&result)
 			require.Nil(t, err)
 			require.Equal(t, test.output, result)

@@ -46,8 +46,8 @@ func (r *machineResource) webService() *restful.WebService {
 				SubPath: "/ipmi",
 				Doc:     "reports IPMI ip addresses leased by a management server for machines",
 				Access:  metal.EditAccess,
-				Reads:   v1.MachineIpmiReport{},
-				Writes:  v1.MachineIpmiReportResponse{},
+				Reads:   v1.MachineIPMIReportRequest{},
+				Writes:  v1.MachineIPMIReportResponse{},
 				Handler: r.ipmiReport,
 			},
 			{

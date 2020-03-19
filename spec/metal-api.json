@@ -1598,7 +1598,7 @@
         "tags"
       ]
     },
-    "v1.MachineIpmiReport": {
+    "v1.MachineIPMIReportRequest": {
       "properties": {
         "leases": {
           "additionalProperties": {
@@ -1617,7 +1617,7 @@
         "partitionid"
       ]
     },
-    "v1.MachineIpmiReportResponse": {
+    "v1.MachineIPMIReportResponse": {
       "properties": {
         "created": {
           "additionalProperties": {
@@ -3751,7 +3751,7 @@
             "name": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1.MachineIpmiReport"
+              "$ref": "#/definitions/v1.MachineIPMIReportRequest"
             }
           }
         ],
@@ -3762,7 +3762,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/v1.MachineIpmiReportResponse"
+              "$ref": "#/definitions/v1.MachineIPMIReportResponse"
             }
           },
           "default": {

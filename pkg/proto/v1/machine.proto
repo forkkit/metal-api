@@ -13,12 +13,12 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
 service MachineService {
-    rpc Create(MachineCreateRequest) returns (MachineResponse);
-    rpc Update(MachineUpdateRequest) returns (MachineResponse);
-    rpc Delete(MachineDeleteRequest) returns (MachineResponse);
-    rpc Get(MachineGetRequest) returns (MachineResponse);
-    rpc Find(MachineFindRequest) returns (MachineListResponse);
-    rpc List(MachineListRequest) returns (MachineListResponse);
+    rpc Get (MachineGetRequest) returns (MachineResponse);
+    rpc Find (MachineFindRequest) returns (MachineListResponse);
+    rpc List (MachineListRequest) returns (MachineListResponse);
+    rpc IPMIReport (MachineIPMIReportRequest) returns (MachineIPMIReportResponse);
+    rpc Update (MachineUpdateRequest) returns (MachineResponse);
+    rpc Delete (MachineDeleteRequest) returns (MachineResponse);
 }
 
 message MachineSetup {
@@ -262,12 +262,12 @@ message MachineIPMIResponse {
     MachineIPMI IPMI = 3; // ipmi information of this machine
 }
 
-message MachineIpmiReport {
+message MachineIPMIReportRequest {
 	string PartitionID = 1; // the partition id for the ipmi report
     map<string, string> activeLeases = 2; // the active leases to be reported by a management server
 }
 
-message MachineIpmiReportResponse {
+message MachineIPMIReportResponse {
     map<string, string> updatedLeases = 1; // the leases that triggered an update of ipmi data
     map<string, string> createdLeases = 2; // the leases that triggered a creation of a machine entity
 }
