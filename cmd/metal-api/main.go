@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/grpc"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/firewall"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/image"
@@ -14,6 +15,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/project"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/size"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
+	"net"
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
@@ -524,12 +526,30 @@ func run() {
 		}
 	})
 
-	addr := fmt.Sprintf("%s:%d", viper.GetString("bind-addr"), viper.GetInt("port"))
-	logger.Infow("start metal api", "version", v.V.String(), "address", addr, "base-path", service.BasePath)
-	err := http.ListenAndServe(addr, nil)
+	s, err := grpc.CreateServer(ds)
 	if err != nil {
-		logger.Errorw("failed to start metal api", "error", err)
+		logger.Fatalf("Failed to create GRPC server", zap.Error(err))
 	}
+	grpcAddress := fmt.Sprintf(":%d", grpc.DefaultGRPCPort) //TODO port via config
+	listener, err := net.Listen("tcp", grpcAddress)
+	if err != nil {
+		logger.Fatalf("failed to listen: %v", err)
+	}
+
+	// Run REST server in background
+	go func() {
+		addr := fmt.Sprintf("%s:%d", viper.GetString("bind-addr"), viper.GetInt("port"))
+		logger.Infow("start metal api", "version", v.V.String(), "address", addr, "base-path", service.BasePath)
+		err := http.ListenAndServe(addr, nil)
+		if err != nil {
+			logger.Errorw("failed to start metal api", "error", err)
+		}
+	}()
+
+	// Run gRPC server in foreground
+	fmt.Printf("Start metal api gRPC server at %q\n", grpcAddress)
+	logger.Fatalf("failed to serve: %v", s.Serve(listener))
+
 }
 
 func enrichSwaggerObject(swo *spec.Swagger) {

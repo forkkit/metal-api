@@ -26,6 +26,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.3.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/crypto v0.0.0-20200214034016-1d94cc7ab1c6
+	google.golang.org/grpc v1.27.1
 	google.golang.org/protobuf v1.20.0 // indirect
 	gopkg.in/rethinkdb/rethinkdb-go.v5 v5.0.1
 )

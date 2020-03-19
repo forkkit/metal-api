@@ -38,7 +38,6 @@ func NewMachineService(
 		ipamer:    ipamer,
 		mdc:       mdc,
 	}
-	// TODO Find better place
 	return r.webService()
 }
 
