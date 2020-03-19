@@ -4,9 +4,13 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -426,4 +430,264 @@ var fileDescriptor_b2b462dcc8ce95f9 = []byte{
 	0x4c, 0x69, 0xb6, 0xbe, 0x76, 0xcf, 0xac, 0xe6, 0xb4, 0xbe, 0xce, 0xed, 0xbf, 0x4e, 0xdb, 0x64,
 	0x15, 0x98, 0xa7, 0xf9, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x1e, 0x17, 0x2a, 0x35, 0x41, 0x04,
 	0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// ImageServiceClient is the client API for ImageService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type ImageServiceClient interface {
+	Create(ctx context.Context, in *ImageCreateRequest, opts ...grpc.CallOption) (*ImageResponse, error)
+	Update(ctx context.Context, in *ImageUpdateRequest, opts ...grpc.CallOption) (*ImageResponse, error)
+	Delete(ctx context.Context, in *ImageDeleteRequest, opts ...grpc.CallOption) (*ImageResponse, error)
+	Get(ctx context.Context, in *ImageGetRequest, opts ...grpc.CallOption) (*ImageResponse, error)
+	Find(ctx context.Context, in *ImageFindRequest, opts ...grpc.CallOption) (*ImageListResponse, error)
+	List(ctx context.Context, in *ImageListRequest, opts ...grpc.CallOption) (*ImageListResponse, error)
+}
+
+type imageServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewImageServiceClient(cc grpc.ClientConnInterface) ImageServiceClient {
+	return &imageServiceClient{cc}
+}
+
+func (c *imageServiceClient) Create(ctx context.Context, in *ImageCreateRequest, opts ...grpc.CallOption) (*ImageResponse, error) {
+	out := new(ImageResponse)
+	err := c.cc.Invoke(ctx, "/v1.ImageService/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *imageServiceClient) Update(ctx context.Context, in *ImageUpdateRequest, opts ...grpc.CallOption) (*ImageResponse, error) {
+	out := new(ImageResponse)
+	err := c.cc.Invoke(ctx, "/v1.ImageService/Update", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *imageServiceClient) Delete(ctx context.Context, in *ImageDeleteRequest, opts ...grpc.CallOption) (*ImageResponse, error) {
+	out := new(ImageResponse)
+	err := c.cc.Invoke(ctx, "/v1.ImageService/Delete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *imageServiceClient) Get(ctx context.Context, in *ImageGetRequest, opts ...grpc.CallOption) (*ImageResponse, error) {
+	out := new(ImageResponse)
+	err := c.cc.Invoke(ctx, "/v1.ImageService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *imageServiceClient) Find(ctx context.Context, in *ImageFindRequest, opts ...grpc.CallOption) (*ImageListResponse, error) {
+	out := new(ImageListResponse)
+	err := c.cc.Invoke(ctx, "/v1.ImageService/Find", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *imageServiceClient) List(ctx context.Context, in *ImageListRequest, opts ...grpc.CallOption) (*ImageListResponse, error) {
+	out := new(ImageListResponse)
+	err := c.cc.Invoke(ctx, "/v1.ImageService/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ImageServiceServer is the server API for ImageService service.
+type ImageServiceServer interface {
+	Create(context.Context, *ImageCreateRequest) (*ImageResponse, error)
+	Update(context.Context, *ImageUpdateRequest) (*ImageResponse, error)
+	Delete(context.Context, *ImageDeleteRequest) (*ImageResponse, error)
+	Get(context.Context, *ImageGetRequest) (*ImageResponse, error)
+	Find(context.Context, *ImageFindRequest) (*ImageListResponse, error)
+	List(context.Context, *ImageListRequest) (*ImageListResponse, error)
+}
+
+// UnimplementedImageServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedImageServiceServer struct {
+}
+
+func (*UnimplementedImageServiceServer) Create(ctx context.Context, req *ImageCreateRequest) (*ImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (*UnimplementedImageServiceServer) Update(ctx context.Context, req *ImageUpdateRequest) (*ImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (*UnimplementedImageServiceServer) Delete(ctx context.Context, req *ImageDeleteRequest) (*ImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (*UnimplementedImageServiceServer) Get(ctx context.Context, req *ImageGetRequest) (*ImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedImageServiceServer) Find(ctx context.Context, req *ImageFindRequest) (*ImageListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Find not implemented")
+}
+func (*UnimplementedImageServiceServer) List(ctx context.Context, req *ImageListRequest) (*ImageListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+
+func RegisterImageServiceServer(s *grpc.Server, srv ImageServiceServer) {
+	s.RegisterService(&_ImageService_serviceDesc, srv)
+}
+
+func _ImageService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImageServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.ImageService/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImageServiceServer).Create(ctx, req.(*ImageCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ImageService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImageServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.ImageService/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImageServiceServer).Update(ctx, req.(*ImageUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ImageService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImageServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.ImageService/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImageServiceServer).Delete(ctx, req.(*ImageDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ImageService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageGetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImageServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.ImageService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImageServiceServer).Get(ctx, req.(*ImageGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ImageService_Find_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageFindRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImageServiceServer).Find(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.ImageService/Find",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImageServiceServer).Find(ctx, req.(*ImageFindRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ImageService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImageServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.ImageService/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImageServiceServer).List(ctx, req.(*ImageListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _ImageService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1.ImageService",
+	HandlerType: (*ImageServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _ImageService_Create_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _ImageService_Update_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _ImageService_Delete_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _ImageService_Get_Handler,
+		},
+		{
+			MethodName: "Find",
+			Handler:    _ImageService_Find_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _ImageService_List_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "v1/image.proto",
 }

@@ -4,8 +4,12 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -505,4 +509,264 @@ var fileDescriptor_8347758cbb88e74f = []byte{
 	0xc2, 0xe8, 0xa6, 0x3e, 0x87, 0x19, 0xf7, 0xb3, 0x9b, 0x6b, 0x5f, 0x7d, 0x12, 0xfc, 0x92, 0xae,
 	0x4c, 0x75, 0x7a, 0xf7, 0x3b, 0x00, 0x00, 0xff, 0xff, 0xba, 0x03, 0xfe, 0x47, 0x59, 0x04, 0x00,
 	0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// SizeServiceClient is the client API for SizeService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type SizeServiceClient interface {
+	Create(ctx context.Context, in *SizeCreateRequest, opts ...grpc.CallOption) (*SizeResponse, error)
+	Update(ctx context.Context, in *SizeUpdateRequest, opts ...grpc.CallOption) (*SizeResponse, error)
+	Delete(ctx context.Context, in *SizeDeleteRequest, opts ...grpc.CallOption) (*SizeResponse, error)
+	Get(ctx context.Context, in *SizeGetRequest, opts ...grpc.CallOption) (*SizeResponse, error)
+	Find(ctx context.Context, in *SizeFindRequest, opts ...grpc.CallOption) (*SizeListResponse, error)
+	List(ctx context.Context, in *SizeListRequest, opts ...grpc.CallOption) (*SizeListResponse, error)
+}
+
+type sizeServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSizeServiceClient(cc grpc.ClientConnInterface) SizeServiceClient {
+	return &sizeServiceClient{cc}
+}
+
+func (c *sizeServiceClient) Create(ctx context.Context, in *SizeCreateRequest, opts ...grpc.CallOption) (*SizeResponse, error) {
+	out := new(SizeResponse)
+	err := c.cc.Invoke(ctx, "/v1.SizeService/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sizeServiceClient) Update(ctx context.Context, in *SizeUpdateRequest, opts ...grpc.CallOption) (*SizeResponse, error) {
+	out := new(SizeResponse)
+	err := c.cc.Invoke(ctx, "/v1.SizeService/Update", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sizeServiceClient) Delete(ctx context.Context, in *SizeDeleteRequest, opts ...grpc.CallOption) (*SizeResponse, error) {
+	out := new(SizeResponse)
+	err := c.cc.Invoke(ctx, "/v1.SizeService/Delete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sizeServiceClient) Get(ctx context.Context, in *SizeGetRequest, opts ...grpc.CallOption) (*SizeResponse, error) {
+	out := new(SizeResponse)
+	err := c.cc.Invoke(ctx, "/v1.SizeService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sizeServiceClient) Find(ctx context.Context, in *SizeFindRequest, opts ...grpc.CallOption) (*SizeListResponse, error) {
+	out := new(SizeListResponse)
+	err := c.cc.Invoke(ctx, "/v1.SizeService/Find", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sizeServiceClient) List(ctx context.Context, in *SizeListRequest, opts ...grpc.CallOption) (*SizeListResponse, error) {
+	out := new(SizeListResponse)
+	err := c.cc.Invoke(ctx, "/v1.SizeService/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SizeServiceServer is the server API for SizeService service.
+type SizeServiceServer interface {
+	Create(context.Context, *SizeCreateRequest) (*SizeResponse, error)
+	Update(context.Context, *SizeUpdateRequest) (*SizeResponse, error)
+	Delete(context.Context, *SizeDeleteRequest) (*SizeResponse, error)
+	Get(context.Context, *SizeGetRequest) (*SizeResponse, error)
+	Find(context.Context, *SizeFindRequest) (*SizeListResponse, error)
+	List(context.Context, *SizeListRequest) (*SizeListResponse, error)
+}
+
+// UnimplementedSizeServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedSizeServiceServer struct {
+}
+
+func (*UnimplementedSizeServiceServer) Create(ctx context.Context, req *SizeCreateRequest) (*SizeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (*UnimplementedSizeServiceServer) Update(ctx context.Context, req *SizeUpdateRequest) (*SizeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (*UnimplementedSizeServiceServer) Delete(ctx context.Context, req *SizeDeleteRequest) (*SizeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (*UnimplementedSizeServiceServer) Get(ctx context.Context, req *SizeGetRequest) (*SizeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedSizeServiceServer) Find(ctx context.Context, req *SizeFindRequest) (*SizeListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Find not implemented")
+}
+func (*UnimplementedSizeServiceServer) List(ctx context.Context, req *SizeListRequest) (*SizeListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+
+func RegisterSizeServiceServer(s *grpc.Server, srv SizeServiceServer) {
+	s.RegisterService(&_SizeService_serviceDesc, srv)
+}
+
+func _SizeService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SizeCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SizeServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SizeService/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SizeServiceServer).Create(ctx, req.(*SizeCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SizeService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SizeUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SizeServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SizeService/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SizeServiceServer).Update(ctx, req.(*SizeUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SizeService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SizeDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SizeServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SizeService/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SizeServiceServer).Delete(ctx, req.(*SizeDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SizeService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SizeGetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SizeServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SizeService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SizeServiceServer).Get(ctx, req.(*SizeGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SizeService_Find_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SizeFindRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SizeServiceServer).Find(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SizeService/Find",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SizeServiceServer).Find(ctx, req.(*SizeFindRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SizeService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SizeListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SizeServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SizeService/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SizeServiceServer).List(ctx, req.(*SizeListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _SizeService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1.SizeService",
+	HandlerType: (*SizeServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _SizeService_Create_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _SizeService_Update_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _SizeService_Delete_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _SizeService_Get_Handler,
+		},
+		{
+			MethodName: "Find",
+			Handler:    _SizeService_Find_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _SizeService_List_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "v1/size.proto",
 }

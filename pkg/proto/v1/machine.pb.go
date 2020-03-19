@@ -4,10 +4,14 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -2871,4 +2875,264 @@ var fileDescriptor_1940b0ac6d52d698 = []byte{
 	0xf9, 0x58, 0xe4, 0x61, 0x74, 0xa6, 0xc7, 0x61, 0x97, 0x6d, 0x76, 0xcf, 0x4e, 0xd4, 0xbf, 0x80,
 	0x9b, 0xfd, 0xad, 0xa3, 0x69, 0x39, 0xfa, 0xf4, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x14, 0x38,
 	0x42, 0x5e, 0xb7, 0x28, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// MachineServiceClient is the client API for MachineService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MachineServiceClient interface {
+	Create(ctx context.Context, in *MachineCreateRequest, opts ...grpc.CallOption) (*MachineResponse, error)
+	Update(ctx context.Context, in *MachineUpdateRequest, opts ...grpc.CallOption) (*MachineResponse, error)
+	Delete(ctx context.Context, in *MachineDeleteRequest, opts ...grpc.CallOption) (*MachineResponse, error)
+	Get(ctx context.Context, in *MachineGetRequest, opts ...grpc.CallOption) (*MachineResponse, error)
+	Find(ctx context.Context, in *MachineFindRequest, opts ...grpc.CallOption) (*MachineListResponse, error)
+	List(ctx context.Context, in *MachineListRequest, opts ...grpc.CallOption) (*MachineListResponse, error)
+}
+
+type machineServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewMachineServiceClient(cc grpc.ClientConnInterface) MachineServiceClient {
+	return &machineServiceClient{cc}
+}
+
+func (c *machineServiceClient) Create(ctx context.Context, in *MachineCreateRequest, opts ...grpc.CallOption) (*MachineResponse, error) {
+	out := new(MachineResponse)
+	err := c.cc.Invoke(ctx, "/v1.MachineService/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineServiceClient) Update(ctx context.Context, in *MachineUpdateRequest, opts ...grpc.CallOption) (*MachineResponse, error) {
+	out := new(MachineResponse)
+	err := c.cc.Invoke(ctx, "/v1.MachineService/Update", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineServiceClient) Delete(ctx context.Context, in *MachineDeleteRequest, opts ...grpc.CallOption) (*MachineResponse, error) {
+	out := new(MachineResponse)
+	err := c.cc.Invoke(ctx, "/v1.MachineService/Delete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineServiceClient) Get(ctx context.Context, in *MachineGetRequest, opts ...grpc.CallOption) (*MachineResponse, error) {
+	out := new(MachineResponse)
+	err := c.cc.Invoke(ctx, "/v1.MachineService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineServiceClient) Find(ctx context.Context, in *MachineFindRequest, opts ...grpc.CallOption) (*MachineListResponse, error) {
+	out := new(MachineListResponse)
+	err := c.cc.Invoke(ctx, "/v1.MachineService/Find", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineServiceClient) List(ctx context.Context, in *MachineListRequest, opts ...grpc.CallOption) (*MachineListResponse, error) {
+	out := new(MachineListResponse)
+	err := c.cc.Invoke(ctx, "/v1.MachineService/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MachineServiceServer is the server API for MachineService service.
+type MachineServiceServer interface {
+	Create(context.Context, *MachineCreateRequest) (*MachineResponse, error)
+	Update(context.Context, *MachineUpdateRequest) (*MachineResponse, error)
+	Delete(context.Context, *MachineDeleteRequest) (*MachineResponse, error)
+	Get(context.Context, *MachineGetRequest) (*MachineResponse, error)
+	Find(context.Context, *MachineFindRequest) (*MachineListResponse, error)
+	List(context.Context, *MachineListRequest) (*MachineListResponse, error)
+}
+
+// UnimplementedMachineServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedMachineServiceServer struct {
+}
+
+func (*UnimplementedMachineServiceServer) Create(ctx context.Context, req *MachineCreateRequest) (*MachineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (*UnimplementedMachineServiceServer) Update(ctx context.Context, req *MachineUpdateRequest) (*MachineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (*UnimplementedMachineServiceServer) Delete(ctx context.Context, req *MachineDeleteRequest) (*MachineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (*UnimplementedMachineServiceServer) Get(ctx context.Context, req *MachineGetRequest) (*MachineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedMachineServiceServer) Find(ctx context.Context, req *MachineFindRequest) (*MachineListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Find not implemented")
+}
+func (*UnimplementedMachineServiceServer) List(ctx context.Context, req *MachineListRequest) (*MachineListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+
+func RegisterMachineServiceServer(s *grpc.Server, srv MachineServiceServer) {
+	s.RegisterService(&_MachineService_serviceDesc, srv)
+}
+
+func _MachineService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MachineCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.MachineService/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).Create(ctx, req.(*MachineCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MachineUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.MachineService/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).Update(ctx, req.(*MachineUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MachineDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.MachineService/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).Delete(ctx, req.(*MachineDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MachineGetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.MachineService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).Get(ctx, req.(*MachineGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineService_Find_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MachineFindRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).Find(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.MachineService/Find",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).Find(ctx, req.(*MachineFindRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MachineListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.MachineService/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).List(ctx, req.(*MachineListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _MachineService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1.MachineService",
+	HandlerType: (*MachineServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _MachineService_Create_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _MachineService_Update_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _MachineService_Delete_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _MachineService_Get_Handler,
+		},
+		{
+			MethodName: "Find",
+			Handler:    _MachineService_Find_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _MachineService_List_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "v1/machine.proto",
 }

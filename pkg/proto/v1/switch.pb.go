@@ -4,9 +4,13 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -540,4 +544,198 @@ var fileDescriptor_4559081f66c40988 = []byte{
 	0x79, 0x28, 0x24, 0xa1, 0x0b, 0xfb, 0x4d, 0x72, 0x1e, 0xe6, 0x8b, 0xd8, 0xfc, 0xe5, 0x85, 0xe5,
 	0x68, 0xd6, 0xd1, 0x5f, 0xaf, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0x86, 0x58, 0x32, 0xc9, 0x5d,
 	0x05, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// SwitchServiceClient is the client API for SwitchService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type SwitchServiceClient interface {
+	//    rpc Create(SwitchCreateRequest) returns (SwitchResponse);
+	//    rpc Update(SwitchUpdateRequest) returns (SwitchResponse);
+	Update(ctx context.Context, in *SwitchRegisterRequest, opts ...grpc.CallOption) (*SwitchResponse, error)
+	//    rpc Delete(SwitchDeleteRequest) returns (SwitchResponse);
+	Get(ctx context.Context, in *SwitchGetRequest, opts ...grpc.CallOption) (*SwitchResponse, error)
+	Find(ctx context.Context, in *SwitchFindRequest, opts ...grpc.CallOption) (*SwitchListResponse, error)
+	List(ctx context.Context, in *SwitchListRequest, opts ...grpc.CallOption) (*SwitchListResponse, error)
+}
+
+type switchServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSwitchServiceClient(cc grpc.ClientConnInterface) SwitchServiceClient {
+	return &switchServiceClient{cc}
+}
+
+func (c *switchServiceClient) Update(ctx context.Context, in *SwitchRegisterRequest, opts ...grpc.CallOption) (*SwitchResponse, error) {
+	out := new(SwitchResponse)
+	err := c.cc.Invoke(ctx, "/v1.SwitchService/Update", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *switchServiceClient) Get(ctx context.Context, in *SwitchGetRequest, opts ...grpc.CallOption) (*SwitchResponse, error) {
+	out := new(SwitchResponse)
+	err := c.cc.Invoke(ctx, "/v1.SwitchService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *switchServiceClient) Find(ctx context.Context, in *SwitchFindRequest, opts ...grpc.CallOption) (*SwitchListResponse, error) {
+	out := new(SwitchListResponse)
+	err := c.cc.Invoke(ctx, "/v1.SwitchService/Find", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *switchServiceClient) List(ctx context.Context, in *SwitchListRequest, opts ...grpc.CallOption) (*SwitchListResponse, error) {
+	out := new(SwitchListResponse)
+	err := c.cc.Invoke(ctx, "/v1.SwitchService/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SwitchServiceServer is the server API for SwitchService service.
+type SwitchServiceServer interface {
+	//    rpc Create(SwitchCreateRequest) returns (SwitchResponse);
+	//    rpc Update(SwitchUpdateRequest) returns (SwitchResponse);
+	Update(context.Context, *SwitchRegisterRequest) (*SwitchResponse, error)
+	//    rpc Delete(SwitchDeleteRequest) returns (SwitchResponse);
+	Get(context.Context, *SwitchGetRequest) (*SwitchResponse, error)
+	Find(context.Context, *SwitchFindRequest) (*SwitchListResponse, error)
+	List(context.Context, *SwitchListRequest) (*SwitchListResponse, error)
+}
+
+// UnimplementedSwitchServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedSwitchServiceServer struct {
+}
+
+func (*UnimplementedSwitchServiceServer) Update(ctx context.Context, req *SwitchRegisterRequest) (*SwitchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (*UnimplementedSwitchServiceServer) Get(ctx context.Context, req *SwitchGetRequest) (*SwitchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedSwitchServiceServer) Find(ctx context.Context, req *SwitchFindRequest) (*SwitchListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Find not implemented")
+}
+func (*UnimplementedSwitchServiceServer) List(ctx context.Context, req *SwitchListRequest) (*SwitchListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+
+func RegisterSwitchServiceServer(s *grpc.Server, srv SwitchServiceServer) {
+	s.RegisterService(&_SwitchService_serviceDesc, srv)
+}
+
+func _SwitchService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SwitchRegisterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SwitchServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SwitchService/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SwitchServiceServer).Update(ctx, req.(*SwitchRegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SwitchService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SwitchGetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SwitchServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SwitchService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SwitchServiceServer).Get(ctx, req.(*SwitchGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SwitchService_Find_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SwitchFindRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SwitchServiceServer).Find(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SwitchService/Find",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SwitchServiceServer).Find(ctx, req.(*SwitchFindRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SwitchService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SwitchListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SwitchServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.SwitchService/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SwitchServiceServer).List(ctx, req.(*SwitchListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _SwitchService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1.SwitchService",
+	HandlerType: (*SwitchServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Update",
+			Handler:    _SwitchService_Update_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _SwitchService_Get_Handler,
+		},
+		{
+			MethodName: "Find",
+			Handler:    _SwitchService_Find_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _SwitchService_List_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "v1/switch.proto",
 }

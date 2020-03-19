@@ -4,9 +4,13 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -541,4 +545,230 @@ var fileDescriptor_6ffc15cb0683cf40 = []byte{
 	0xc5, 0x26, 0x97, 0xd5, 0x9a, 0xa5, 0xdc, 0x4b, 0x2f, 0x83, 0xf2, 0x7b, 0xf7, 0xb2, 0xc1, 0xb8,
 	0x5b, 0xac, 0xf6, 0xfe, 0x04, 0x00, 0x00, 0xff, 0xff, 0xf6, 0xf3, 0x6f, 0xca, 0x38, 0x06, 0x00,
 	0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// PartitionServiceClient is the client API for PartitionService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type PartitionServiceClient interface {
+	Create(ctx context.Context, in *PartitionCreateRequest, opts ...grpc.CallOption) (*PartitionResponse, error)
+	Update(ctx context.Context, in *PartitionUpdateRequest, opts ...grpc.CallOption) (*PartitionResponse, error)
+	//    rpc Delete(PartitionDeleteRequest) returns (PartitionResponse);
+	Get(ctx context.Context, in *PartitionGetRequest, opts ...grpc.CallOption) (*PartitionResponse, error)
+	Find(ctx context.Context, in *PartitionFindRequest, opts ...grpc.CallOption) (*PartitionListResponse, error)
+	List(ctx context.Context, in *PartitionListRequest, opts ...grpc.CallOption) (*PartitionListResponse, error)
+}
+
+type partitionServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewPartitionServiceClient(cc grpc.ClientConnInterface) PartitionServiceClient {
+	return &partitionServiceClient{cc}
+}
+
+func (c *partitionServiceClient) Create(ctx context.Context, in *PartitionCreateRequest, opts ...grpc.CallOption) (*PartitionResponse, error) {
+	out := new(PartitionResponse)
+	err := c.cc.Invoke(ctx, "/v1.PartitionService/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *partitionServiceClient) Update(ctx context.Context, in *PartitionUpdateRequest, opts ...grpc.CallOption) (*PartitionResponse, error) {
+	out := new(PartitionResponse)
+	err := c.cc.Invoke(ctx, "/v1.PartitionService/Update", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *partitionServiceClient) Get(ctx context.Context, in *PartitionGetRequest, opts ...grpc.CallOption) (*PartitionResponse, error) {
+	out := new(PartitionResponse)
+	err := c.cc.Invoke(ctx, "/v1.PartitionService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *partitionServiceClient) Find(ctx context.Context, in *PartitionFindRequest, opts ...grpc.CallOption) (*PartitionListResponse, error) {
+	out := new(PartitionListResponse)
+	err := c.cc.Invoke(ctx, "/v1.PartitionService/Find", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *partitionServiceClient) List(ctx context.Context, in *PartitionListRequest, opts ...grpc.CallOption) (*PartitionListResponse, error) {
+	out := new(PartitionListResponse)
+	err := c.cc.Invoke(ctx, "/v1.PartitionService/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// PartitionServiceServer is the server API for PartitionService service.
+type PartitionServiceServer interface {
+	Create(context.Context, *PartitionCreateRequest) (*PartitionResponse, error)
+	Update(context.Context, *PartitionUpdateRequest) (*PartitionResponse, error)
+	//    rpc Delete(PartitionDeleteRequest) returns (PartitionResponse);
+	Get(context.Context, *PartitionGetRequest) (*PartitionResponse, error)
+	Find(context.Context, *PartitionFindRequest) (*PartitionListResponse, error)
+	List(context.Context, *PartitionListRequest) (*PartitionListResponse, error)
+}
+
+// UnimplementedPartitionServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedPartitionServiceServer struct {
+}
+
+func (*UnimplementedPartitionServiceServer) Create(ctx context.Context, req *PartitionCreateRequest) (*PartitionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (*UnimplementedPartitionServiceServer) Update(ctx context.Context, req *PartitionUpdateRequest) (*PartitionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (*UnimplementedPartitionServiceServer) Get(ctx context.Context, req *PartitionGetRequest) (*PartitionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedPartitionServiceServer) Find(ctx context.Context, req *PartitionFindRequest) (*PartitionListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Find not implemented")
+}
+func (*UnimplementedPartitionServiceServer) List(ctx context.Context, req *PartitionListRequest) (*PartitionListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+
+func RegisterPartitionServiceServer(s *grpc.Server, srv PartitionServiceServer) {
+	s.RegisterService(&_PartitionService_serviceDesc, srv)
+}
+
+func _PartitionService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PartitionCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PartitionServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.PartitionService/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PartitionServiceServer).Create(ctx, req.(*PartitionCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PartitionService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PartitionUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PartitionServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.PartitionService/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PartitionServiceServer).Update(ctx, req.(*PartitionUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PartitionService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PartitionGetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PartitionServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.PartitionService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PartitionServiceServer).Get(ctx, req.(*PartitionGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PartitionService_Find_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PartitionFindRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PartitionServiceServer).Find(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.PartitionService/Find",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PartitionServiceServer).Find(ctx, req.(*PartitionFindRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PartitionService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PartitionListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PartitionServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.PartitionService/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PartitionServiceServer).List(ctx, req.(*PartitionListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _PartitionService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1.PartitionService",
+	HandlerType: (*PartitionServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _PartitionService_Create_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _PartitionService_Update_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _PartitionService_Get_Handler,
+		},
+		{
+			MethodName: "Find",
+			Handler:    _PartitionService_Find_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _PartitionService_List_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "v1/partition.proto",
 }

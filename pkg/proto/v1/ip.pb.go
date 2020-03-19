@@ -4,9 +4,13 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -608,4 +612,266 @@ var fileDescriptor_bff53b684f2612dc = []byte{
 	0x29, 0xe1, 0x5e, 0xd4, 0xcd, 0xb8, 0xe7, 0x5f, 0xa9, 0xdf, 0x1e, 0xa3, 0x36, 0xbb, 0x0a, 0xe5,
 	0xbf, 0x8e, 0x3d, 0xef, 0x4d, 0xaa, 0xf9, 0xaf, 0xe7, 0x3f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x21,
 	0x52, 0x49, 0x3d, 0xc8, 0x06, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// IPServiceClient is the client API for IPService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type IPServiceClient interface {
+	//    rpc Create(IPCreateRequest) returns (IPResponse);
+	Allocate(ctx context.Context, in *IPAllocateRequest, opts ...grpc.CallOption) (*IPResponse, error)
+	Update(ctx context.Context, in *IPUpdateRequest, opts ...grpc.CallOption) (*IPResponse, error)
+	Delete(ctx context.Context, in *IPDeleteRequest, opts ...grpc.CallOption) (*IPResponse, error)
+	Get(ctx context.Context, in *IPGetRequest, opts ...grpc.CallOption) (*IPResponse, error)
+	Find(ctx context.Context, in *IPFindRequest, opts ...grpc.CallOption) (*IPListResponse, error)
+	List(ctx context.Context, in *IPListRequest, opts ...grpc.CallOption) (*IPListResponse, error)
+}
+
+type iPServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewIPServiceClient(cc grpc.ClientConnInterface) IPServiceClient {
+	return &iPServiceClient{cc}
+}
+
+func (c *iPServiceClient) Allocate(ctx context.Context, in *IPAllocateRequest, opts ...grpc.CallOption) (*IPResponse, error) {
+	out := new(IPResponse)
+	err := c.cc.Invoke(ctx, "/v1.IPService/Allocate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iPServiceClient) Update(ctx context.Context, in *IPUpdateRequest, opts ...grpc.CallOption) (*IPResponse, error) {
+	out := new(IPResponse)
+	err := c.cc.Invoke(ctx, "/v1.IPService/Update", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iPServiceClient) Delete(ctx context.Context, in *IPDeleteRequest, opts ...grpc.CallOption) (*IPResponse, error) {
+	out := new(IPResponse)
+	err := c.cc.Invoke(ctx, "/v1.IPService/Delete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iPServiceClient) Get(ctx context.Context, in *IPGetRequest, opts ...grpc.CallOption) (*IPResponse, error) {
+	out := new(IPResponse)
+	err := c.cc.Invoke(ctx, "/v1.IPService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iPServiceClient) Find(ctx context.Context, in *IPFindRequest, opts ...grpc.CallOption) (*IPListResponse, error) {
+	out := new(IPListResponse)
+	err := c.cc.Invoke(ctx, "/v1.IPService/Find", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iPServiceClient) List(ctx context.Context, in *IPListRequest, opts ...grpc.CallOption) (*IPListResponse, error) {
+	out := new(IPListResponse)
+	err := c.cc.Invoke(ctx, "/v1.IPService/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// IPServiceServer is the server API for IPService service.
+type IPServiceServer interface {
+	//    rpc Create(IPCreateRequest) returns (IPResponse);
+	Allocate(context.Context, *IPAllocateRequest) (*IPResponse, error)
+	Update(context.Context, *IPUpdateRequest) (*IPResponse, error)
+	Delete(context.Context, *IPDeleteRequest) (*IPResponse, error)
+	Get(context.Context, *IPGetRequest) (*IPResponse, error)
+	Find(context.Context, *IPFindRequest) (*IPListResponse, error)
+	List(context.Context, *IPListRequest) (*IPListResponse, error)
+}
+
+// UnimplementedIPServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedIPServiceServer struct {
+}
+
+func (*UnimplementedIPServiceServer) Allocate(ctx context.Context, req *IPAllocateRequest) (*IPResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Allocate not implemented")
+}
+func (*UnimplementedIPServiceServer) Update(ctx context.Context, req *IPUpdateRequest) (*IPResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (*UnimplementedIPServiceServer) Delete(ctx context.Context, req *IPDeleteRequest) (*IPResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (*UnimplementedIPServiceServer) Get(ctx context.Context, req *IPGetRequest) (*IPResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedIPServiceServer) Find(ctx context.Context, req *IPFindRequest) (*IPListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Find not implemented")
+}
+func (*UnimplementedIPServiceServer) List(ctx context.Context, req *IPListRequest) (*IPListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+
+func RegisterIPServiceServer(s *grpc.Server, srv IPServiceServer) {
+	s.RegisterService(&_IPService_serviceDesc, srv)
+}
+
+func _IPService_Allocate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPAllocateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IPServiceServer).Allocate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.IPService/Allocate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IPServiceServer).Allocate(ctx, req.(*IPAllocateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IPService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IPServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.IPService/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IPServiceServer).Update(ctx, req.(*IPUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IPService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IPServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.IPService/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IPServiceServer).Delete(ctx, req.(*IPDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IPService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPGetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IPServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.IPService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IPServiceServer).Get(ctx, req.(*IPGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IPService_Find_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPFindRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IPServiceServer).Find(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.IPService/Find",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IPServiceServer).Find(ctx, req.(*IPFindRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IPService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IPServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.IPService/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IPServiceServer).List(ctx, req.(*IPListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _IPService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1.IPService",
+	HandlerType: (*IPServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Allocate",
+			Handler:    _IPService_Allocate_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _IPService_Update_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _IPService_Delete_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _IPService_Get_Handler,
+		},
+		{
+			MethodName: "Find",
+			Handler:    _IPService_Find_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _IPService_List_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "v1/ip.proto",
 }

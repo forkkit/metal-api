@@ -4,9 +4,13 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -176,4 +180,126 @@ var fileDescriptor_2e3898ff840d6971 = []byte{
 	0x5d, 0x2f, 0xd3, 0x5c, 0x6e, 0xc9, 0x16, 0x0c, 0x13, 0xe3, 0xca, 0xb0, 0x7c, 0xe3, 0xce, 0x4c,
 	0x71, 0xa2, 0x36, 0x45, 0xf3, 0x22, 0x88, 0xcd, 0x96, 0x9d, 0xc3, 0xe9, 0xfa, 0x2b, 0x00, 0x00,
 	0xff, 0xff, 0x6b, 0x41, 0x4c, 0xcf, 0x54, 0x02, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// FirewallServiceClient is the client API for FirewallService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type FirewallServiceClient interface {
+	Create(ctx context.Context, in *FirewallCreateRequest, opts ...grpc.CallOption) (*FirewallResponse, error)
+	//    rpc Update(FirewallUpdateRequest) returns (FirewallResponse);
+	//    rpc Delete(FirewallDeleteRequest) returns (FirewallResponse);
+	//    rpc Get(FirewallGetRequest) returns (FirewallResponse);
+	Find(ctx context.Context, in *FirewallFindRequest, opts ...grpc.CallOption) (*FirewallResponse, error)
+}
+
+type firewallServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewFirewallServiceClient(cc grpc.ClientConnInterface) FirewallServiceClient {
+	return &firewallServiceClient{cc}
+}
+
+func (c *firewallServiceClient) Create(ctx context.Context, in *FirewallCreateRequest, opts ...grpc.CallOption) (*FirewallResponse, error) {
+	out := new(FirewallResponse)
+	err := c.cc.Invoke(ctx, "/v1.FirewallService/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *firewallServiceClient) Find(ctx context.Context, in *FirewallFindRequest, opts ...grpc.CallOption) (*FirewallResponse, error) {
+	out := new(FirewallResponse)
+	err := c.cc.Invoke(ctx, "/v1.FirewallService/Find", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// FirewallServiceServer is the server API for FirewallService service.
+type FirewallServiceServer interface {
+	Create(context.Context, *FirewallCreateRequest) (*FirewallResponse, error)
+	//    rpc Update(FirewallUpdateRequest) returns (FirewallResponse);
+	//    rpc Delete(FirewallDeleteRequest) returns (FirewallResponse);
+	//    rpc Get(FirewallGetRequest) returns (FirewallResponse);
+	Find(context.Context, *FirewallFindRequest) (*FirewallResponse, error)
+}
+
+// UnimplementedFirewallServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedFirewallServiceServer struct {
+}
+
+func (*UnimplementedFirewallServiceServer) Create(ctx context.Context, req *FirewallCreateRequest) (*FirewallResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (*UnimplementedFirewallServiceServer) Find(ctx context.Context, req *FirewallFindRequest) (*FirewallResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Find not implemented")
+}
+
+func RegisterFirewallServiceServer(s *grpc.Server, srv FirewallServiceServer) {
+	s.RegisterService(&_FirewallService_serviceDesc, srv)
+}
+
+func _FirewallService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FirewallCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FirewallServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.FirewallService/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FirewallServiceServer).Create(ctx, req.(*FirewallCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FirewallService_Find_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FirewallFindRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FirewallServiceServer).Find(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.FirewallService/Find",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FirewallServiceServer).Find(ctx, req.(*FirewallFindRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _FirewallService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1.FirewallService",
+	HandlerType: (*FirewallServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _FirewallService_Create_Handler,
+		},
+		{
+			MethodName: "Find",
+			Handler:    _FirewallService_Find_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "v1/firewall.proto",
 }

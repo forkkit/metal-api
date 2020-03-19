@@ -4,9 +4,13 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -751,4 +755,232 @@ var fileDescriptor_77ef602c4c85062d = []byte{
 	0x4e, 0x18, 0x9e, 0x2c, 0xe4, 0x1a, 0xc7, 0xbe, 0x1b, 0x2f, 0xe6, 0xf9, 0x2f, 0xa5, 0x9b, 0xf5,
 	0xc7, 0x86, 0x58, 0x7d, 0xf9, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x4e, 0x68, 0x6d, 0x9f, 0x93,
 	0x0a, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// NetworkServiceClient is the client API for NetworkService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type NetworkServiceClient interface {
+	Create(ctx context.Context, in *NetworkCreateRequest, opts ...grpc.CallOption) (*NetworkResponse, error)
+	Update(ctx context.Context, in *NetworkUpdateRequest, opts ...grpc.CallOption) (*NetworkResponse, error)
+	//    rpc Delete(NetworkDeleteRequest) returns (NetworkResponse);
+	//    rpc Get(NetworkGetRequest) returns (NetworkResponse);
+	Allocate(ctx context.Context, in *NetworkAllocateRequest, opts ...grpc.CallOption) (*NetworkResponse, error)
+	Find(ctx context.Context, in *NetworkFindRequest, opts ...grpc.CallOption) (*NetworkListResponse, error)
+	List(ctx context.Context, in *NetworkListRequest, opts ...grpc.CallOption) (*NetworkListResponse, error)
+}
+
+type networkServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewNetworkServiceClient(cc grpc.ClientConnInterface) NetworkServiceClient {
+	return &networkServiceClient{cc}
+}
+
+func (c *networkServiceClient) Create(ctx context.Context, in *NetworkCreateRequest, opts ...grpc.CallOption) (*NetworkResponse, error) {
+	out := new(NetworkResponse)
+	err := c.cc.Invoke(ctx, "/v1.NetworkService/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkServiceClient) Update(ctx context.Context, in *NetworkUpdateRequest, opts ...grpc.CallOption) (*NetworkResponse, error) {
+	out := new(NetworkResponse)
+	err := c.cc.Invoke(ctx, "/v1.NetworkService/Update", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkServiceClient) Allocate(ctx context.Context, in *NetworkAllocateRequest, opts ...grpc.CallOption) (*NetworkResponse, error) {
+	out := new(NetworkResponse)
+	err := c.cc.Invoke(ctx, "/v1.NetworkService/Allocate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkServiceClient) Find(ctx context.Context, in *NetworkFindRequest, opts ...grpc.CallOption) (*NetworkListResponse, error) {
+	out := new(NetworkListResponse)
+	err := c.cc.Invoke(ctx, "/v1.NetworkService/Find", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkServiceClient) List(ctx context.Context, in *NetworkListRequest, opts ...grpc.CallOption) (*NetworkListResponse, error) {
+	out := new(NetworkListResponse)
+	err := c.cc.Invoke(ctx, "/v1.NetworkService/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// NetworkServiceServer is the server API for NetworkService service.
+type NetworkServiceServer interface {
+	Create(context.Context, *NetworkCreateRequest) (*NetworkResponse, error)
+	Update(context.Context, *NetworkUpdateRequest) (*NetworkResponse, error)
+	//    rpc Delete(NetworkDeleteRequest) returns (NetworkResponse);
+	//    rpc Get(NetworkGetRequest) returns (NetworkResponse);
+	Allocate(context.Context, *NetworkAllocateRequest) (*NetworkResponse, error)
+	Find(context.Context, *NetworkFindRequest) (*NetworkListResponse, error)
+	List(context.Context, *NetworkListRequest) (*NetworkListResponse, error)
+}
+
+// UnimplementedNetworkServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedNetworkServiceServer struct {
+}
+
+func (*UnimplementedNetworkServiceServer) Create(ctx context.Context, req *NetworkCreateRequest) (*NetworkResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (*UnimplementedNetworkServiceServer) Update(ctx context.Context, req *NetworkUpdateRequest) (*NetworkResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (*UnimplementedNetworkServiceServer) Allocate(ctx context.Context, req *NetworkAllocateRequest) (*NetworkResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Allocate not implemented")
+}
+func (*UnimplementedNetworkServiceServer) Find(ctx context.Context, req *NetworkFindRequest) (*NetworkListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Find not implemented")
+}
+func (*UnimplementedNetworkServiceServer) List(ctx context.Context, req *NetworkListRequest) (*NetworkListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+
+func RegisterNetworkServiceServer(s *grpc.Server, srv NetworkServiceServer) {
+	s.RegisterService(&_NetworkService_serviceDesc, srv)
+}
+
+func _NetworkService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.NetworkService/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkServiceServer).Create(ctx, req.(*NetworkCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.NetworkService/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkServiceServer).Update(ctx, req.(*NetworkUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkService_Allocate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkAllocateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkServiceServer).Allocate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.NetworkService/Allocate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkServiceServer).Allocate(ctx, req.(*NetworkAllocateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkService_Find_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkFindRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkServiceServer).Find(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.NetworkService/Find",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkServiceServer).Find(ctx, req.(*NetworkFindRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.NetworkService/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkServiceServer).List(ctx, req.(*NetworkListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _NetworkService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1.NetworkService",
+	HandlerType: (*NetworkServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _NetworkService_Create_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _NetworkService_Update_Handler,
+		},
+		{
+			MethodName: "Allocate",
+			Handler:    _NetworkService_Allocate_Handler,
+		},
+		{
+			MethodName: "Find",
+			Handler:    _NetworkService_Find_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _NetworkService_List_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "v1/network.proto",
 }
