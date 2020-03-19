@@ -117,14 +117,19 @@ type MachineAllocation struct {
 	UserData        string            `rethinkdb:"userdata" json:"userdata"`
 	ConsolePassword string            `rethinkdb:"console_password" json:"console_password"`
 	Succeeded       bool              `rethinkdb:"succeeded" json:"succeeded"`
+	SSHPubKeys      []string          `rethinkdb:"sshpubkeys" json:"sshpubkeys"`
 	Reinstall       bool              `rethinkdb:"reinstall" json:"reinstall"`
-	PrimaryDisk     string            `rethinkdb:"primarydisk" json:"primarydisk"`
-	OSPartition     string            `rethinkdb:"ospartition" json:"ospartition"`
-	Initrd          string            `rethinkdb:"initrd" json:"initrd"`
-	Cmdline         string            `rethinkdb:"cmdline" json:"cmdline"`
-	Kernel          string            `rethinkdb:"kernel" json:"kernel"`
-	BootloaderID    string            `rethinkdb:"bootloaderid" json:"bootloaderid"`
-	SSHPubKeys      []string          `rethinkdb:"sshPubKeys" json:"sshPubKeys"`
+	Setup           *MachineSetup     `rethinkdb:"setup" json:"setup"`
+}
+
+// A MachineSetup stores the data used for machine reinstallations.
+type MachineSetup struct {
+	PrimaryDisk  string `rethinkdb:"primarydisk" json:"primarydisk"`
+	OSPartition  string `rethinkdb:"ospartition" json:"ospartition"`
+	Initrd       string `rethinkdb:"initrd" json:"initrd"`
+	Cmdline      string `rethinkdb:"cmdline" json:"cmdline"`
+	Kernel       string `rethinkdb:"kernel" json:"kernel"`
+	BootloaderID string `rethinkdb:"bootloaderid" json:"bootloaderid"`
 }
 
 // ByProjectID creates a map of machines with the project id as the index.

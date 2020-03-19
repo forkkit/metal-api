@@ -183,13 +183,17 @@ func ToMachineAllocation(alloc *metal.MachineAllocation, img *metal.Image) *v1.M
 }
 
 func ToMachineSetup(alloc *metal.MachineAllocation) *v1.MachineSetup {
+	setup := alloc.Setup
+	if setup == nil {
+		return nil
+	}
 	return &v1.MachineSetup{
-		PrimaryDisk:  alloc.PrimaryDisk,
-		OsPartition:  alloc.OSPartition,
-		Initrd:       alloc.Initrd,
-		Cmdline:      alloc.Cmdline,
-		Kernel:       alloc.Kernel,
-		BootloaderID: alloc.BootloaderID,
+		PrimaryDisk:  setup.PrimaryDisk,
+		OsPartition:  setup.OSPartition,
+		Initrd:       setup.Initrd,
+		Cmdline:      setup.Cmdline,
+		Kernel:       setup.Kernel,
+		BootloaderID: setup.BootloaderID,
 	}
 }
 

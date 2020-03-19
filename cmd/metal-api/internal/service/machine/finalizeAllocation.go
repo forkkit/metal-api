@@ -36,12 +36,14 @@ func (r *machineResource) finalizeAllocation(request *restful.Request, response 
 
 	m.Allocation.ConsolePassword = requestPayload.ConsolePassword
 	if requestPayload.Setup != nil {
-		m.Allocation.PrimaryDisk = requestPayload.Setup.PrimaryDisk
-		m.Allocation.OSPartition = requestPayload.Setup.OsPartition
-		m.Allocation.Initrd = requestPayload.Setup.Initrd
-		m.Allocation.Cmdline = requestPayload.Setup.Cmdline
-		m.Allocation.Kernel = requestPayload.Setup.Kernel
-		m.Allocation.BootloaderID = requestPayload.Setup.BootloaderID
+		m.Allocation.Setup = &metal.MachineSetup{
+			PrimaryDisk:  requestPayload.Setup.PrimaryDisk,
+			OSPartition:  requestPayload.Setup.OsPartition,
+			Initrd:       requestPayload.Setup.Initrd,
+			Cmdline:      requestPayload.Setup.Cmdline,
+			Kernel:       requestPayload.Setup.Kernel,
+			BootloaderID: requestPayload.Setup.BootloaderID,
+		}
 	}
 	m.Allocation.Reinstall = false // just for safety
 
