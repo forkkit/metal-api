@@ -14,16 +14,23 @@ import (
 
 func (r *machineResource) findIPMIMachine(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
-
-	m, err := r.ds.FindMachineByID(id)
+	resp, err := FindIPMIMachine(r.ds, id)
 	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, makeMachineIPMIResponse(m, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, resp)
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
-		return
 	}
+}
+
+func FindIPMIMachine(ds *datastore.RethinkStore, id string) (*v1.MachineIPMIResponse, error) {
+	m, err := ds.FindMachineByID(id)
+	if err != nil {
+		return nil, err
+	}
+	resp := makeMachineIPMIResponse(m, ds, zapup.MustRootLogger().Sugar())
+	return resp, nil
 }
 
 func makeMachineIPMIResponse(m *metal.Machine, ds *datastore.RethinkStore, logger *zap.SugaredLogger) *v1.MachineIPMIResponse {

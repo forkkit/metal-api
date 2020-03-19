@@ -6,6 +6,9 @@ import (
 
 // GenerateTerm generates the machine search query term
 func (m *MachineSearchQuery) GenerateTerm(q r.Term) *r.Term {
+	if m == nil {
+		return &q
+	}
 	if m.ID != nil {
 		q = q.Filter(func(row r.Term) r.Term {
 			return row.Field("id").Eq(m.ID.GetValue())

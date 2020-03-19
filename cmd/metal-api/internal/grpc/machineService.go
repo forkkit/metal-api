@@ -42,10 +42,19 @@ func (s *machineService) IPMIReport(ctx context.Context, req *v1.MachineIPMIRepo
 	return machine.IPMIReport(s.ds, req)
 }
 
-func (s *machineService) Update(ctx context.Context, req *v1.MachineUpdateRequest) (*v1.MachineResponse, error) {
-	return nil, nil
+func (s *machineService) FindIPMIMachine(ctx context.Context, req *v1.MachineIPMIGetRequest) (*v1.MachineIPMIResponse, error) {
+	return machine.FindIPMIMachine(s.ds, req.Identifiable.Id)
 }
 
-func (s *machineService) Delete(ctx context.Context, req *v1.MachineDeleteRequest) (*v1.MachineResponse, error) {
-	return nil, nil
+func (s *machineService) ListIPMIMachines(ctx context.Context, req *v1.MachineIPMIFindRequest) (*v1.MachineIPMIListResponse, error) {
+	return toMachineIPMIListResponse(machine.FindIPMIMachines(s.ds, req.MachineSearchQuery))
+}
+
+func toMachineIPMIListResponse(machines []*v1.MachineIPMIResponse, err error) (*v1.MachineIPMIListResponse, error) {
+	if err != nil {
+		return nil, err
+	}
+	return &v1.MachineIPMIListResponse{
+		MachineIPMIList: machines,
+	}, nil
 }

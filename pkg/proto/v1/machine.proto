@@ -17,8 +17,8 @@ service MachineService {
     rpc Find (MachineFindRequest) returns (MachineListResponse);
     rpc List (MachineListRequest) returns (MachineListResponse);
     rpc IPMIReport (MachineIPMIReportRequest) returns (MachineIPMIReportResponse);
-    rpc Update (MachineUpdateRequest) returns (MachineResponse);
-    rpc Delete (MachineDeleteRequest) returns (MachineResponse);
+    rpc FindIPMIMachine (MachineIPMIGetRequest) returns (MachineIPMIResponse);
+    rpc ListIPMIMachines (MachineIPMIFindRequest) returns (MachineIPMIListResponse);
 }
 
 message MachineSetup {
@@ -262,6 +262,10 @@ message MachineIPMIResponse {
     MachineIPMI IPMI = 3; // ipmi information of this machine
 }
 
+message MachineIPMIListResponse {
+    repeated MachineIPMIResponse machineIPMIList = 1;
+}
+
 message MachineIPMIReportRequest {
 	string PartitionID = 1; // the partition id for the ipmi report
     map<string, string> activeLeases = 2; // the active leases to be reported by a management server
@@ -320,6 +324,14 @@ message MachineGetRequest {
 }
 
 message MachineFindRequest {
+    MachineSearchQuery machineSearchQuery = 1;
+}
+
+message MachineIPMIGetRequest {
+    v1.Identifiable identifiable = 1;
+}
+
+message MachineIPMIFindRequest {
     MachineSearchQuery machineSearchQuery = 1;
 }
 

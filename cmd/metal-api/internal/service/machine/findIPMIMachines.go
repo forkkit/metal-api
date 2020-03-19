@@ -14,22 +14,31 @@ import (
 )
 
 func (r *machineResource) findIPMIMachines(request *restful.Request, response *restful.Response) {
-	var requestPayload v1.MachineSearchQuery
+	var requestPayload v1.MachineFindRequest
 	err := request.ReadEntity(&requestPayload)
 	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
 
-	ms := metal.Machines{}
-	err = r.ds.SearchMachines(&requestPayload, &ms)
+	resp, err := FindIPMIMachines(r.ds, requestPayload.MachineSearchQuery)
 	if service.CheckError(request, response, util.CurrentFuncName(), err) {
 		return
 	}
-	err = response.WriteHeaderAndEntity(http.StatusOK, makeMachineIPMIResponseList(ms, r.ds, util.Logger(request).Sugar()))
+	err = response.WriteHeaderAndEntity(http.StatusOK, resp)
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
-		return
 	}
+}
+
+func FindIPMIMachines(ds *datastore.RethinkStore, query *v1.MachineSearchQuery) ([]*v1.MachineIPMIResponse, error) {
+	var ms metal.Machines
+	err := ds.SearchMachines(query, &ms)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := makeMachineIPMIResponseList(ms, ds, zapup.MustRootLogger().Sugar())
+	return resp, nil
 }
 
 func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, logger *zap.SugaredLogger) []*v1.MachineIPMIResponse {
@@ -37,26 +46,26 @@ func makeMachineIPMIResponseList(ms metal.Machines, ds *datastore.RethinkStore, 
 
 	var result []*v1.MachineIPMIResponse
 
-	for index := range ms {
+	for _, m := range ms {
 		var s *metal.Size
-		if ms[index].SizeID != "" {
-			sizeEntity := sMap[ms[index].SizeID]
+		if m.SizeID != "" {
+			sizeEntity := sMap[m.SizeID]
 			s = &sizeEntity
 		}
 		var p *metal.Partition
-		if ms[index].PartitionID != "" {
-			partitionEntity := pMap[ms[index].PartitionID]
+		if m.PartitionID != "" {
+			partitionEntity := pMap[m.PartitionID]
 			p = &partitionEntity
 		}
 		var i *metal.Image
-		if ms[index].Allocation != nil {
-			if ms[index].Allocation.ImageID != "" {
-				imageEntity := iMap[ms[index].Allocation.ImageID]
+		if m.Allocation != nil {
+			if m.Allocation.ImageID != "" {
+				imageEntity := iMap[m.Allocation.ImageID]
 				i = &imageEntity
 			}
 		}
-		ec := ecMap[ms[index].ID]
-		result = append(result, NewMachineIPMIResponse(&ms[index], s, p, i, &ec))
+		ec := ecMap[m.ID]
+		result = append(result, NewMachineIPMIResponse(&m, s, p, i, &ec))
 	}
 
 	return result

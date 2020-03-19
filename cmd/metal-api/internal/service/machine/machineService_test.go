@@ -303,8 +303,10 @@ func TestMachineFindIPMI(t *testing.T) {
 			machineService := NewMachineService(ds, &emptyPublisher{}, ipam.New(goipam.New()), nil)
 			container := restful.NewContainer().Add(machineService)
 
-			query := v1.MachineSearchQuery{
-				ID: util.StringProto(test.machine.ID),
+			query := v1.MachineFindRequest{
+				MachineSearchQuery:  &v1.MachineSearchQuery{
+					ID: util.StringProto(test.machine.ID),
+				},
 			}
 			js, _ := json.Marshal(query)
 			body := bytes.NewBuffer(js)
