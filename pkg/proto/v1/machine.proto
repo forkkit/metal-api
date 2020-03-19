@@ -331,5 +331,5 @@ message MachineResponse {
 message MachineListRequest {}
 
 message MachineListResponse {
-    repeated Machine machines = 1;
+    repeated MachineResponse machines = 1;
 }

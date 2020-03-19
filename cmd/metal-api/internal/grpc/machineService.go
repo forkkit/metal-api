@@ -34,7 +34,13 @@ func (s *machineService) Get(ctx context.Context, req *v1.MachineGetRequest) (*v
 }
 
 func (s *machineService) Find(ctx context.Context, req *v1.MachineFindRequest) (*v1.MachineListResponse, error) {
-	return nil, nil
+	mm, err := machine.FindMachines(s.ds, req.MachineSearchQuery)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.MachineListResponse{
+		Machines: mm,
+	}, nil
 }
 
 func (s *machineService) List(ctx context.Context, req *v1.MachineListRequest) (*v1.MachineListResponse, error) {

@@ -54,7 +54,7 @@ message PartitionResponse {
 message PartitionListRequest {}
 
 message PartitionListResponse {
-    repeated Partition partitions = 1;
+    repeated PartitionResponse partitions = 1;
 }
 
 message ServerCapacity {

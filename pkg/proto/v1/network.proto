@@ -95,5 +95,5 @@ message NetworkResponse {
 message NetworkListRequest {}
 
 message NetworkListResponse {
-    repeated Network networks = 1;
+    repeated NetworkResponse networks = 1;
 }

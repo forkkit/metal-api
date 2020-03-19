@@ -60,5 +60,5 @@ message SizeResponse {
 message SizeListRequest {}
 
 message SizeListResponse {
-    repeated Size sizes = 1;
+    repeated SizeResponse sizes = 1;
 }

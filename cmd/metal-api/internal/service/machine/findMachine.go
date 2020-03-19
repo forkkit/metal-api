@@ -21,7 +21,6 @@ func (r *machineResource) findMachine(request *restful.Request, response *restfu
 	err = response.WriteHeaderAndEntity(http.StatusOK, resp)
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
-		return
 	}
 }
 
@@ -30,5 +29,6 @@ func FindMachine(ds *datastore.RethinkStore, id string) (*v1.MachineResponse, er
 	if err != nil {
 		return nil, err
 	}
-	return MakeResponse(m, ds, zapup.MustRootLogger().Sugar()), nil
+	resp := MakeResponse(m, ds, zapup.MustRootLogger().Sugar())
+	return resp, nil
 }

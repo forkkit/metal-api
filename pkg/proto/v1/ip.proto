@@ -76,5 +76,5 @@ message IPResponse {
 }
 
 message IPListResponse {
-    repeated IP ips = 1;
+    repeated IPResponse ips = 1;
 }
