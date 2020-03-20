@@ -65,11 +65,12 @@ func (r *machineResource) registerMachine(request *restful.Request, response *re
 			RackID:      requestPayload.RackID,
 			Hardware:    machineHardware,
 			State: metal.MachineState{
-				Value: metal.AvailableState,
+				Value: v1.MachineState_AVAILABLE,
+				Description: "Machine just registered",
 			},
 			LEDState: metal.ChassisIdentifyLEDState{
-				Value:       metal.LEDStateOff,
-				Description: "Machine registered",
+				Value:       v1.ChassisIdentifyLEDState_LED_OFF,
+				Description: "Machine just registered",
 			},
 			Tags: util.StringSlice(requestPayload.Tags),
 			IPMI: NewMetalIPMI(requestPayload.IPMI),

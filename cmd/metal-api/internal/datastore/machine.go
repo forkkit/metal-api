@@ -103,9 +103,7 @@ func (rs *RethinkStore) FindAvailableMachine(partitionid, sizeid string) (*metal
 		"allocation":  nil,
 		"partitionid": partitionid,
 		"sizeid":      sizeid,
-		"state": map[string]string{
-			"value": string(metal.AvailableState),
-		},
+		"state": v1.MachineState_AVAILABLE,
 	}).Sample(1)
 
 	var available metal.Machines

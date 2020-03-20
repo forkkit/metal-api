@@ -36,7 +36,7 @@ func (r *machineResource) finalizeAllocation(request *restful.Request, response 
 
 	m.Allocation.ConsolePassword = requestPayload.ConsolePassword
 	if requestPayload.Setup != nil {
-		m.Allocation.Setup = &metal.MachineSetup{
+		m.Allocation.MachineSetup = &metal.MachineSetup{
 			PrimaryDisk:  requestPayload.Setup.PrimaryDisk,
 			OSPartition:  requestPayload.Setup.OsPartition,
 			Initrd:       requestPayload.Setup.Initrd,

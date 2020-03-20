@@ -35,7 +35,7 @@ message MachineReinstall {
     MachineSetup setup = 2;  // the machine setup
 }
 
-message MachineNetwork { //TODO Reuse NetworkImmutable?
+message MachineNetwork {
     string networkID = 1; // the networkID of the allocated machine in this vrf
     repeated string prefixes = 2; // the prefixes of this network
     repeated string IPs = 3; // the ip addresses of the allocated machine in this vrf
@@ -52,7 +52,7 @@ message MachineAllocation {
     string name = 2; // the name of the machine
     google.protobuf.StringValue description = 3; // a description for this machine
     string projectID = 4; // the project id that this machine is assigned to
-    v1.ImageResponse imageResponse = 5; // the image assigned to this machine //TODO readonly
+    v1.ImageResponse imageResponse = 5; // the image assigned to this machine
     repeated MachineNetwork machineNetworks = 6; // the networks of this machine
     string hostname = 7; // the hostname which will be used when creating the machine
     repeated string sshPubKeys = 8; // the public ssh keys to access the machine with
@@ -79,12 +79,21 @@ message MachineHardwareExtended {
 }
 
 message MachineState {
-    string value = 1;       // the state of this machine. empty means available for all //TODO enum?
+    enum State {
+        AVAILABLE = 0;
+        RESERVED = 1;
+        LOCKED = 2;
+    }
+    State value = 1; // the state of this machine (defaults to AVAILABLE)
     string description = 2; // a description why this machine is in the given state
 }
 
 message ChassisIdentifyLEDState {
-    string value = 1; // the state of this chassis identify LED. empty means LED-OFF //TODO enum?
+    enum State {
+        LED_OFF = 0;
+        LED_ON = 1;
+    }
+    State value = 1; // the state of this chassis identify LED (defaults to LED_OFF)
     string description = 2; // a description why this chassis identify LED is in the given state
 }
 
@@ -102,7 +111,7 @@ message MachineRecentProvisioningEvents {
 }
 
 message MachineProvisioningEvent {
-	google.protobuf.Timestamp time = 1; // the time that this event was received //TODO readonly
+	google.protobuf.Timestamp time = 1; // the time that this event was received
 	string event = 2; // description:"the event emitted by the machine
 	google.protobuf.StringValue message = 3; // an additional message to add to the event
 }
@@ -294,9 +303,9 @@ message MachineNicExtended {
 // A machine representing a bare metal machine
 message Machine {
     v1.Common common = 1;
-    v1.PartitionResponse partitionResponse = 2; // the partition assigned to this machine //TODO readonly
-    string rackID = 3; // the rack assigned to this machine //TODO readonly
-    v1.SizeResponse sizeResponse = 4; // the size of this machine //TODO readonly
+    v1.PartitionResponse partitionResponse = 2; // the partition assigned to this machine
+    string rackID = 3; // the rack assigned to this machine
+    v1.SizeResponse sizeResponse = 4; // the size of this machine
     MachineHardware hardware = 5; // the hardware of this machine
     MachineBIOS BIOS = 6; // bios information of this machine
     MachineAllocation allocation = 7; // the allocation data of an allocated machine

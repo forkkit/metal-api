@@ -6,6 +6,7 @@ import (
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/sw"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"go.uber.org/zap"
 	"net/http"
@@ -67,7 +68,7 @@ func (r *machineResource) reinstallOrDeleteMachine(request *restful.Request, res
 		return err
 	}
 
-	if m.State.Value == metal.LockedState {
+	if m.State.Value == v1.MachineState_LOCKED {
 		return fmt.Errorf("machine is locked")
 	}
 

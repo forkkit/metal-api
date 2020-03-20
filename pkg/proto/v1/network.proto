@@ -37,10 +37,10 @@ message NetworkImmutable {
 }
 
 message NetworkUsage {
-    uint64 availableIPs = 1;      // the total available IPs //TODO readonly
-    uint64 usedIPs = 2;           // the total used IPs //TODO readonly
-    uint64 availablePrefixes = 3; // the total available prefixes //TODO readonly
-    uint64 usedPrefixes = 4;      // the total used prefixes //TODO readonly
+    uint64 availableIPs = 1;      // the total available IPs
+    uint64 usedIPs = 2;           // the total used IPs
+    uint64 availablePrefixes = 3; // the total available prefixes
+    uint64 usedPrefixes = 4;      // the total used prefixes
 }
 
 // NetworkSearchQuery can be used to search networks.
@@ -89,7 +89,7 @@ message NetworkAllocateRequest {
 message NetworkResponse {
     Network network = 1;
     NetworkImmutable networkImmutable = 2;
-    NetworkUsage usage = 3; // usage of ips and prefixes in this network //TODO readonly
+    NetworkUsage usage = 3; // usage of ips and prefixes in this network
 }
 
 message NetworkListRequest {}

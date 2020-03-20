@@ -19,12 +19,8 @@ func (r *machineResource) setMachineState(request *restful.Request, response *re
 		return
 	}
 
-	machineState, err := metal.MachineStateFrom(requestPayload.Value)
-	if service.CheckError(request, response, util.CurrentFuncName(), err) {
-		return
-	}
-
-	if machineState != metal.AvailableState && requestPayload.Description == "" {
+	machineState := requestPayload.Value
+	if machineState != v1.MachineState_AVAILABLE && requestPayload.Description == "" {
 		// we want a cause why this machine is not available
 		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("you must supply a description")) {
 			return

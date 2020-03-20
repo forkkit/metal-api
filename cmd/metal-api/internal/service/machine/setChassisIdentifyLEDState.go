@@ -19,12 +19,8 @@ func (r *machineResource) setChassisIdentifyLEDState(request *restful.Request, r
 		return
 	}
 
-	ledState, err := metal.LEDStateFrom(requestPayload.Value)
-	if service.CheckError(request, response, util.CurrentFuncName(), err) {
-		return
-	}
-
-	if ledState == metal.LEDStateOff && requestPayload.Description == "" {
+	ledState := requestPayload.Value
+	if ledState == v1.ChassisIdentifyLEDState_LED_OFF && requestPayload.Description == "" {
 		// we want a cause why this chassis identify LED is off
 		if service.CheckError(request, response, util.CurrentFuncName(), fmt.Errorf("you must supply a description")) {
 			return

@@ -2,68 +2,23 @@ package metal
 
 import (
 	"fmt"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"time"
 
 	"github.com/dustin/go-humanize"
 )
 
-// A MState is an enum which indicates the state of a machine
-type MState string
-
-// The enums for the machine states.
-const (
-	AvailableState MState = ""
-	ReservedState  MState = "RESERVED"
-	LockedState    MState = "LOCKED"
-)
-
-// A MachineState describes the state of a machine. If the Value is AvailableState,
+// A MachineState describes the state of a machine. If the Value is AVAILABLE,
 // the machine will be available for allocation. In all other cases the allocation
 // must explicitly point to this machine.
 type MachineState struct {
-	Value       MState `rethinkdb:"value" json:"value"`
+	Value       v1.MachineState_State `rethinkdb:"value" json:"value"`
 	Description string `rethinkdb:"description" json:"description"`
-}
-
-// MachineStateFrom converts a machineState string to the type
-func MachineStateFrom(name string) (MState, error) {
-	switch name {
-	case string(AvailableState):
-		return AvailableState, nil
-	case string(ReservedState):
-		return ReservedState, nil
-	case string(LockedState):
-		return LockedState, nil
-	default:
-		return "", fmt.Errorf("unknown MachineState:%s", name)
-	}
-}
-
-// LEDState is the state of the LED of the Machine
-type LEDState string
-
-const (
-	// LEDStateOn LED is on
-	LEDStateOn LEDState = "LED-ON"
-	// LEDStateOff LED is off
-	LEDStateOff LEDState = "LED-OFF"
-)
-
-// LEDStateFrom converts an LEDState string to the corresponding type
-func LEDStateFrom(name string) (LEDState, error) {
-	switch name {
-	case string(LEDStateOff):
-		return LEDStateOff, nil
-	case string(LEDStateOn):
-		return LEDStateOn, nil
-	default:
-		return "", fmt.Errorf("unknown LEDState:%s", name)
-	}
 }
 
 // A ChassisIdentifyLEDState describes the state of a chassis identify LED, i.e. LED-ON/LED-OFF.
 type ChassisIdentifyLEDState struct {
-	Value       LEDState `rethinkdb:"value" json:"value"`
+	Value       v1.ChassisIdentifyLEDState_State `rethinkdb:"value" json:"value"`
 	Description string   `rethinkdb:"description" json:"description"`
 }
 
@@ -119,7 +74,7 @@ type MachineAllocation struct {
 	Succeeded       bool              `rethinkdb:"succeeded" json:"succeeded"`
 	SSHPubKeys      []string          `rethinkdb:"sshpubkeys" json:"sshpubkeys"`
 	Reinstall       bool              `rethinkdb:"reinstall" json:"reinstall"`
-	Setup           *MachineSetup     `rethinkdb:"setup" json:"setup"`
+	MachineSetup    *MachineSetup     `rethinkdb:"setup" json:"setup"`
 }
 
 // A MachineSetup stores the data used for machine reinstallations.

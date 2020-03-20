@@ -126,11 +126,11 @@ func ToMachine(m *metal.Machine, s *metal.Size, p *metal.Partition, img *metal.I
 			Date:    m.BIOS.Date,
 		},
 		State: &v1.MachineState{
-			Value:       string(m.State.Value),
+			Value:       m.State.Value,
 			Description: m.State.Description,
 		},
 		LedState: &v1.ChassisIdentifyLEDState{
-			Value:       string(m.LEDState.Value),
+			Value:       m.LEDState.Value,
 			Description: m.LEDState.Description,
 		},
 		Liveliness:               liveliness,
@@ -183,7 +183,7 @@ func ToMachineAllocation(alloc *metal.MachineAllocation, img *metal.Image) *v1.M
 }
 
 func ToMachineSetup(alloc *metal.MachineAllocation) *v1.MachineSetup {
-	setup := alloc.Setup
+	setup := alloc.MachineSetup
 	if setup == nil {
 		return nil
 	}
