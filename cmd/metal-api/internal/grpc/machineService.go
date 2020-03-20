@@ -58,3 +58,13 @@ func toMachineIPMIListResponse(machines []*v1.MachineIPMIResponse, err error) (*
 		MachineIPMIList: machines,
 	}, nil
 }
+
+func (s *machineService) WaitForAllocation(req *v1.MachineWaitForAllocationRequest, srv v1.MachineService_WaitForAllocationServer) error {
+	resp, err := machine.WaitForAllocation(context.Background(), s.ds, req.Identifiable.Id)
+	if err == nil {
+		err = srv.Send(&v1.MachineWaitForAllocationResponse{
+			Machine: resp,
+		})
+	}
+	return err
+}

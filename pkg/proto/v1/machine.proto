@@ -19,6 +19,7 @@ service MachineService {
     rpc IPMIReport (MachineIPMIReportRequest) returns (MachineIPMIReportResponse);
     rpc FindIPMIMachine (MachineIPMIGetRequest) returns (MachineIPMIResponse);
     rpc ListIPMIMachines (MachineIPMIFindRequest) returns (MachineIPMIListResponse);
+    rpc WaitForAllocation (MachineWaitForAllocationRequest) returns (stream MachineWaitForAllocationResponse);
 }
 
 message MachineSetup {
@@ -174,7 +175,7 @@ message MachineAllocateRequest {
 	repeated google.protobuf.StringValue Tags = 9; // tags for this machine
 	repeated MachineAllocationNetwork networks = 10; // the networks that this machine will be placed in
 	repeated google.protobuf.StringValue IPs = 11; // the ips to attach to this machine additionally
-    repeated google.protobuf.StringValue SSHPubKeys = 99; // the public ssh keys to access the machine with //TODO move all sshpubkeys fields to last
+    repeated google.protobuf.StringValue SSHPubKeys = 99; // the public ssh keys to access the machine with
 }
 
 message MachineAllocationNetwork {
@@ -353,4 +354,12 @@ message MachineListRequest {}
 
 message MachineListResponse {
     repeated MachineResponse machines = 1;
+}
+
+message MachineWaitForAllocationRequest {
+    v1.Identifiable identifiable = 1;
+}
+
+message MachineWaitForAllocationResponse {
+    MachineResponse machine = 1;
 }

@@ -2,11 +2,14 @@ package machine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-api/cmd/metal-api/internal/datastore"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/metal"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service"
 	"github.com/metal-stack/metal-api/cmd/metal-api/internal/service/helper"
+	v1 "github.com/metal-stack/metal-api/pkg/proto/v1"
 	"github.com/metal-stack/metal-api/pkg/util"
 	"github.com/metal-stack/metal-lib/httperrors"
 	"github.com/metal-stack/metal-lib/zapup"
@@ -32,39 +35,49 @@ type Allocator func(Allocation) error
 func (r *machineResource) waitForAllocation(request *restful.Request, response *restful.Response) {
 	id := request.PathParameter("id")
 	ctx, cancel := context.WithCancel(request.Request.Context())
-	log := util.Logger(request)
-
 	// after leaving waiting, stop listening for machine table changes in the background
 	defer cancel()
 
-	err := r.wait(ctx, id, log.Sugar(), func(alloc Allocation) error {
+	resp, err := WaitForAllocation(ctx, r.ds, id)
+	if err != nil {
+		service.SendError(zapup.MustRootLogger(), response, util.CurrentFuncName(), httperrors.InternalServerError(err))
+
+		err = response.WriteHeaderAndEntity(http.StatusGatewayTimeout, httperrors.NewHTTPError(http.StatusGatewayTimeout, err))
+		if err != nil {
+			zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
+		}
+	}
+
+	err = response.WriteHeaderAndEntity(http.StatusOK, resp)
+	if err != nil {
+		zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
+	}
+}
+
+func WaitForAllocation(ctx context.Context, ds *datastore.RethinkStore, id string) (*v1.MachineResponse, error) {
+	log := zapup.MustRootLogger()
+
+	var resp *v1.MachineResponse
+	err := wait(ctx, ds, id, log.Sugar(), func(alloc Allocation) error {
 		select {
 		case <-time.After(waitForServerTimeout):
-			err := response.WriteHeaderAndEntity(http.StatusGatewayTimeout, httperrors.NewHTTPError(http.StatusGatewayTimeout, fmt.Errorf("server timeout")))
-			if err != nil {
-				zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
-				return nil
-			}
+			err := errors.New("server timeout")
+			log.Error("Failed to send response", zap.Error(err))
+			return err
 		case a := <-alloc:
 			if a.Err != nil {
 				log.Sugar().Errorw("allocation returned an error", "error", a.Err)
 				return a.Err
 			}
 
-			s, p, i, ec := FindMachineReferencedEntities(a.Machine, r.ds, log.Sugar())
-			err := response.WriteHeaderAndEntity(http.StatusOK, helper.NewMachineResponse(a.Machine, s, p, i, ec))
-			if err != nil {
-				zapup.MustRootLogger().Error("Failed to send response", zap.Error(err))
-				return nil
-			}
+			s, p, i, ec := FindMachineReferencedEntities(a.Machine, ds, log.Sugar())
+			resp = helper.NewMachineResponse(a.Machine, s, p, i, ec)
+			return nil
 		case <-ctx.Done():
 			return fmt.Errorf("client timeout")
 		}
-		return nil
 	})
-	if err != nil {
-		service.SendError(log, response, util.CurrentFuncName(), httperrors.InternalServerError(err))
-	}
+	return resp, err
 }
 
 // Wait inserts the machine with the given ID in the waittable, so
@@ -76,8 +89,8 @@ func (r *machineResource) waitForAllocation(request *restful.Request, response *
 // channel to get a result. Using a channel allows the caller of this
 // function to implement timeouts to not wait forever.
 // The user of this function will block until this machine is allocated.
-func (r *machineResource) wait(ctx context.Context, id string, logger *zap.SugaredLogger, allocator Allocator) error {
-	m, err := r.ds.FindMachineByID(id)
+func wait(ctx context.Context, ds *datastore.RethinkStore, id string, logger *zap.SugaredLogger, allocator Allocator) error {
+	m, err := ds.FindMachineByID(id)
 	if err != nil {
 		return err
 	}
@@ -91,19 +104,19 @@ func (r *machineResource) wait(ctx context.Context, id string, logger *zap.Sugar
 		return allocator(a)
 	}
 
-	err = r.ds.InsertWaitingMachine(m)
+	err = ds.InsertWaitingMachine(m)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		err := r.ds.RemoveWaitingMachine(m)
+		err := ds.RemoveWaitingMachine(m)
 		if err != nil {
 			logger.Errorw("could not remove machine from wait table", "error", err)
 		}
 	}()
 
 	go func() {
-		changedMachine, err := r.ds.WaitForMachineAllocation(ctx, m)
+		changedMachine, err := ds.WaitForMachineAllocation(ctx, m)
 		if err != nil {
 			logger.Errorw("WaitForMachineAllocation returned an error", "error", err)
 			a <- MachineAllocation{Err: err}
